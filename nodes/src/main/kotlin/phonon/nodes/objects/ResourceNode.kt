@@ -280,7 +280,7 @@ public data class ResourceAttributeAnimals(
 // ============================================================================
 
 public data class ResourceAttributeTotalIncomeMultiplier(
-    private val multiplier: Double,
+    val multiplier: Double,
 ): ResourceAttribute {
     override val priority: Int = 50
     val description: String = "Income Multiplier: ${this.multiplier}"
@@ -310,7 +310,7 @@ public data class ResourceAttributeTotalIncomeMultiplier(
 
 
 public data class ResourceAttributeTotalOreMultiplier(
-    private val multiplier: Double,
+    val multiplier: Double,
 ): ResourceAttribute {
     override val priority: Int = 50
     val description: String = "Ore Multiplier: ${this.multiplier}"
@@ -335,7 +335,7 @@ public data class ResourceAttributeTotalOreMultiplier(
 
 
 public data class ResourceAttributeTotalCropsMultiplier(
-    private val multiplier: Double,
+    val multiplier: Double,
 ): ResourceAttribute {
     override val priority: Int = 50
     val description: String = "Crops Multiplier: ${this.multiplier}"
@@ -360,7 +360,7 @@ public data class ResourceAttributeTotalCropsMultiplier(
 
 
 public data class ResourceAttributeTotalAnimalsMultiplier(
-    private val multiplier: Double,
+    val multiplier: Double,
 ): ResourceAttribute {
     override val priority: Int = 50
     val description: String = "Animal Breeding Multiplier: ${this.multiplier}"
@@ -965,6 +965,41 @@ public data class ResourceAttributeNeighborAnimalsMultiplier(
     override fun describe(): String = this.description
 }
 
+public data class ResourceAttributeAttackerTimeMultiplier(
+    val multiplier: Double,
+): ResourceAttribute {
+    override val priority: Int = 200
+    val description: String = "Attacker Time Multiplier: ${this.multiplier}"
+
+    /**
+     * Multiply together multipliers.
+     */
+    override fun apply(resources: TerritoryResources): TerritoryResources {
+        return resources.copy(
+            attackerTimeMultiplier = resources.attackerTimeMultiplier * multiplier,
+        )
+    }
+
+    override fun describe(): String = this.description
+}
+
+public data class ResourceAttributeDefenderTimeMultiplier(
+    val multiplier: Double,
+): ResourceAttribute {
+    override val priority: Int = 201
+    val description: String = "Defender Time Multiplier: ${this.multiplier}"
+
+    /**
+     * Multiply together multipliers.
+     */
+    override fun apply(resources: TerritoryResources): TerritoryResources {
+        return resources.copy(
+            defenderTimeMultiplier = resources.defenderTimeMultiplier * multiplier,
+        )
+    }
+
+    override fun describe(): String = this.description
+}
 
 // ============================================================================
 // RESOURCE ATTRIBUTE LOADER IMPLEMENTATION
@@ -1130,6 +1165,14 @@ public object DefaultResourceAttributeLoader: ResourceAttributeLoader {
                         val animalsMultiplier = parseJsonMapEntityTypeToDouble(jsonAnimals)
                         attributes.add(ResourceAttributeNeighborAnimalsMultiplier(animalsMultiplier))
                     }
+                }
+
+                // claim time modifiers
+                node.get("attacker_time_multiplier")?.getAsDouble()?.let { multiplier ->
+                    attributes.add(ResourceAttributeAttackerTimeMultiplier(multiplier))
+                }
+                node.get("defender_time_multiplier")?.getAsDouble()?.let { multiplier ->
+                    attributes.add(ResourceAttributeDefenderTimeMultiplier(multiplier))
                 }
 
                 resources.put(name, ResourceNode(

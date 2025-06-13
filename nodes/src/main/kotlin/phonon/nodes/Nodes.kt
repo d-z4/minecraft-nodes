@@ -5,8 +5,6 @@
 package phonon.nodes
 
 import kotlin.system.measureNanoTime
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.EnumMap
 import java.util.EnumSet
 import java.util.UUID
@@ -14,17 +12,22 @@ import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.Future
 import java.io.IOException
 import java.io.File
-import java.nio.file.*
-import java.nio.ByteBuffer
-import java.nio.channels.AsynchronousFileChannel
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util.logging.Logger
 import com.google.gson.JsonObject
+import org.bukkit.Bukkit
+import org.bukkit.Chunk
+import org.bukkit.ChatColor
+import org.bukkit.Location
+import org.bukkit.Material
+import org.bukkit.World
 import org.bukkit.plugin.Plugin
 import org.bukkit.event.HandlerList
 import org.bukkit.entity.Player
 import org.bukkit.entity.EntityType
-import org.bukkit.*
 import org.bukkit.block.Block
 import org.bukkit.block.Chest
 import org.bukkit.block.DoubleChest
@@ -46,8 +49,6 @@ import phonon.nodes.listeners.NodesPlayerChestProtectListener
 import phonon.nodes.war.FlagWar
 import phonon.nodes.war.Truce
 
-// backup format
-private val BACKUP_DATE_FORMATTER = SimpleDateFormat("yyyy.MM.dd.HH.mm.ss"); 
 
 /**
  * Nodes container
@@ -55,7 +56,7 @@ private val BACKUP_DATE_FORMATTER = SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
 public object Nodes {
     
     // version string
-    internal val version: String = "1.16.5 v0.0.10"
+    internal val version: String = "v0.0.13"
 
     // library of resource node definitions
     internal val resourceNodes: HashMap<String, ResourceNode> = hashMapOf()
@@ -85,19 +86,17 @@ public object Nodes {
     public val war = FlagWar
 
     // flag that world was updated and needs save
-    private var needsSave: Boolean = false
+    internal var needsSave: Boolean = false
 
     // set of invalid block locations for hidden ore drops
     internal val hiddenOreInvalidBlocks: OreBlockCache = OreBlockCache(2000)
 
     // hooks to other plugins
-    internal var protocolLib: Boolean = false // flag that protocolLib is loaded
     internal var dynmap: Boolean = false // simple flag
     internal val DYNMAP_DIR: Path = Paths.get("plugins/dynmap/web/nodes")
     internal val DYNMAP_PATH_NODES_CONFIG: Path = Paths.get("plugins/dynmap/web/nodes/config.json")
     internal val DYNMAP_PATH_WORLD: Path = Paths.get("plugins/dynmap/web/nodes/world.json")
     internal val DYNMAP_PATH_TOWNS: Path = Paths.get("plugins/dynmap/web/nodes/towns.json")
-    internal val dynmapWriteTask = NodesDynmapJsonWriter(Config.pathTowns, Nodes.DYNMAP_DIR, Nodes.DYNMAP_PATH_TOWNS)
 
     // minecraft plugin variable
     internal var plugin: Plugin? = null
@@ -172,7 +171,7 @@ public object Nodes {
             Nodes.setResidentOnline(resident, player)
 
             // create nametag (only when town exists)
-            if ( resident.town !== null && Nodes.protocolLib == true && Config.useNametags ) {
+            if ( resident.town !== null && Config.useNametags ) {
                 Nametag.create(player)
             }
         }
@@ -210,7 +209,7 @@ public object Nodes {
         }
 
         // cleanup nametags
-        if ( Nodes.protocolLib == true && Config.useNametags ) {
+        if ( Config.useNametags ) {
             Nametag.clear()
         }
 
@@ -331,7 +330,7 @@ public object Nodes {
                 for ( neighborId in terr.neighbors ) {
                     terrResourceGraph[neighborId]?.let { neighborResources ->
                         if ( neighborResources.hasNeighborModifier ) {
-                            terrAfterNeighborModifiers = terrAfterNeighborModifiers.applyNeighborModifiers(neighborResources)
+                            terrAfterNeighborModifiers = terrAfterNeighborModifiers.accumulateNeighborModifiers(neighborResources)
                         }
                     }
                 }
@@ -350,7 +349,8 @@ public object Nodes {
                 return
             }
 
-            val resources = terrResourceGraph[t.id]!!
+            // get resources and apply all accumulated neighbor modifiers
+            val resources = terrResourceGraph[t.id]!!.applyNeighborModifiers()
 
             // sorted resource names
             val resourceNamesSorted = t.resourceNodes.sortedBy { name -> Nodes.resourceNodes[name]!!.priority }
@@ -378,6 +378,8 @@ public object Nodes {
                 crops = resources.crops,
                 animals = resources.animals,
                 customProperties = resources.customProperties,
+                attackerTimeMultiplier = resources.attackerTimeMultiplier,
+                defenderTimeMultiplier = resources.defenderTimeMultiplier,
             )
             
             // if previous territory existed, first do cleanup and copy mutable ingame properties
@@ -397,6 +399,8 @@ public object Nodes {
                 Nodes.territoryChunks.put(c, TerritoryChunk(c, territory))
             }
         }
+
+        Bukkit.getPluginManager().callEvent(NodesTerritoriesLoadedEvent())
     }
 
     /**
@@ -423,8 +427,7 @@ public object Nodes {
 
             // no errors happened: copy world.json to dynmap folder
             if ( Nodes.dynmap == true || Config.dynmapCopyTowns ) {
-                Files.createDirectories(Nodes.DYNMAP_DIR)
-                Files.copy(Config.pathWorld, Nodes.DYNMAP_PATH_WORLD, StandardCopyOption.REPLACE_EXISTING)    
+                TaskCopyToDynmap(Config.pathWorld, Nodes.DYNMAP_DIR, Nodes.DYNMAP_PATH_WORLD).run()
             }
             
             return true
@@ -454,8 +457,7 @@ public object Nodes {
             
             // load world.json to dynmap folder
             if ( Nodes.dynmap == true || Config.dynmapCopyTowns ) {
-                Files.createDirectories(Nodes.DYNMAP_DIR)
-                Files.copy(Config.pathWorld, Nodes.DYNMAP_PATH_WORLD, StandardCopyOption.REPLACE_EXISTING)    
+                TaskCopyToDynmap(Config.pathWorld, Nodes.DYNMAP_DIR, Nodes.DYNMAP_PATH_WORLD).run()
             }
             
             // load towns from json after main world load finishes
@@ -486,6 +488,8 @@ public object Nodes {
                 System.err.println("No towns found: ${Config.pathTowns.toString()}")
                 return true
             }
+
+            Bukkit.getPluginManager().callEvent(NodesWorldLoadedEvent())
         }
         else {
             System.err.println("Failed to load world: ${Config.pathWorld.toString()}")
@@ -495,122 +499,83 @@ public object Nodes {
         return true
     }
 
-    internal fun copyWorldtoDynmap() {
-        // copy towns to dynmap folder
-        if ( Nodes.dynmap || Config.dynmapCopyTowns ) {
-            Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, Nodes.dynmapWriteTask)
+    /**
+     * Save world to JSON storage.
+     */
+    internal fun saveWorld(
+        checkIfNeedsSave: Boolean = true, // set to false to force save
+        async: Boolean = false, // run serialization and file write asynchronously
+    ) {
+        // if we reached backup time interval, generate a backup millis
+        // timestamp for save task, which will be used to create a
+        // timestamped backup file
+        val currTime = System.currentTimeMillis()
+        val backup = currTime > Nodes.lastBackupTime + Config.backupPeriod
+        val backupTimestamp = if ( backup ) {
+            Nodes.lastBackupTime = currTime
+            currTime
+        } else {
+            -1
         }
-    }
 
-    // asynchronous file save of town.json
-    // (world.json not saved, that's read only)
-    internal fun saveWorld(checkIfNeedsSave: Boolean = true) {
-        if ( checkIfNeedsSave == false || Nodes.needsSave == true ) {
-
+        if ( Nodes.needsSave == true || checkIfNeedsSave == false ) {
             // world pre-processing
             Nodes.saveWorldPreprocess()
 
-            // get json string
-            var json = ""
             val timeUpdate = measureNanoTime {
-                json = Serializer.worldToJson(
-                    Nodes.residents.values.toList(),
-                    Nodes.towns.values.toList(),
-                    Nodes.nations.values.toList()
+                // create a snapshot of world objects state
+                // always do synchronously on main thread to keep world consistent 
+                val residentsSnapshot = Nodes.residents.values.map { it.getSaveState() }
+                val townsSnapshot = Nodes.towns.values.map { it.getSaveState() }
+                val nationsSnapshot = Nodes.nations.values.map { it.getSaveState() }
+
+                // whether should copy towns.json to dynmap folder
+                val copyToDynmap = Nodes.dynmap || Config.dynmapCopyTowns
+
+                // save task manages:
+                // 1. serialize individual objects into json strings and combine into a full json string
+                // 2. write file
+                // 3. copy to dynmap folder when save done
+                // 4. save backup if reached backup interval
+                val taskSave = TaskSaveWorld(
+                    residentsSnapshot,
+                    townsSnapshot,
+                    nationsSnapshot,
+                    Config.pathTowns,
+                    Nodes.DYNMAP_DIR,
+                    Nodes.DYNMAP_PATH_TOWNS,
+                    Config.pathBackup,
+                    Config.pathLastBackupTime,
+                    copyToDynmap,
+                    backupTimestamp,
                 )
+
+                if ( async ) {
+                    Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, taskSave)
+                } else {
+                    taskSave.run()
+                }
+                
+                Nodes.needsSave = false
             }
 
-            println("[Nodes] Saving world: ${timeUpdate.toString()}ns")
-
-            // write file in async thread
-            // callback: copy to dynmap folder when save done
-            Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, FileWriteTask(json, Config.pathTowns, Nodes::copyWorldtoDynmap))
-
-            Nodes.needsSave = false
+            Nodes.logger?.info("[Nodes] Saving world: ${timeUpdate.toString()}ns")
         }
-    }
-
-    // alternative save world method
-    // 1. updates individual object JSON strings on main thread (for thread safety)
-    // 2. combines into a full json string on async thread
-    internal fun saveWorldAsync(checkIfNeedsSave: Boolean = true) {
-        if ( checkIfNeedsSave == false || Nodes.needsSave == true ) {
-
-            // world pre-processing
-            Nodes.saveWorldPreprocess()
-
-            val timeUpdate = measureNanoTime {
-                for ( v in Nodes.residents.values ) {
-                    v.getSaveState()
-                }
-                for ( v in Nodes.towns.values ) {
-                    v.getSaveState()
-                }
-                for ( v in Nodes.nations.values ) {
-                    v.getSaveState()
-                }
+        // no new save needed...just do backup if we reached backup interval
+        else if ( backup ) {
+            val taskBackup = TaskSaveBackup(backupTimestamp, Config.pathTowns, Config.pathBackup, Config.pathLastBackupTime)
+            if ( async ) {
+                Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, taskBackup)
+            } else {
+                taskBackup.run()
             }
-
-            println("[Nodes] Saving world: ${timeUpdate.toString()}ns")
-
-            // write file in async thread
-            // callback: copy to dynmap folder when save done
-            // val pathTest = Paths.get(Config.pathPlugin, "towns_test.json").normalize()
-            Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, object: Runnable {
-                val residents = Nodes.residents.values.toList()
-                val towns = Nodes.towns.values.toList()
-                val nations = Nodes.nations.values.toList()
-
-                override public fun run() {
-                    val json = Serializer.worldToJson(
-                        residents,
-                        towns,
-                        nations
-                    )
-
-                    saveStringToFile(json, Config.pathTowns)
-
-                    Nodes.copyWorldtoDynmap()
-                }
-            })
-
-            Nodes.needsSave = false
         }
     }
 
-    // performs synchronous save of the world
-    // much slower, but needed on events that cannot
-    // use threads (e.g. on plugin shutdown, scheduler cancelled)
-    internal fun saveWorldSync(): Boolean {
-        // world pre-processing
-        Nodes.saveWorldPreprocess()
-
-        // get json string
-        val json: String = Serializer.worldToJson(
-            Nodes.residents.values.toList(),
-            Nodes.towns.values.toList(),
-            Nodes.nations.values.toList()
-        )
-
-        // write main file
-        val fileChannel: AsynchronousFileChannel = AsynchronousFileChannel.open(Config.pathTowns, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
-        val buffer = ByteBuffer.wrap(json.toByteArray())
-        val operation: Future<Int> = fileChannel.write(buffer, 0);
-        operation.get()
-        
-        // copy to dynmap folder
-        if ( Nodes.dynmap ) {
-            Files.copy(Config.pathTowns, Nodes.DYNMAP_PATH_TOWNS, StandardCopyOption.REPLACE_EXISTING) 
-        }
-
-        // save truce state
-        FileWriteTask(Truce.toJsonString(), Config.pathTruce).run()
-
-        return true
-    }
-
-    // handle any pre-processing, town/nation modifications before
-    // saving to json
+    /**
+     * Handle any pre-processing or finishing town/nation modifications before
+     * saving to json.
+     */
     internal fun saveWorldPreprocess() {
         // move all town income items from inventory gui
         // back to storage data structure
@@ -623,19 +588,30 @@ public object Nodes {
     }
 
     /**
-     * Run backup
+     * Save config and world state to dynmap folder.
+     * Should run when plugin enabled.
      */
-    internal fun doBackup() {
-        val pathTowns = Config.pathTowns
-        if ( Files.exists(pathTowns) ) {
-            val pathBackupDir = Config.pathBackup
-            Files.createDirectories(pathBackupDir) // create backup folder if it does not exist
+    internal fun saveWorldToDynmap(async: Boolean) {
+        // copy towns to dynmap folder
+        if ( Nodes.dynmap || Config.dynmapCopyTowns ) {
+            val taskSaveClaimsConfig = TaskSaveDynmapClaimsConfig(
+                Config.territoryCostBase,
+                Config.territoryCostScale,
+                Nodes.DYNMAP_PATH_NODES_CONFIG,
+            )
+            val taskSaveTowns = TaskCopyToDynmap(
+                Config.pathTowns,
+                Nodes.DYNMAP_DIR,
+                Nodes.DYNMAP_PATH_TOWNS,
+            )
 
-            // save vehicle file backup
-            val date = Date()
-            val backupName = "towns.${BACKUP_DATE_FORMATTER.format(date)}.json"
-            val pathBackup = pathBackupDir.resolve(backupName)
-            Files.copy(pathTowns, pathBackup)
+            if ( async ) {
+                Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, taskSaveClaimsConfig)
+                Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, taskSaveTowns)
+            } else {
+                taskSaveClaimsConfig.run()
+                taskSaveTowns.run()
+            }
         }
     }
 
@@ -852,6 +828,13 @@ public object Nodes {
         return Nodes.territoryChunks.get(coord)?.territory
     }
 
+    /**
+     * Returns an iterable of all (terrId, territory) pairs in world.
+     */
+    public fun iterTerritories(): Iterable<kotlin.collections.Map.Entry<TerritoryId, Territory>> {
+        return Nodes.territories.asIterable()
+    }
+
     public fun getChunkFromCoord(coord: Coord, world: World): Chunk? {
        return Bukkit.getWorld(world.name)?.getChunkAt(coord.x, coord.z)
     }
@@ -867,12 +850,12 @@ public object Nodes {
 
         // iterate up in y to find first empty block
         val world = Bukkit.getWorlds().get(0);
-        var y = 0
-        while ( y < 255 ) {
-            if ( world.getBlockAt(x, y, z).isEmpty() ) {
+        var y = 255
+        while ( y > 0 ) {
+            if ( !world.getBlockAt(x, y, z).isEmpty() ) {
                 break
             }
-            y += 1
+            y -= 1
         }
 
         return Location(world, x.toDouble(), y.toDouble(), z.toDouble())
@@ -1384,6 +1367,26 @@ public object Nodes {
     }
 
     /**
+     * If input is "*", return all towns. Otherwise, return list of
+     * single town.
+     */
+    public fun matchTowns(name: String): List<Town> {
+        val matchedTowns = ArrayList<Town>()
+
+        if ( name == "*" ) {
+            matchedTowns.addAll(towns.values)
+        }
+        else {
+            val town = getTownFromName(name)
+            if ( town !== null ) {
+                matchedTowns.add(town)
+            }
+        }
+
+        return matchedTowns
+    }
+
+    /**
      * Return town that owns chunk if it exists
      */
     public fun getTownAtChunkCoord(cx: Int, cz: Int): Town? {
@@ -1503,6 +1506,10 @@ public object Nodes {
      * players if their town is over max claims
      */
     public fun overMaxClaimsReminder() {
+        if ( !Config.overClaimsPenalty ) { // skip reminder if over max claims disabled
+            return
+        }
+
         val resourcePenalty = "${(Config.overClaimsMaxPenalty * 100).toInt()}% resource penalty"
 
         for ( town in Nodes.towns.values ) {
@@ -1518,8 +1525,10 @@ public object Nodes {
         }
     }
 
-    // claim territory for a town
-    // returns TerritoryClaim status of result
+    /**
+     * Claim territory for a town. Returns result with either Territory
+     * if successful, or an TerritoryClaim error status.
+     */
     public fun claimTerritory(town: Town, territory: Territory): Result<Territory> {
 
         // check if territory already claimed
@@ -1541,7 +1550,7 @@ public object Nodes {
         }
 
         // check if town has claims available
-        if ( territory.cost > town.claimsMax - town.claimsUsed ) {
+        if ( !Config.overClaimsAllowClaim && territory.cost > town.claimsMax - town.claimsUsed ) {
             return Result.failure(ErrorTooManyClaims)
         }
 
@@ -1739,8 +1748,38 @@ public object Nodes {
 
     // adds items to town's income
     // used by taxation events in occupied/captured territories
+    // TODO: cleanup + rename this to "townIncomeAdd"
     public fun addToIncome(town: Town, material: Material, amount: Int, meta: Int = 0) {
         town.income.add(material, amount, meta)
+        town.needsUpdate()
+        Nodes.needsSave = true
+    }
+
+    /**
+     * Removes items from town's income. If Material is null, removes all
+     * items. If amount < 0, removes all items of that type.
+     */
+    public fun townIncomeRemove(
+        town: Town,
+        material: Material?,
+        amount: Int = -1,
+    ) {
+        town.income.pushToStorage(force = true) // push items to storage before removing
+
+        if ( material !== null ) {
+            if ( amount >= 0 ) {
+                val currAmount = town.income.storage.get(material) ?: 0
+                if ( currAmount > amount ) {
+                    town.income.storage.put(material, currAmount - amount)
+                } else {
+                    town.income.storage.remove(material)
+                }
+            } else { // remove all
+                town.income.storage.remove(material)
+            }
+        } else {
+            town.income.storage.clear()
+        }
         town.needsUpdate()
         Nodes.needsSave = true
     }
@@ -1884,23 +1923,39 @@ public object Nodes {
         return false
     }
 
-    // set town's leader
+    /**
+     * Set town's leader. If input resident is null, try to remove
+     * current town leader.
+     */
     public fun townSetLeader(town: Town, resident: Resident?) {
-        if ( resident?.town !== town ) {
-            return
-        }
-        
-        // same town leader, ignore
-        if ( town.leader === resident ) {
-            return
-        }
+        if ( resident !== null ) {
+            if ( resident.town !== town ) {
+                // must first be part of town, skipping
+                return
+            }
+            
+            // same town leader, ignore
+            if ( town.leader === resident ) {
+                return
+            }
+    
+            // remove resident from officers if there
+            town.officers.remove(resident)
+    
+            town.leader = resident
+            town.needsUpdate()
+            Nodes.needsSave = true
+        } else {
+            // no resident input: remove current town leader
+            if ( town.leader === null ) {
+                // no leader to remove, skipping
+                return
+            }
 
-        // remove resident from officers if there
-        town.officers.remove(resident)
-
-        town.leader = resident
-        town.needsUpdate()
-        Nodes.needsSave = true
+            town.leader = null
+            town.needsUpdate()
+            Nodes.needsSave = true
+        }
     }
 
     public fun renameTown(town: Town, s: String): Boolean {
@@ -2423,115 +2478,147 @@ public object Nodes {
     // Territory income cycle functions
     // ==============================================
     
-    // add income from each territory,
-    // occupied territories 
+    /**
+     * System to run income from all town territories and deposit items into
+     * a town's income inventory chest. For a town's occupied territories,
+     * it gives the income to the occupier town. This must also handle 
+     * adjusting net income rates based on a town's over max claims penalty.
+     * Strategy for income:
+     *     for each town:
+     *         // 1. construct hashmap of each town name mapped to an enum map of
+     *         //    material mapped to net income to be given
+     *         townIncomes = HashMap<Town, EnumMap<Material, Double>>
+     *         
+     *         // 2. accumulate net income from each territory into the town
+     *         //    incomes hashmap. for occupied territories, create a new
+     *         //    town entry if it doesn't exist.
+     *         for territory in town:
+     *             doTownIncomeLogic(territory)
+     *     
+     *         // 3. apply over max claims penalty, other modifiers, etc.
+     *         //    to each town's income to be given
+     *         townIncomes.forEach { town, income -> doTownIncomeModifiers(town, income) }
+     * 
+     *         // 4. add incomes to each town's income chests
+     *         townIncomes.forEach { town, income -> addTownIncomeToChest(town, income) }
+     */
     public fun runIncome() {
 
-        // converts item rate as Double to item count as Int
-        // (can be < 1.0 for random, or >1.0 for fixed amount)
+        /**
+         * Helper to convert an income item rate Double to a item count as Int.
+         * The rate must be >0.0 but can have fractional parts which allow for
+         * random rolls for item amount. Examples for handling rates:
+         * - rate = 2.0 : 2 items
+         * - rate = 2.5 : split into 2.0 + 0.5
+         *      - 2.0 -> 2 items are guaranteed
+         *      - 0.5 -> do random roll, if roll < 0.5, add 1 item (50% chance)
+         */
         fun rateToAmount(rate: Double): Int {
-            if ( rate < 1.0 ) {
+            if ( rate <= 0.0 ) {
+                return 0
+            }
+
+            // determine integer part and fractional remainder for random roll
+            val intPart = kotlin.math.floor(rate)
+            val fracPart = kotlin.math.max(0.0, rate - intPart)
+
+            val fracAmount = if ( fracPart > 0.0 ) {
                 val roll = ThreadLocalRandom.current().nextDouble()
-                if ( roll < rate ) {
-                    return 1
+                if ( roll < fracPart ) {
+                    1
                 } else {
-                    return 0
+                    0
                 }
+            } else {
+                0
             }
-            else {
-                return rate.toInt()
-            }
+
+            return intPart.toInt() + fracAmount
         }
 
-        val taxRate = Config.taxIncomeRate
+        // tax and kept item rates for occupied territories
+        val taxRate = Config.taxIncomeRate.coerceIn(0.0, 1.0)
+        val keptRate = 1.0 - taxRate
 
         for ( town in Nodes.towns.values ) {
-            for ( terrId in town.territories ) {
-                val territory = Nodes.getTerritoryFromId(terrId)
-                if ( territory === null ) {
-                    continue
-                }
+            try {
+                val thisTownIncome = EnumMap<Material, Double>(Material::class.java) // hard-coded value for this town
+                val townIncomes = HashMap<Town, EnumMap<Material, Double>>()
 
-                val occupier = territory.occupier
-                if ( occupier != null ) {
-                    // regular item income
-                    for ( (material, rate) in territory.income ) {
-                        val amount: Int = rateToAmount(rate)
-                        if ( amount > 1 ) {
-                            val amountTaxed: Int = Math.ceil(taxRate * amount).toInt()
-                            occupier.income.add(material, amountTaxed)
-
-                            val amountKept: Int = amount - amountTaxed
-                            
-                            // apply over claims penalty
-                            if ( town.isOverClaimsMax == true ) {
-                                val newAmountKept: Int = Math.floor(amountKept.toDouble() * (1.0 - Config.overClaimsMaxPenalty)).toInt()
-                                town.income.add(material, newAmountKept)
-                            }
-                            else {
-                                town.income.add(material, amountKept)
-                            }
-                        }
-                        // if <= 1, give all to occupier
-                        else {
-                            occupier.income.add(material, amount)
-                        }
+                // inject this town, to unify claims penalty logic later
+                townIncomes[town] = thisTownIncome
+                
+                for ( terrId in town.territories ) {
+                    val territory = Nodes.getTerritoryFromId(terrId)
+                    if ( territory === null ) {
+                        continue
                     }
 
-                    // 1.12 spawn egg income
-                    // for ( (entityType, rate) in territory.incomeSpawnEgg ) {
-                    //     val amount: Int = rateToAmount(rate)
-                    //     if ( amount > 1 ) {
-                    //         val amountTaxed: Int = Math.ceil(taxRate * amount).toInt()
-                    //         occupier.income.add(Material.MONSTER_EGG, amountTaxed, entityType.ordinal)
+                    val occupier = territory.occupier
+                    if ( occupier != null ) {
+                        val occupierIncome = townIncomes.getOrPut(occupier) { EnumMap<Material, Double>(Material::class.java) }
 
-                    //         val amountKept: Int = amount - amountTaxed
-                            
-                    //         // apply over claims penalty
-                    //         if ( town.isOverClaimsMax == true ) {
-                    //             val newAmountKept: Int = Math.floor(amountKept.toDouble() * (1.0 - Config.overClaimsMaxPenalty)).toInt()
-                    //             town.income.add(Material.MONSTER_EGG, newAmountKept, entityType.ordinal)
-                    //         }
-                    //         else {
-                    //             town.income.add(Material.MONSTER_EGG, amountKept, entityType.ordinal)
-                    //         }
-                    //     }
-                    //     // if <= 1, give all to occupier
-                    //     else {
-                    //         occupier.income.add(Material.MONSTER_EGG, amount, entityType.ordinal)
-                    //     }
-                    // }
-
-                    occupier.needsUpdate()
-                }
-                else {
-                    // regular item income
-                    for ( (material, rate) in territory.income ) {
-                        var amount: Int = rateToAmount(rate)
-
-                        // over max claims penalty
-                        if ( town.isOverClaimsMax == true ) {
-                            amount = Math.floor(amount.toDouble() * (1.0 - Config.overClaimsMaxPenalty)).toInt()
+                        // regular item income
+                        for ( (material, amount) in territory.income ) {                            
+                            occupierIncome[material] = (occupierIncome[material] ?: 0.0) + (amount * taxRate)
+                            thisTownIncome[material] = (thisTownIncome[material] ?: 0.0) + (amount * keptRate)
                         }
 
-                        town.income.add(material, amount)
+                        // TODO: 1.12 compatibility? spawn egg income
+                        // for ( (entityType, rate) in territory.incomeSpawnEgg ) {
+                        //     TODO
+                        // }
+                    }
+                    else {
+                        // regular item income
+                        for ( (material, amount) in territory.income ) {                            
+                            thisTownIncome[material] = (thisTownIncome[material] ?: 0.0) + amount
+                        }
+
+                        // TODO: 1.12 compatibility? spawn egg income
+                        // for ( (entityType, rate) in territory.incomeSpawnEgg ) {
+                        //     TODO
+                        // }
+                    }
+                }
+
+                // apply income modifiers for each town, then add items to town income chest
+                for ( (townForIncome, income) in townIncomes ) {
+                    var incomeModifier = 1.0
+                    
+                    // over max claims penalty
+                    if ( Config.overClaimsPenalty && townForIncome.isOverClaimsMax == true ) {
+                        incomeModifier *= (1.0 - Config.overClaimsMaxPenalty)
                     }
 
-                    // 1.12 spawn egg income
-                    // for ( (entityType, rate) in territory.incomeSpawnEgg ) {
-                    //     var amount: Int = rateToAmount(rate)
+                    // income claims power scaling
+                    if ( Config.incomeScaleByClaimPower ) {
+                        val claimsUsedRatio = townForIncome.claimsMax.toDouble() / townForIncome.claimsUsed.toDouble()
+                        val incomeClaimsPowerScale = claimsUsedRatio.coerceIn(Config.incomeScaleMin, Config.incomeScaleMax)
+                        incomeModifier *= incomeClaimsPowerScale
+                    }
 
-                    //     // over max claims penalty
-                    //     if ( town.isOverClaimsMax == true ) {
-                    //         amount = Math.floor(amount.toDouble() * (1.0 - Config.overClaimsMaxPenalty)).toInt()
-                    //     }
+                    // we can do any other income modifiers here in the future
 
-                    //     town.income.add(Material.MONSTER_EGG, amount, entityType.ordinal)
-                    // }
+                    // add items to town income chest
+                    for ( (material, amount) in income ) {
+                        val amountInt = rateToAmount(amount * incomeModifier)
+                        if ( amountInt > 0 ) {
+                            Nodes.addToIncome(town, material, amountInt)
+                        }
+                    }
                 }
+
+                // TODO: 1.12 compatibility? spawn egg income
+                // for ( (entityType, rate) in territory.incomeSpawnEgg ) {
+                //     var amount: Int = rateToAmount(rate)
+                //     town.income.add(Material.MONSTER_EGG, amount, entityType.ordinal)
+                // }
             }
-
-            town.needsUpdate()
+            catch ( err: Exception ) {
+                Nodes.logger?.severe("Error running income for town ${town.name}")
+                err.printStackTrace()
+            }
         }
 
         // message players ingame that income collected
@@ -3035,8 +3122,21 @@ public object Nodes {
         
         // save truce.json file
         if ( Truce.needsUpdate == true ) {
-            Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, FileWriteTask(Truce.toJsonString(), Config.pathTruce, null))
+            Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, Truce.saveTask())
             Truce.needsUpdate = false
+        }
+    }
+    
+    /**
+     * Save truces to json file. This is separate from world state save
+     * because truces only need to be saved infrequently on a separate
+     * schedule than regular world save.
+     */
+    public fun saveTruce(async: Boolean = false) {
+        if ( async ) {
+            Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, Truce.saveTask())
+        } else {
+            Truce.saveTask().run()
         }
     }
 
@@ -3247,17 +3347,11 @@ public object Nodes {
         }
 
         task.runTaskTimer(Nodes.plugin!!, 0, 20)
-        
     }
 
     // ==============================================
     // Hooks to external functions
     // ==============================================
-    // mark that protocol lib exists
-    internal fun hookProtocolLib() {
-        Nodes.protocolLib = true
-    }
-
     // just sets a flag that dynmap exists
     internal fun hookDynmap() {
         Nodes.dynmap = true

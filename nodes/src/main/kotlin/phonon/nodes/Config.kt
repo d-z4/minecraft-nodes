@@ -69,8 +69,20 @@ public object Config {
     // ===================================
     // resource configs
     // ===================================
-    // territory income time
+    // territory do income enabled and income time
+    public var incomeEnabled: Boolean = true
     public var incomePeriod: Long = 3600000L
+
+    // enable income rate scaling based on percent of town claim power used
+    // e.g. if 100 claim power is needed for all territories
+    // and town players have total of 60 claim power
+    // then income rate is scaled by,
+    //     r = (sum of player claim power) / (sum of territory claim)
+    //       = 60 / 100
+    //       = 0.6
+    public var incomeScaleByClaimPower: Boolean = true
+    public var incomeScaleMin: Double = 0.1  // minimum income scaling factor
+    public var incomeScaleMax: Double = 1.0  // maximum income scaling factor, >1.0 allowed
 
     // global resource node in all territories
     public var globalResources = TerritoryResources()
@@ -211,8 +223,17 @@ public object Config {
     public var townClaimsPenaltyDecayPeriod: Long = 3600000L
     public var playerClaimsIncreasePeriod: Long = 3600000L
 
+    // flag for enforcing over max claims
+    // for now, this affects all systems (income, hidden ore, crops,
+    // breeding, etc...)
+    // TODO: make fine grained over claims penalty for each system
+    public var overClaimsPenalty: Boolean = true
+    
     // reduced resource rate when over max claim (runs Math.random() < rate)
     public var overClaimsMaxPenalty: Double = 0.5
+
+    // allow claiming territories even if town already over max claims
+    public var overClaimsAllowClaim: Boolean = false
 
     // annexation settings
     // only allow annexing during war time
@@ -388,7 +409,11 @@ public object Config {
         Config.townMoveHomeCooldown = config.getLong("townMoveHomeCooldown", Config.townMoveHomeCooldown)
 
         // resource configs
+        Config.incomeEnabled = config.getBoolean("incomeEnabled", Config.incomeEnabled)
         Config.incomePeriod = config.getLong("incomePeriod", Config.incomePeriod)
+        Config.incomeScaleByClaimPower = config.getBoolean("incomeScaleByClaimPower", Config.incomeScaleByClaimPower)
+        Config.incomeScaleMin = config.getDouble("incomeScaleMin", Config.incomeScaleMin)
+        Config.incomeScaleMax = config.getDouble("incomeScaleMax", Config.incomeScaleMax)
         Config.allowOreInWilderness = config.getBoolean("allowOreInWilderness", Config.allowOreInWilderness)
         Config.allowCropsInWilderness = config.getBoolean("allowCropsInWilderness", Config.allowCropsInWilderness)
         Config.allowBreedingInWilderness = config.getBoolean("allowBreedingInWilderness", Config.allowBreedingInWilderness)
@@ -422,7 +447,9 @@ public object Config {
         Config.townPenaltyDecay = config.getInt("townPenaltyDecay", Config.townPenaltyDecay)
         Config.townClaimsPenaltyDecayPeriod = config.getLong("townClaimsPenaltyDecayPeriod", Config.townClaimsPenaltyDecayPeriod)
         Config.playerClaimsIncreasePeriod = config.getLong("playerClaimsIncreasePeriod", Config.playerClaimsIncreasePeriod)
+        Config.overClaimsPenalty = config.getBoolean("overClaimsPenalty", Config.overClaimsPenalty)
         Config.overClaimsMaxPenalty = config.getDouble("overClaimsMaxPenalty", Config.overClaimsMaxPenalty)
+        Config.overClaimsAllowClaim = config.getBoolean("overClaimsAllowClaim", Config.overClaimsAllowClaim)
 
         Config.canOnlyAnnexDuringWar = config.getBoolean("canOnlyAnnexDuringWar", Config.canOnlyAnnexDuringWar)
 

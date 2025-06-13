@@ -48,7 +48,7 @@ import phonon.nodes.objects.TerritoryChunk
 import phonon.nodes.objects.Town
 import phonon.nodes.event.*
 import phonon.nodes.constants.*
-import phonon.blockedit.FastBlockEditSession
+import phonon.nms.blockedit.FastBlockEditSession
 
 // beacon color: wool material data values
 // corresponding to each 10% progress interval
@@ -542,13 +542,22 @@ public object FlagWar {
         val flagTorch = world.getBlockAt(flagBaseX, flagBaseY + 2, flagBaseZ)
         val progressBar = Bukkit.getServer().createBossBar("Attacking ${territory.town!!.name} at (${flagBaseX}, ${flagBaseY}, ${flagBaseZ})", BarColor.YELLOW, BarStyle.SOLID)
         
-        // calculate max attack time based on chunk
+        // calculate max attack time based on chunk and other modifiers
         var attackTime = Config.chunkAttackTime.toDouble()
         if ( territory.bordersWilderness ) {
             attackTime *= Config.chunkAttackFromWastelandMultiplier
         }
-        if ( territory.id == territory.town?.home ) {
-            attackTime *= Config.chunkAttackHomeMultiplier
+        // town specific claim time modifiers
+        val terrTown = territory.town
+        if ( terrTown !== null ) {
+            if ( territory.id == terrTown.home ) {
+                attackTime *= Config.chunkAttackHomeMultiplier
+            }
+            if ( terrTown.uuid == attackingTown.uuid || terrTown.allies.contains(attackingTown) ) {
+                attackTime *= territory.defenderTimeMultiplier
+            } else {
+                attackTime *= territory.attackerTimeMultiplier
+            }
         }
 
         // get sky beacon blocks
@@ -873,7 +882,7 @@ public object FlagWar {
         }
 
         if ( createFrame || createColor ) {
-            edit.update(updateLighting)
+            edit.execute(updateLighting)
         }
     }
 
@@ -896,7 +905,7 @@ public object FlagWar {
         }
 
         // dont do lighting update
-        edit.update(false)
+        edit.execute(false)
     }
 
     // cleanup attack instance, then dispatch signal
@@ -923,6 +932,9 @@ public object FlagWar {
         for ( block in attack.skyBeaconColorBlocks ) {
             block.setType(Material.AIR)
         }
+
+        // remove town label
+        attack.armorstandTownLabel.remove()
 
         // remove attack instance references
         FlagWar.attackers.get(attack.attacker)?.remove(attack)
@@ -973,6 +985,9 @@ public object FlagWar {
         for ( block in attack.skyBeaconColorBlocks ) {
             block.setType(Material.AIR)
         }
+
+        // remove town label
+        attack.armorstandTownLabel.remove()
 
         // remove attack instance references
         FlagWar.attackers.get(attack.attacker)?.remove(attack)
@@ -1128,6 +1143,23 @@ public object FlagWar {
                             attack.skyBeaconColorBlocks,
                             progressColor
                         )
+                    }
+                })
+            }
+
+            // re-send armorstand label packets to players in range if armorstand
+            // is alive. if somehow dead, schedule re-create armorstand on main thread
+            if ( attack.armorstandTownLabel.isValid() ) {
+                try {
+                    attack.armorstandTownLabel.sendLabel()
+                } catch ( e: Exception ) {
+                    e.printStackTrace()
+                    Nodes.logger?.warning("Error sending war flag armorstand label packet: ${e.message}")
+                }
+            } else {
+                Bukkit.getScheduler().runTask(Nodes.plugin!!, object: Runnable {
+                    override fun run() {
+                        attack.armorstandTownLabel.respawn()
                     }
                 })
             }

@@ -12,7 +12,7 @@ import org.bukkit.Bukkit
 import org.bukkit.plugin.Plugin
 import org.bukkit.scheduler.BukkitTask
 import phonon.nodes.Nodes
-import phonon.nodes.tasks.FileWriteTask
+import phonon.nodes.utils.FileWriteTask
 
 
 public object PeriodicTickManager {
@@ -43,17 +43,6 @@ public object PeriodicTickManager {
                 previousTime = currTime
 
                 // =================================
-                // backup cycle
-                // =================================
-                if ( currTime > Nodes.lastBackupTime + Config.backupPeriod ) {
-                    Nodes.lastBackupTime = currTime
-                    Nodes.doBackup()
-
-                    // save current time
-                    Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, FileWriteTask(currTime.toString(), Config.pathLastBackupTime, null))
-                }
-
-                // =================================
                 // income cycle
                 // =================================
                 if ( currTime > Nodes.lastIncomeTime + Config.incomePeriod ) {
@@ -62,7 +51,9 @@ public object PeriodicTickManager {
                     // schedule main thread to run task
                     Bukkit.getScheduler().runTask(plugin, object: Runnable {
                         override fun run() {
-                            Nodes.runIncome()
+                            if ( Config.incomeEnabled ) {
+                                Nodes.runIncome()
+                            }
                         }
                     })
 

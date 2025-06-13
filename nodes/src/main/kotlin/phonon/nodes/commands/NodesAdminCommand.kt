@@ -94,12 +94,15 @@ private val TOWN_SUBCOMMANDS: List<String> = listOf(
     "claimspenalty",
     "open",
     "income",
+    "incomeadd",
+    "incomeremove",
     "setspawn",
     "spawn",
     "sethome",
     "sethomecooldown",
     "addoutpost",
     "removeoutpost",
+    "defaulttownspawns"
 )
 
 // nation subcommands
@@ -147,7 +150,7 @@ public class NodesAdminCommand : CommandExecutor, TabCompleter {
             "truce" -> setTruce(sender, args)
             "truceremove" -> removeTruce(sender, args)
             "treaty" -> manageTreaty(sender, args)
-            "save" -> saveWorld(sender)
+            "save" -> saveWorld(sender, args)
             "load" -> loadWorld(sender)
             "runincome" -> Nodes.runIncome()
             "playersonline" -> Nodes.refreshPlayersOnline()
@@ -650,12 +653,16 @@ public class NodesAdminCommand : CommandExecutor, TabCompleter {
                 "addofficer" -> addTownOfficer(sender, args)
                 "removeofficer" -> removeTownOfficer(sender, args)
                 "leader" -> setTownLeader(sender, args)
+                "removeleader" -> removeTownLeader(sender, args)
                 "open" -> setTownOpen(sender, args)
                 "income" -> townIncome(sender, args)
+                "incomeadd" -> townIncomeAdd(sender, args)
+                "incomeremove" -> townIncomeRemove(sender, args)
                 "sethome" -> setTownHome(sender, args)
                 "sethomecooldown" -> setTownMoveHomeCooldown(sender, args)
                 "addoutpost" -> addOutpostToTown(sender, args)
                 "removeoutpost" -> removeOutpostFromTown(sender, args)
+                "defaulttownspawns" -> defaultTownSpawns(sender, args)
                 else -> { printTownHelp(sender) }
             }
         }
@@ -1198,8 +1205,8 @@ public class NodesAdminCommand : CommandExecutor, TabCompleter {
      * Remove town's leader (makes town leaderless)
      */
     private fun removeTownLeader(sender: CommandSender, args: Array<String>) {
-        if ( args.size < 4 ) {
-            Message.error(sender, "Usage: /nodesadmin town leader [town] [player]")
+        if ( args.size < 3 ) {
+            Message.error(sender, "Usage: /nodesadmin town removeleader [town]")
             return
         }
 
@@ -1264,6 +1271,82 @@ public class NodesAdminCommand : CommandExecutor, TabCompleter {
 
         // open town inventory
         player.openInventory(Nodes.getTownIncomeInventory(town))
+    }
+
+    /**
+     * @command /nodesadmin town incomeadd [town]
+     * Adds item player is holding to input town income inventories.
+     */
+    private fun townIncomeAdd(sender: CommandSender, args: Array<String>) {
+        val player: Player? = if ( sender is Player ) sender else null
+        if ( player === null ) {
+            Message.print(sender, "Must be run ingame")
+            return
+        }
+
+        if ( args.size < 3 ) {
+            Message.error(sender, "Usage: /nodesadmin town incomeadd [town]")
+            return
+        }
+
+        // get towns
+        val townName = args[2]
+        val towns = Nodes.matchTowns(townName)
+        if ( towns.size == 0 ) {
+            Message.error(sender, "Town \"${townName}\" does not exist")
+            return
+        }
+
+        // get item in player hand
+        val item = player.inventory.itemInMainHand
+        if ( item === null || item.type == Material.AIR ) {
+            Message.error(sender, "You must be holding an item")
+            return
+        }
+
+        for ( town in towns ) {
+            Nodes.addToIncome(town, item.type, item.amount) 
+            Message.print(sender, "Added item to \"${town.name}\" income inventory")
+        }
+    }
+
+    /**
+     * @command /nodesadmin town incomeremove [town] [material]
+     * Removes items in town income inventories. If material is not specified,
+     * removes all items.
+     */
+    private fun townIncomeRemove(sender: CommandSender, args: Array<String>) {
+        val player: Player? = if ( sender is Player ) sender else null
+        if ( player === null ) {
+            Message.print(sender, "Must be run ingame")
+            return
+        }
+
+        if ( args.size < 3 ) {
+            Message.error(sender, "Usage: /nodesadmin town incomeremove [town] [material]")
+            return
+        }
+
+        // get towns
+        val townName = args[2]
+        val towns = Nodes.matchTowns(townName)
+        if ( towns.size == 0 ) {
+            Message.error(sender, "Town \"${townName}\" does not exist")
+            return
+        }
+
+        // get material if specified, otherwise treat as null and remove all
+        val material = if ( args.size >= 4 ) Material.matchMaterial(args[3]) else null
+
+        // TODO: perhaps abstract this into a Nodes api func
+        for ( town in towns ) {
+            Nodes.townIncomeRemove(town, material)
+            if ( material !== null ) {
+                Message.print(sender, "Removed ${material} from \"${town.name}\" income inventory")
+            } else {
+                Message.print(sender, "Removed all items from \"${town.name}\" income inventory")
+            }
+        }
     }
 
     /**
@@ -1473,6 +1556,40 @@ public class NodesAdminCommand : CommandExecutor, TabCompleter {
     }
 
     // TODO: town perm toggles
+
+    /**
+     * @command /nodesadmin town defaulttownspawns [town]
+     * Reset town spawns to default position (highest block before air)
+     */
+    private fun defaultTownSpawns(sender: CommandSender, args: Array<String>) {
+        if ( args.size < 3 ) {
+            Message.error(sender, "Usage: /nodesadmin town defaulttownspawns [town]")
+            return
+        }
+
+        // get towns
+        val townName = args[2]
+        val towns = Nodes.matchTowns(townName)
+        if ( towns.size == 0 ) {
+            Message.error(sender, "Town \"${townName}\" does not exist")
+            return
+        }
+
+        for ( town in towns ) {
+            val terrHome = Nodes.territories.get(town.home)
+            if ( terrHome !== null ) {
+                val spawnpoint = Nodes.getDefaultSpawnLocation(terrHome)
+                town.spawnpoint = spawnpoint
+                town.needsUpdate()
+                Message.print(sender, "Set town \"${town.name}\" spawnpoint to ${spawnpoint}")
+            } else {
+                Message.error(sender, "Town \"${town.name}\" home territory ${town.home} does not exist")
+            }
+        }
+
+        // TODO: move this out
+        Nodes.needsSave = true
+    }
 
     // =============================================================
     // nation management commands:
@@ -2079,10 +2196,15 @@ public class NodesAdminCommand : CommandExecutor, TabCompleter {
     //       - allow loading from backups folder?
     // =============================================================
 
-    // force save the world
-    private fun saveWorld(sender: CommandSender) {
-        Message.print(sender, "[Nodes] Saving world")
-        Nodes.saveWorldAsync(false)
+    // force save the world (using async save)
+    private fun saveWorld(sender: CommandSender, args: Array<String>) {
+        if ( args.size > 1 && args[1] == "sync" ) {
+            Message.print(sender, "[Nodes] Saving world (sync)")
+            Nodes.saveWorld(checkIfNeedsSave = false, async = false)
+        } else {
+            Message.print(sender, "[Nodes] Saving world (async)")
+            Nodes.saveWorld(checkIfNeedsSave = false, async = true)
+        }
     }
 
     // force reload the world

@@ -7,4 +7,13 @@
  * in the user manual at https://docs.gradle.org/6.0.1/userguide/multi_project_builds.html
  */
 
-rootProject.name = "block-edit"
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven("https://repo.papermc.io/repository/maven-public/")
+    }
+}
+
+rootProject.name = "nodes-refinery"
+include(":nodes")
+project(":nodes").projectDir = File("../nodes")
