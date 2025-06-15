@@ -13,31 +13,13 @@ version = "0.0.13"
 // base of output jar name
 val OUTPUT_JAR_NAME = "nodes"
 
-// target will be set to minecraft version by cli input parameter
-var target = ""
-
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
-    id("org.jetbrains.kotlin.jvm") version "1.6.10"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("org.jetbrains.kotlin.jvm") version "2.2.0-RC2"
+    id("com.gradleup.shadow") version "8.3.6"
     // maven() // no longer needed in gradle 7
 
-    // include paperweight, but DO NOT APPLY BY DEFAULT...
-    // we need imports, but only conditionally apply it for 1.17+ builds
-    // for 1.16.5, we don't want to apply because not supported, it
-    // does not allow building unless a bundle version is applied,
-    // which does not exist for 1.16.5, so its impossible to build with
-    // paperweight plugin enabled on 1.16.5
-    // https://stackoverflow.com/questions/62579114/how-to-optionally-apply-some-plugins-using-kotlin-dsl-and-plugins-block-with-gra
-
-    // i fucking hate gradle and cant configure this
-    // just manually uncomment
-
-    // USE FOR 1.16.5, UNCOMMENT WHEN NEEDED :^(
-    // id("io.papermc.paperweight.userdev") version "1.3.8" apply false
-    
-    // USE FOR 1.18.2 (DEFAULT)
-    id("io.papermc.paperweight.userdev") version "1.3.8"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
 }
 
 repositories {
@@ -46,7 +28,7 @@ repositories {
     jcenter()
     
     maven { // paper
-        url = uri("https://papermc.io/repo/repository/maven-public/")
+        url = uri("https://repo.papermc.io/repository/maven-public/")
     }
     maven { // protocol lib
         url = uri("https://repo.dmulloy2.net/nexus/repository/public/")
@@ -108,55 +90,16 @@ dependencies {
     // Use the Kotlin JUnit integration.
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 
-    if ( project.hasProperty("1.16") == true ) {
-        target = "1.16.5"
-        // java must be up to 16 for 1.16
-        java.toolchain.languageVersion.set(JavaLanguageVersion.of(16))
-        // nms version specific source
-        sourceSets["main"].java.srcDir("src/nms/v1_16_R3")
-        // spigot/paper api
-        compileOnly(files("./lib/spigot-1.16.5.jar"))
-        configurations["compileOnlyPriority"]("com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT")
-    } else if ( project.hasProperty("1.18") == true ) {
-        target = "1.18.2"
-        // java must be 17 for 1.18
-        java.toolchain.languageVersion.set(JavaLanguageVersion.of(17))
-        // nms version specific source
-        sourceSets["main"].java.srcDir("src/nms/v1_18_R2")
-        // spigot/paper api
-        paperDevBundle("1.18.2-R0.1-SNAPSHOT") // contains 1.18.2 nms classes
-        compileOnly("io.papermc.paper:paper-api:1.18.2-R0.1-SNAPSHOT")
-
-        tasks {
-            assemble {
-                // must write it like below because in 1.16 config, reobfJar does not exist
-                // so the simpler definition below wont compile
-                // dependsOn(reobfJar) // won't compile :^(
-                dependsOn(project.tasks.first { it.name.contains("reobfJar") })
-            }
-        }
-
-        tasks.named("reobfJar") {
-            base.archivesBaseName = "${OUTPUT_JAR_NAME}-${target}"
-        }
-    }
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions.freeCompilerArgs = listOf("-Xallow-result-return-type")
+    java.toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    // spigot/paper api
+    paperweight.paperDevBundle("1.21.5-R0.1-SNAPSHOT") // contains 1.18.2 nms classes
+    compileOnly("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
 }
 
 tasks {
     named<ShadowJar>("shadowJar") {
-        // verify valid target minecraft version
-        doFirst {
-            val supportedMinecraftVersions = setOf("1.16.5", "1.18.2")
-            if ( !supportedMinecraftVersions.contains(target) ) {
-                throw Exception("Invalid Minecraft version! Supported versions are: 1.16, 1.18")
-            }
-        }
 
-        classifier = ""
+        archiveClassifier.set("")
         configurations = mutableListOf(project.configurations.named("shadowImplementation").get()) as List<FileCollection>
         relocate("com.google", "nodes.shadow.com.google")
     }
@@ -175,7 +118,7 @@ tasks {
 gradle.taskGraph.whenReady {
     tasks {
         named<ShadowJar>("shadowJar") {
-            baseName = "${OUTPUT_JAR_NAME}-${target}"
+            archiveBaseName.set(OUTPUT_JAR_NAME)
             minimize()
         }
     }

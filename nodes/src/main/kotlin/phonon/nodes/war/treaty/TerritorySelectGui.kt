@@ -27,7 +27,7 @@ val ICON_BACK = ItemIcon(
     listOf()
 )
 
-val ICON_TERRITORY = ItemStack(Material.GRASS, 1)
+val ICON_TERRITORY = ItemStack(Material.GRASS_BLOCK, 1)
 
 val ICON_OCCUPIED = ItemStack(Material.DIRT, 1, 2.toShort()) // podzol
 

@@ -157,7 +157,7 @@ public class AllyCommand : CommandExecutor, TabCompleter {
                 // broadcast that alliance was created
                 AllianceRequest.ACCEPTED -> {
                     Message.broadcast("${thisSideName} has formed an alliance with ${otherSideName}")
-                }
+                } null -> {}
             }
         }
         else {

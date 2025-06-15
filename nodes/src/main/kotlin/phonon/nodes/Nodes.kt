@@ -3305,7 +3305,7 @@ public object Nodes {
 
         // create repeating event to spawn particles each second
         val task = object: BukkitRunnable() {
-            private val particle = Particle.VILLAGER_HAPPY
+            private val particle = Particle.HAPPY_VILLAGER
             private val particleCount = 3
             private val randomOffsetXZ = 0.05
             private val randomOffsetY = 0.1

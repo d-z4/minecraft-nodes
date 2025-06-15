@@ -390,7 +390,7 @@ public class NationCommand : CommandExecutor, TabCompleter {
             Message.error(player, "That town has no leader (?)")
             return
         }
-        val invitee: Player? = Bukkit.getPlayer(inviteeResident?.name)
+        val invitee: Player? = Bukkit.getPlayer(inviteeResident.name)
         if ( invitee == null) {
             Message.error(player, "That town's leader is not online")
             return

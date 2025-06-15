@@ -45,7 +45,7 @@ public fun spawnEggFromEntity(entityType: EntityType): Material? {
         EntityType.HUSK -> Material.HUSK_SPAWN_EGG
         EntityType.LLAMA -> Material.LLAMA_SPAWN_EGG
         EntityType.MAGMA_CUBE -> Material.MAGMA_CUBE_SPAWN_EGG
-        EntityType.MUSHROOM_COW -> Material.MOOSHROOM_SPAWN_EGG
+        EntityType.MOOSHROOM -> Material.MOOSHROOM_SPAWN_EGG
         EntityType.MULE -> Material.MULE_SPAWN_EGG
         EntityType.OCELOT -> Material.OCELOT_SPAWN_EGG
         EntityType.PANDA -> Material.PANDA_SPAWN_EGG

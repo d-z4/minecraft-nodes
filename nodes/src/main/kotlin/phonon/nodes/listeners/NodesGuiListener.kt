@@ -41,6 +41,7 @@ public class NodesGuiListener: Listener {
 
                     // cancel unsafe actions
                     InventoryAction.COLLECT_TO_CURSOR -> { event.setCancelled(true) }
+                    else -> {}
                 }
             }
         }
