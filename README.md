@@ -79,22 +79,16 @@ are edited in `nodes/` source before re-building documentation site.
 
 -----------------------------------------------------------
 
-## 4. Building ports plugin (NOT CURRENTLY SUPPORTED)
+## 4. Building ports plugin
 Requirements:
-- Java JDK 16 (current plugin target java version)
+- Java JDK 21 (current plugin target java version)
 
-### 1. Build main `nodes` plugin first (follow steps above).
-Make sure there is the nodes output `.jar` at path
-```
-nodes/build/libs/nodes.jar
-```
-
-### 2. Build ports plugin `nodes-ports.jar`:
+### 1. Build ports plugin `nodes-ports.jar`:
 Go inside `ports/` and run
 ```
-./gradlew build -P 1.16
+./gradlew build
 ```
-Built `.jar` will appear in `build/libs/nodes-ports-1.16-*.jar`.
+Built `.jar` will appear in `build/libs/nodes-ports-*.jar`.
 
 
 
