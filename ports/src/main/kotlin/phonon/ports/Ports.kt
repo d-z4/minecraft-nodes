@@ -56,10 +56,6 @@ import org.bukkit.event.player.PlayerBucketEmptyEvent
 import org.bukkit.scheduler.BukkitTask
 import org.bukkit.scheduler.BukkitRunnable
 
-import org.bukkit.craftbukkit.v1_18_R2.entity.CraftEntity
-import org.bukkit.craftbukkit.v1_18_R2.entity.CraftPlayer
-import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
-
 import phonon.nodes.Nodes
 import phonon.nodes.constants.DiplomaticRelationship
 import phonon.nodes.objects.Town
@@ -1417,7 +1413,7 @@ public object Ports {
         }
         else {
             // 2. player in a boat
-            if ( entityVehicle.type == EntityType.BOAT ) {
+            if ( entityVehicle.type.toString().contains("_BOAT") ) {
                 entitiesToWarp.add(entityVehicle)
             }
             // // 3. player in a custom plugin vehicle (ArmorStand only)
@@ -1614,17 +1610,10 @@ public object Ports {
             override public fun run() {
                 entity.teleport(destination)
 
-                // re-send entity to players to make sure it exists on client
-                for ( p in passengers ) {
-                    try {
-                        val nmsPlayer = (p as CraftPlayer).getHandle()
-                        val nmsEntity = (entity as CraftEntity).getHandle()
-                        nmsPlayer.connection.send(ClientboundAddEntityPacket(nmsEntity))
-                    } catch ( err: Exception ) {
-                        if ( Ports.debug ) {
-                            err.printStackTrace()
-                        }
-                    }
+                // force the chunk to load at destination to makes sure the entity syncs to the client
+                val chunk = entity.location.chunk
+                if (!chunk.isLoaded) {
+                    chunk.load()
                 }
             }
         }, 1L)

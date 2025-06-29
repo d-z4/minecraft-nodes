@@ -26,7 +26,7 @@ repositories {
     // Use jcenter for resolving dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
-    
+
     maven { // paper
         url = uri("https://repo.papermc.io/repository/maven-public/")
     }
@@ -94,6 +94,18 @@ dependencies {
     // spigot/paper api
     paperweight.paperDevBundle("1.21.5-R0.1-SNAPSHOT") // contains 1.18.2 nms classes
     compileOnly("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
+
+    tasks {
+        assemble {
+            dependsOn(reobfJar)
+        }
+    }
+
+    tasks.named("reobfJar") {
+        dependsOn(tasks.jar)
+        base.archivesBaseName = "${OUTPUT_JAR_NAME}"
+    }
+
 }
 
 tasks {
@@ -109,7 +121,7 @@ tasks {
     build {
         dependsOn(shadowJar)
     }
-    
+
     test {
         testLogging.showStandardStreams = true
     }
