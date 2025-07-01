@@ -8,15 +8,10 @@ The overall architecture:
 -   Internal nodes map world written in rust compiled to wasm
     to accelerate internal nodes map structure calculations.
 
-Current dynmap plugin target version: `Dynmap-3.3.2-spigot.jar`.
-The dynmap plugin version must match because dynmap's api/internals
-can change which can screw up the nodes map injection.
-
-
 # Requirements/Installation
 ## Requirements
 1. node.js
-2. Rust nightly 1.62.0+
+2. Rust
 3. wasm bindgen for Rust
 
 
@@ -30,28 +25,18 @@ npm install
 
 3. Download/install rust language: <https://www.rust-lang.org/tools/install>
 
-4. Switch into rust nightly for this repository (required for wasm for now):
-```
-rustup override set nightly
-```
-
-5. Make sure rust toolchain is updated to nightly >=1.62.0:
-```
-rustup update nightly
-```
-
-6. Install `wasm32` target for rust:
+4. Install `wasm32` target for rust:
 ```
 rustup target add wasm32-unknown-unknown
 ```
 
-7. Install rust `wasm-bindgen` cli used to generate wasm bindings
+5. Install rust `wasm-bindgen` cli used to generate wasm bindings
 (NOTE: cli version **must** match `wasm-bindgen` version in `Cargo.toml`):
 ```
-cargo install -f --version 0.2.80 wasm-bindgen-cli
+cargo install -f --version 0.2.100 wasm-bindgen-cli
 ```
 
-8. If things install properly, run:
+6. If things install properly, run:
 ```
 npm run wasm
 ```

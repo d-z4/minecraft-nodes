@@ -48,7 +48,7 @@ run with following:
 
 -----------------------------------------------------------
 
-## 2. Building dynmap viewer/editor (NOT CURRENTLY SUPPORTED)
+## 2. Building dynmap viewer/editor
 *See internal folder `dynmap/README.md` for more details*
 
 Requirements:
