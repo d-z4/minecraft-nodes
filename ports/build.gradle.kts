@@ -19,7 +19,7 @@ val OUTPUT_JAR_NAME = "nodes-ports"
 
 plugins {
     // paperweight for nms
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
+    id("io.papermc.paperweight.userdev") version "2.0.0-SNAPSHOT"
     // Apply the Kotlin JVM plugin to add support for Kotlin.
     id("org.jetbrains.kotlin.jvm") version "2.2.0-RC2"
     id("com.gradleup.shadow") version "8.3.6"
