@@ -95,7 +95,7 @@ tasks {
     named<ShadowJar>("shadowJar") {
 
         archiveClassifier.set("")
-        configurations = mutableListOf(project.configurations.named("resolvableImplementation").get()) as List<FileCollection>
+        from(project.configurations.named("resolvableImplementation"))
     }
 }
 
