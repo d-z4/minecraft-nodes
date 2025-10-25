@@ -112,7 +112,6 @@ tasks.named<ShadowJar>("shadowJar") {
     dependsOn(tasks.named("compileTestKotlin"))
     archiveClassifier.set("")
     from(project.configurations.named("shadowImplementation"))
-    relocate("com.google", "nodes.shadow.com.google")
 }
 
 tasks {
