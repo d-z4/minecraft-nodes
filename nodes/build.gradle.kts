@@ -112,7 +112,7 @@ tasks {
     named<ShadowJar>("shadowJar") {
 
         archiveClassifier.set("")
-        configurations = mutableListOf(project.configurations.named("shadowImplementation").get()) as List<FileCollection>
+        from(project.configurations.named("shadowImplementation"))
         relocate("com.google", "nodes.shadow.com.google")
     }
 }
