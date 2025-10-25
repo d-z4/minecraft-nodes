@@ -66,19 +66,19 @@ dependencies {
     }
 
     // google json
-    compileOnly("com.google.code.gson:gson:2.10") {
+    compileOnly("com.google.code.gson:gson:2.13.2") {
         version {
             strictly("2.10")
         }
     }
     // shadows gson dependency
-    configurations["shadowImplementation"]("com.google.code.gson:gson:2.10") {
+    configurations["shadowImplementation"]("com.google.code.gson:gson:2.13.2") {
         version {
             strictly("2.10")
         }
     }
     // force overrides gson dependency inside paper mc
-    configurations["compileOnlyPriority"]("com.google.code.gson:gson:2.10") {
+    configurations["compileOnlyPriority"]("com.google.code.gson:gson:2.13.2") {
         version {
             strictly("2.10")
         }
