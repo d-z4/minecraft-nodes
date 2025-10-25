@@ -16,7 +16,7 @@ val OUTPUT_JAR_NAME = "nodes"
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
     id("org.jetbrains.kotlin.jvm") version "2.3.0-Beta1"
-    id("com.gradleup.shadow") version "8.3.6"
+    id("com.gradleup.shadow") version "9.2.2"
     // maven() // no longer needed in gradle 7
 
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
