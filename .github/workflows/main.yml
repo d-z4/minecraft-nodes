@@ -65,6 +65,6 @@ jobs:
             exit 1
           fi
           echo "Found JARs: $ALL_JARS"
-          gh release create "v$VERSION" "$ALL_JARS" \
+          gh release create "v$VERSION" $ALL_JARS \
             --title "Release v$VERSION" \
             --notes "Automated release for version $VERSION."
