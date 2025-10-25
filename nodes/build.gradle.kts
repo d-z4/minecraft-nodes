@@ -16,7 +16,7 @@ val OUTPUT_JAR_NAME = "nodes"
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
     id("org.jetbrains.kotlin.jvm") version "2.3.0-Beta1"
-    id("com.gradleup.shadow") version "8.3.6"
+    id("com.gradleup.shadow") version "9.2.2"
     // maven() // no longer needed in gradle 7
 
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
@@ -108,13 +108,11 @@ dependencies {
 
 }
 
-tasks {
-    named<ShadowJar>("shadowJar") {
-
-        archiveClassifier.set("")
-        configurations = mutableListOf(project.configurations.named("shadowImplementation").get()) as List<FileCollection>
-        relocate("com.google", "nodes.shadow.com.google")
-    }
+tasks.named<ShadowJar>("shadowJar") {
+    dependsOn(tasks.named("compileTestKotlin"))
+    archiveClassifier.set("")
+    from(project.configurations.named("shadowImplementation"))
+    relocate("com.google", "nodes.shadow.com.google")
 }
 
 tasks {
