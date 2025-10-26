@@ -26,6 +26,22 @@ jobs:
           chmod +x gradlew
           ./gradlew clean build
 
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: |
+         cd dynmap
+         npm install
+         rustup target add wasm32-unknown-unknown
+         cargo install -f --version 0.2.100 wasm-bindgen-cli
+         npm run wasm
+         npm run build
+         zip -r dynmap.zip build/*
+         
       - if: github.event_name == 'push'
         id: get_version
         run: |
@@ -59,12 +75,13 @@ jobs:
         run: |
           NODES_JAR=$(find nodes/build/libs -type f -name "*.jar" ! -name "*-reobj.jar" | head -n 1)
           PORTS_JAR=$(find ports/build/libs -type f -name "*.jar" ! -name "*-reobj.jar" | head -n 1)
-          ALL_JARS="$NODES_JAR $PORTS_JAR"
-          if [ -z "$ALL_JARS" ]; then
-            echo "No JAR found"
+          DYNMAP_ZIP=dynmap/build.zip
+          ALL="$NODES_JAR $PORTS_JAR $DYNMAP_ZIP"
+          if [ -z "$ALL" ]; then
+            echo "No build files found"
             exit 1
           fi
-          echo "Found JARs: $ALL_JARS"
-          gh release create "v$VERSION" $ALL_JARS \
+          echo "Found build files: $ALL"
+          gh release create "v$VERSION" $ALL \
             --title "Release v$VERSION" \
             --notes "Automated release for version $VERSION."
