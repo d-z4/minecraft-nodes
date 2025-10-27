@@ -22,7 +22,7 @@ js-sys = "0.3.60"
 fnv = "1.0.7"
 rand = { version = "0.8.5", features = [ "small_rng" ] }
 getrandom = { version = "0.2.8", features = ["js"] } # needed for `rand` crate wasm32 support
-voronator = { version = "0.1.2" }
+voronator = { version = "0.2.1" }
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
