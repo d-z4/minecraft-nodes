@@ -98,7 +98,7 @@ pub struct CellDiagram {
 }
 
 impl CellDiagram {
-    pub fn from_voronoi_diagram(voronoi: VoronoiDiagram, min: &(f64, f64), max: &(f64, f64)) -> CellDiagram {
+    pub fn from_voronoi_diagram(voronoi: VoronoiDiagram<VoronoiPoint>, min: &(f64, f64), max: &(f64, f64)) -> CellDiagram {
         // for detecting if points on border of voronoi diagram range
         const EPS: f64 = 1e-6;
 
@@ -441,7 +441,7 @@ fn smooth_corners(mut cell_diagram: CellDiagram) -> CellDiagram {
 ///    Set points from centroids
 /// 
 /// Repeat until cells become more uniform
-fn smooth_centers(voronoi: &VoronoiDiagram, min: &(f64, f64), max: &(f64, f64)) -> Option<VoronoiDiagram> {
+fn smooth_centers(voronoi: &VoronoiDiagram<VoronoiPoint>, min: &(f64, f64), max: &(f64, f64)) -> Option<VoronoiDiagram<VoronoiPoint>> {
     let points: Vec<VoronoiPoint> = voronoi.cells().iter()
         .map(|cell| centroid_from_points(&cell.points()))
         .collect();
@@ -483,7 +483,7 @@ pub fn generate_random_cells(
         .collect();
     
     // initial voronoi diagram
-    let mut voronoi: VoronoiDiagram = VoronoiDiagram::from_tuple(&min, &max, &points).unwrap();
+    let mut voronoi: VoronoiDiagram<VoronoiPoint> = VoronoiDiagram::from_tuple(&min, &max, &points).unwrap();
     
     // smooth centers
     for _ in 0..iterations_smooth_center {
