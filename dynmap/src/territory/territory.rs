@@ -523,6 +523,7 @@ impl Territory {
 }
 
 bitflags! {
+    #[derive(PartialEq)]
     struct Edge: u8 {
         const NONE = 0b0000; // none
         const N = 0b0001; // north
