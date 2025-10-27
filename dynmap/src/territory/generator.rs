@@ -15,7 +15,7 @@ use std::hash::{Hash, Hasher};
 use std::collections::HashMap;
 use voronator::{VoronoiDiagram, delaunator::Point as VoronoiPoint};
 use rand::prelude::*;
-use rand::distributions::Uniform;
+use rand::distr::Uniform;
 use std::mem;
 use territory::geometry::{AABB, Point};
 
@@ -468,7 +468,7 @@ pub fn generate_random_cells(
     let mut rng = if let Some(seed) = random_seed {
         rand::rngs::SmallRng::seed_from_u64(seed as u64)
     } else {
-        rand::rngs::SmallRng::from_entropy()
+        rand::rngs::SmallRng::from_os_rng()
     };
 
     // determine num points by dividing area by expected circular area of each cell
@@ -476,8 +476,8 @@ pub fn generate_random_cells(
     let cell_avg_area = 3.141592654 * average_radius * average_radius;
     let npoints = ((max.0 - min.0) * (max.1 - min.1) / cell_avg_area).round().max(3.0) as u32;
 
-    let range_x = Uniform::new(min.0, max.0);
-    let range_y = Uniform::new(min.1, max.1);
+    let range_x = Uniform::new(min.0, max.0).unwrap();
+    let range_y = Uniform::new(min.1, max.1).unwrap();
     let points: Vec<(f64, f64)> = (0..npoints)
         .map(|_| (rng.sample(&range_x), rng.sample(&range_y)))
         .collect();
