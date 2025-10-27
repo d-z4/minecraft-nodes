@@ -529,17 +529,17 @@ bitflags! {
         const S = 0b0010; // south
         const E = 0b0100; // east
         const W = 0b1000; // west
-        const NS = Self::N.bits | Self::S.bits;
-        const NE = Self::N.bits | Self::E.bits;
-        const NW = Self::N.bits | Self::W.bits;
-        const SE = Self::S.bits | Self::E.bits;
-        const SW = Self::S.bits | Self::W.bits;
-        const EW = Self::E.bits | Self::W.bits;
-        const ENW = Self::E.bits | Self::N.bits | Self::W.bits;
-        const ESW = Self::E.bits | Self::S.bits | Self::W.bits;
-        const NES = Self::N.bits | Self::E.bits | Self::S.bits;
-        const NWS = Self::N.bits | Self::W.bits | Self::S.bits;
-        const NESW = Self::N.bits | Self::E.bits | Self::S.bits | Self::W.bits;
+        const NS = Self::N.bits() | Self::S.bits();
+        const NE = Self::N.bits() | Self::E.bits();
+        const NW = Self::N.bits() | Self::W.bits();
+        const SE = Self::S.bits() | Self::E.bits();
+        const SW = Self::S.bits() | Self::W.bits();
+        const EW = Self::E.bits() | Self::W.bits();
+        const ENW = Self::E.bits() | Self::N.bits() | Self::W.bits();
+        const ESW = Self::E.bits() | Self::S.bits() | Self::W.bits();
+        const NES = Self::N.bits() | Self::E.bits() | Self::S.bits();
+        const NWS = Self::N.bits() | Self::W.bits() | Self::S.bits();
+        const NESW = Self::N.bits() | Self::E.bits() | Self::S.bits() | Self::W.bits();
     }
 }
 
