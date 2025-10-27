@@ -38,7 +38,7 @@
     "eslint-plugin-react": "^7.31.11",
     "file-loader": "^6.2.0",
     "file-saver": "^2.0.5",
-    "react-ace": "^10.0.0",
+    "react-ace": "^14.0.1",
     "react-refresh": "^0.14.0",
     "style-loader": "^4.0.0",
     "svg-url-loader": "^8.0.0",
