@@ -3,8 +3,16 @@ updates:
   - package-ecosystem: "gradle"
     directory: "/nodes"
     schedule:
-      interval: "weekly"
+      interval: "daily"
   - package-ecosystem: "gradle"
     directory: "/ports"
     schedule:
-      interval: "weekly"
+      interval: "daily"
+  - package-ecosystem: "cargo"
+    directory: "/dynmap"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "npm"
+    directory: "/dynmap"
+    schedule:
+      interval: "daily"
