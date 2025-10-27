@@ -12,7 +12,7 @@
     "watch": "webpack --progress --watch --mode development",
     "wasm-rust-build": "cargo build --release --target wasm32-unknown-unknown",
     "wasm-bindgen-main": "wasm-bindgen target/wasm32-unknown-unknown/release/wasm_main.wasm --out-dir ./wasm",
-    "wasm": "npm run wasm-rust-build & npm run wasm-bindgen-main",
+    "wasm": "npm run wasm-rust-build && npm run wasm-bindgen-main",
     "build-js": "webpack --progress --mode production --env NODE_ENV=production --config ./webpack/webpack.prod.js",
     "build": "npm run wasm & npm run build-js"
   },
