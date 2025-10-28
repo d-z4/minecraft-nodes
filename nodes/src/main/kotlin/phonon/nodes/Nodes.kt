@@ -56,7 +56,7 @@ import phonon.nodes.war.Truce
 public object Nodes {
     
     // version string
-    internal val version: String = "v0.0.13"
+    internal val version: String = "v0.0.14"
 
     // library of resource node definitions
     internal val resourceNodes: HashMap<String, ResourceNode> = hashMapOf()
