@@ -73,8 +73,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ steps.get_version.outputs.version }}
         run: |
-          NODES_JAR=nodes/build/libs/nodes-$VERSION
-          PORTS_JAR=ports/build/libs/nodes-$VERSION
+          NODES_JAR=nodes/build/libs/nodes-$VERSION.jar
+          PORTS_JAR=ports/build/libs/nodes-ports-$VERSION.jar
           DYNMAP_ZIP=dynmap/dynmap.zip
           ALL="$NODES_JAR $PORTS_JAR $DYNMAP_ZIP"
           if [ -z "$ALL" ]; then
