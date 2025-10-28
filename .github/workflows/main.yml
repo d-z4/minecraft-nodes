@@ -75,7 +75,7 @@ jobs:
         run: |
           NODES_JAR=$(find nodes/build/libs -type f -name "*.jar" ! -name "*-reobj.jar" | head -n 1)
           PORTS_JAR=$(find ports/build/libs -type f -name "*.jar" ! -name "*-reobj.jar" | head -n 1)
-          DYNMAP_ZIP=dynmap/build.zip
+          DYNMAP_ZIP=dynmap/dynmap.zip
           ALL="$NODES_JAR $PORTS_JAR $DYNMAP_ZIP"
           if [ -z "$ALL" ]; then
             echo "No build files found"
