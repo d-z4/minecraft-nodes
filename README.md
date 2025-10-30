@@ -1,5 +1,5 @@
 # Minecraft nodes plugin
-![Nodes map screenshot](docs/src/images/nodes_map_example.jpg)
+![Nodes map screenshot](docs/nodes_map_example.jpg)
 Map painting but in block game. Contains server plugin and nodes dynmap viewer/editor extension.
 
 **Documentation:** <https://nodes.soy>  
