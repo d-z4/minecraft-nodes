@@ -2,7 +2,7 @@
 ![Nodes map screenshot](docs/nodes_map_example.jpg)
 Map painting but in block game. Contains server plugin and nodes dynmap viewer/editor extension.
 
-**Documentation:** <https://github.com/d-z4/minecraft-nodes/wiki>
+**Documentation:** <https://github.com/d-z4/minecraft-nodes/wiki>   
 **Editor:** <https://editor.nodes.soy/earth.html>  
 
 
