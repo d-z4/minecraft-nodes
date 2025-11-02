@@ -11,7 +11,6 @@ Map painting but in block game. Contains server plugin and nodes dynmap viewer/e
 # Repo structure
 ```
 minecraft-nodes/
- ├─ docs/                 - Documentation source
  ├─ dynmap/               - Dynmap editor/viewer
  ├─ nodes/                - Dynmap editor/viewer
  ├─ ports/                - Nodes ports plugin
@@ -57,29 +56,7 @@ Requirements:
 
 -----------------------------------------------------------
 
-## 3. Building plugin documentation
-### Generating main plugin documentation
-*See `docs/README.md`*
-
-Requirements:
-- Rust
-
-### Generating nodes commands documentation
-Requirements:
-- Python 3
-
-This script reads in documentation comments from in-game command
-files in `src/main/kotlin/phonon/nodes/commands/*` and generates
-documentation for in-game commands:
-```
-python scripts/generate_commands_docs.py
-```
-Run this in the git root directory every time in-game commands
-are edited in `nodes/` source before re-building documentation site.
-
------------------------------------------------------------
-
-## 4. Building ports plugin
+## 3. Building ports plugin
 Requirements:
 - Java JDK 21 (current plugin target java version)
 
