@@ -291,11 +291,13 @@ public object Config {
     public var flagMaterials: EnumSet<Material> = EnumSet.of(
         Material.ACACIA_FENCE,
         Material.BIRCH_FENCE,
+        Material.BAMBOO_FENCE,
+        Material.CHERRY_FENCE,
         Material.DARK_OAK_FENCE,
         Material.JUNGLE_FENCE,
+        Material.MANGROVE_FENCE,
         Material.OAK_FENCE,
         Material.SPRUCE_FENCE
-        // Material.FENCE, // 1.12 only
     )
 
     // disable building within this distance of flag (square range)
