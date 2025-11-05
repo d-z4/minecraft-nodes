@@ -231,6 +231,9 @@ chunkAttackHomeMultiplier: 2.0
 # number of chunks a player can attack at same time
 maxPlayerChunkAttacks: 1
 
+# allow breaking allies war flags
+allowBreakingAlliesFlags: false
+
 # flag sky beacon config
 flagBeaconSize: 6          # in range [2, 16]
 flagBeaconMinSkyLevel: 100 # minimum height level in sky

@@ -316,6 +316,9 @@ public object Config {
     // number of chunks a player can attack at same time
     public var maxPlayerChunkAttacks: Int = 1
 
+    // allow breaking allies war flags
+    public var allowBreakingAlliesFlags = false
+
     // flag sky beacon config
     public var flagBeaconSize: Int = 6 // be in range [2, 16]
     public var flagBeaconMinSkyLevel: Int = 100 // minimum height level in sky
@@ -488,6 +491,7 @@ public object Config {
         Config.chunkAttackFromWastelandMultiplier = config.getDouble("chunkAttackFromWastelandMultiplier", Config.chunkAttackFromWastelandMultiplier)
         Config.chunkAttackHomeMultiplier = config.getDouble("chunkAttackHomeMultiplier", Config.chunkAttackHomeMultiplier)
         Config.maxPlayerChunkAttacks = config.getInt("maxPlayerChunkAttacks", Config.maxPlayerChunkAttacks)
+        Config.allowBreakingAlliesFlags = config.getBoolean("allowBreakingAlliesFlags", Config.allowBreakingAlliesFlags)
         Config.flagBeaconSize = config.getInt("flagBeaconSize", Config.flagBeaconSize)
         Config.flagBeaconMinSkyLevel = config.getInt("flagBeaconMinSkyLevel", Config.flagBeaconMinSkyLevel)
         Config.flagBeaconSkyLevel = config.getInt("flagBeaconSkyLevel", Config.flagBeaconSkyLevel)

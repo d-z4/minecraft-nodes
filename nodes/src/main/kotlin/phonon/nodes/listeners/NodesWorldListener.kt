@@ -32,6 +32,9 @@ import org.bukkit.event.player.PlayerInteractEvent
 import phonon.nodes.Config
 import phonon.nodes.Message
 import phonon.nodes.Nodes
+import phonon.nodes.Nodes.getRelationshipOfPlayerToTown
+import phonon.nodes.Nodes.getRelationshipOfTownToTown
+import phonon.nodes.Nodes.getTownFromPlayer
 import phonon.nodes.constants.*
 import phonon.nodes.objects.Resident
 import phonon.nodes.objects.Territory
@@ -47,28 +50,45 @@ public class NodesWorldListener: Listener {
         val player: Player = event.player
         val block: Block = event.block
         val territoryChunk = Nodes.getTerritoryChunkFromBlock(block.x, block.z)
-        
-        // if war enabled, do no break distance and flag break checks
+
+        // if war enabled, and chunk is being attacked, do flag checks
         if ( Nodes.war.enabled && territoryChunk?.attacker !== null ) {
-            var attack = FlagWar.chunkToAttacker.get(territoryChunk.coord)
+            var attack = FlagWar.chunkToAttacker.get(territoryChunk.coord)!!
 
-            if (attack !== null) {
-                if (blockInWarFlagNoBuildRegion(block, attack)) {
-                    if ( attack.flagBlock == block ) {
-                        event.setCancelled(true)
-                        attack.cancel()
-                        Message.broadcast("${ChatColor.GOLD}[War] Attack at (${block.x}, ${block.y}, ${block.z}) defeated by ${player.name}")
-                        return
-                    } else {
-                        if (player.isOp()) {
-                            return
+            if (blockInWarFlagNoBuildRegion(block, attack)) {
+
+                // handle war flag breaking
+                if ( attack.flagBlock == block ) {
+                    event.setCancelled(true)
+
+                    // handle breaking allies flags
+                    if (!Config.allowBreakingAlliesFlags) {
+                        // allow player to break their own flag
+                        if (player.uniqueId != attack.attacker) {
+                            val relationship = getRelationshipOfPlayerToTown(player, attack.town)
+                            if (relationship in setOf(
+                                    DiplomaticRelationship.NATION,
+                                    DiplomaticRelationship.ALLY,
+                                    DiplomaticRelationship.TOWN
+                            )) {
+                                Message.error(player, "[War] Cannot break ally war flags")
+                                return
+                            }
                         }
-                        event.setCancelled(true)
-                        Message.error(player, "[War] Cannot break blocks within ${Config.flagNoBuildDistance} blocks of war flags")
                     }
-
+                    attack.cancel()
+                    Message.broadcast("${ChatColor.GOLD}[War] Attack at (${block.x}, ${block.y}, ${block.z}) defeated by ${player.name}")
                     return
                 }
+                // handle breaking within no build region
+
+                // op bypass
+                if (player.isOp()) {
+                    return
+                }
+                event.setCancelled(true)
+                Message.error(player, "[War] Cannot break blocks within ${Config.flagNoBuildDistance} blocks of war flags")
+                return
             }
         }
         
