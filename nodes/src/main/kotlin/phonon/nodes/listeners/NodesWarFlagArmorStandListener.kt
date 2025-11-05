@@ -12,7 +12,7 @@ import phonon.nodes.war.NODES_ARMORSTAND_KEY
 public class NodesWarFlagArmorStandListener: Listener {
 
     /**
-     * If an war flag label armor stand is loaded from a chunk, it is most
+     * If an war flag armor stand is loaded from a chunk, it is most
      * likely a stale entity. E.g. normally when server closed, armor stands
      * removed, but if server crashes there will be dangling armor stands.
      * This automatically deletes any armorstands with associated nodes plugin key.

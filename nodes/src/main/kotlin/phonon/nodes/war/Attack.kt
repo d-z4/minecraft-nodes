@@ -47,11 +47,10 @@ public class Attack(
     val noBuildYMin: Int
     val noBuildYMax: Int = 255 // temporarily set to height
 
-    var progressColor: Int // index in progress color array
     var thread: BukkitTask = Bukkit.getScheduler().runTaskTimerAsynchronously(Nodes.plugin!!, this, FlagWar.ATTACK_TICK, FlagWar.ATTACK_TICK)
 
-    // armor stand used to label town name on flag
-    val armorstandTownLabel = AttackArmorStandLabel(town, flagBase.world, flagBase.location.clone().add(0.5, 1.75, 0.5))
+    // armor stands used to show town name and progress on flag
+    val armorstand = AttackArmorStand(this, flagBase.world, flagBase.location.clone().add(0.5, 1.75, 0.5))
 
     // re-used json serialization StringBuilders
     val jsonStringBase: StringBuilder
@@ -72,7 +71,6 @@ public class Attack(
         // set boss bar progress
         val progressNormalized: Double = this.progress.toDouble() / this.attackTime.toDouble()
         this.progressBar.setProgress(progressNormalized)
-        this.progressColor = FlagWar.getProgressColor(progressNormalized)
 
         // pre-generate main part of the JSON serialization string
         this.jsonStringBase = generateFixedJsonBase(
@@ -81,9 +79,9 @@ public class Attack(
             this.flagBase,
         )
 
-        // send name packets to players in range
+        // send armor stand packets to players in range
         try {
-            this.armorstandTownLabel.sendLabel()
+            this.armorstand.sendPackets()
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -156,22 +154,23 @@ private fun generateFixedJsonBase(
     return s
 }
 
-public class AttackArmorStandLabel(
-    val town: Town,
+public class AttackArmorStand(
+    val attack: Attack,
     val world: World,
     val loc: Location,
     val maxViewDistance: Int = 3,
 ) {
-    var armorstand = createArmorStandLabel(world, loc)
+    var townNameArmorstand = createArmorStand(world, loc)
+    var progressArmorstand = createArmorStand(world, loc.add(0.0,-0.25,0.0))
 
-    // min/max x/z chunk view distance from this label
+    // min/max x/z chunk view distance from this armor stand
     val minViewChunkX: Int
     val maxViewChunkX: Int
     val minViewChunkZ: Int
     val maxViewChunkZ: Int
 
     init {
-        // calculate max chunk view distance from this label
+        // calculate max chunk view distance from this armor stand
         val chunk = this.loc.chunk
         val chunkX = chunk.x
         val chunkZ = chunk.z
@@ -186,29 +185,32 @@ public class AttackArmorStandLabel(
      * Remove armorstand, for cleanup.
      */
     public fun remove() {
-        this.armorstand.remove()
+        this.townNameArmorstand.remove()
+        this.progressArmorstand.remove()
     }
 
     /**
      * Check if armorstand is still valid.
      */
     public fun isValid(): Boolean {
-        return this.armorstand.isValid
+        return this.townNameArmorstand.isValid && this.progressArmorstand.isValid
     }
 
     /**
      * Re-create new armorstand.
      */
     public fun respawn() {
-        this.armorstand.remove()
-        this.armorstand = createArmorStandLabel(this.world, this.loc)
+        this.townNameArmorstand.remove()
+        this.townNameArmorstand = createArmorStand(this.world, this.loc)
+        this.progressArmorstand.remove()
+        this.progressArmorstand = createArmorStand(this.world, this.loc.add(0.0,-0.25,0.0))
     }
 
     /**
-     * Send player-specific view label packets for players
+     * Send player-specific armor stand packets for players
      * within maxViewDistance chunks of this armorstand.
      */
-    public fun sendLabel() {
+    public fun sendPackets() {
         // if this chunk not loaded, skip
         if ( !this.world.isChunkLoaded(this.loc.chunk) ) {
             return
@@ -224,24 +226,33 @@ public class AttackArmorStandLabel(
                 continue
             }
 
-            // send view label packet
-            val label = townNametagViewedByPlayer(town, player)
-            val packet = this.armorstand.createArmorStandNamePacket(label)
-            player.sendPacket(packet)
+            // send armor stand packets
+            // town
+            val label = townNametagViewedByPlayer(attack.town, player).dropLast(1)
+            val townNamePacket = this.townNameArmorstand.createArmorStandNamePacket(label)
+            player.sendPacket(townNamePacket)
+
+            // progress
+            val remainingSeconds = (attack.attackTime - attack.progress) / 20
+            val minutes = remainingSeconds / 60
+            val seconds = remainingSeconds % 60
+            val colorCode = townNametagViewedByPlayer(attack.town, player).take(2)
+            val formattedProgress = "$colorCode[$minutes:${seconds.toString().padStart(2, '0')}]"
+            val progressPacket = this.progressArmorstand.createArmorStandNamePacket(formattedProgress)
+            player.sendPacket(progressPacket)
         }
     }
 }
 
 /**
- * Namespaced key for marking armorstands as nodes plugin armorstand labels.
+ * Namespaced key for marking armorstands as nodes plugin armorstands.
  */
-internal val NODES_ARMORSTAND_KEY = NamespacedKey("nodes", "armorstand_label")
+internal val NODES_ARMORSTAND_KEY = NamespacedKey("nodes", "armorstand")
 
 /**
- * Helper function to create a new armorstand label with associated label
- * metadata.
+ * Helper function to create a new armorstand with associated metadata.
  */
-private fun createArmorStandLabel(
+private fun createArmorStand(
     world: World,    
     loc: Location,
 ): ArmorStand {

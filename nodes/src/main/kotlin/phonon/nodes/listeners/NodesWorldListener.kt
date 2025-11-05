@@ -48,19 +48,27 @@ public class NodesWorldListener: Listener {
         val block: Block = event.block
         val territoryChunk = Nodes.getTerritoryChunkFromBlock(block.x, block.z)
         
-        // if war enabled, do flag break check
+        // if war enabled, do no break distance and flag break checks
         if ( Nodes.war.enabled && territoryChunk?.attacker !== null ) {
-            var attack = FlagWar.blockToAttacker.get(block)
-            
-            // check if block above was flag block (e.g. destroying fence)
-            if ( attack === null ) {
-                attack = FlagWar.blockToAttacker.get(block.getRelative(0, 1, 0))
-            }
+            var attack = FlagWar.chunkToAttacker.get(territoryChunk.coord)
 
-            if ( attack !== null ) {
-                event.setCancelled(true)
-                attack.cancel()
-                Message.broadcast("${ChatColor.GOLD}[War] Attack at (${block.x}, ${block.y}, ${block.z}) defeated by ${player.name}")
+            if (attack !== null) {
+                if (blockInWarFlagNoBuildRegion(block, attack)) {
+                    if ( attack.flagBlock == block ) {
+                        event.setCancelled(true)
+                        attack.cancel()
+                        Message.broadcast("${ChatColor.GOLD}[War] Attack at (${block.x}, ${block.y}, ${block.z}) defeated by ${player.name}")
+                        return
+                    } else {
+                        if (player.isOp()) {
+                            return
+                        }
+                        event.setCancelled(true)
+                        Message.error(player, "[War] Cannot break blocks within ${Config.flagNoBuildDistance} blocks of war flags")
+                    }
+
+                    return
+                }
             }
         }
         

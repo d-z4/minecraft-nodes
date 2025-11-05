@@ -50,71 +50,14 @@ import phonon.nodes.event.*
 import phonon.nodes.constants.*
 import phonon.nms.blockedit.FastBlockEditSession
 
-// beacon color: wool material data values
-// corresponding to each 10% progress interval
-// 1.12 wool block data
-private val WOOL_COLORS: Array<Byte> = arrayOf(
-    15,  // black         [0.0, 0.1]
-    7,   // gray          [0.1, 0.2]
-    8,   // light gray    [0.2, 0.3]
-    11,  // blue          [0.3, 0.4]
-    10,  // purple        [0.4, 0.5]
-    2,   // magenta       [0.5, 0.6]
-    6,   // pink          [0.6, 0.7]
-    14,  // red           [0.7, 0.8]
-    1,   // orange        [0.8, 0.9]
-    4    // yellow        [0.9, 1.0]
-)
-
-// 1.16 direct material refs
-private val FLAG_COLORS: Array<Material> = arrayOf(
-    Material.BLACK_WOOL,      // [0.0, 0.1]
-    Material.GRAY_WOOL,       // [0.1, 0.2]
-    Material.LIGHT_GRAY_WOOL, // [0.2, 0.3]
-    Material.BLUE_WOOL,       // [0.3, 0.4]
-    Material.PURPLE_WOOL,     // [0.4, 0.5]
-    Material.MAGENTA_WOOL,    // [0.5, 0.6]
-    Material.PINK_WOOL,       // [0.6, 0.7]
-    Material.RED_WOOL,        // [0.7, 0.8]
-    Material.ORANGE_WOOL,     // [0.8, 0.9]
-    Material.YELLOW_WOOL      // [0.9, 1.0]
-)
-
-// private val BEACON_COLOR_BLOCK = Material.WOOL     // 1.12 only
-// private val BEACON_EDGE_BLOCK = Material.GLOWSTONE // 1.12 use glowstone
-private val SKY_BEACON_FRAME_BLOCK = Material.MAGMA_BLOCK // 1.16 use magma
+private val SKY_BEACON_FRAME_BLOCK = Material.SEA_LANTERN
+private val SKY_BEACON_BLOCK = Material.BLACK_WOOL
 
 // contain all flag materials for sky beacon
 private val SKY_BEACON_MATERIALS: EnumSet<Material> = EnumSet.of(
     SKY_BEACON_FRAME_BLOCK,
-    Material.BLACK_WOOL,      // flag wool stuff
-    Material.GRAY_WOOL, 
-    Material.LIGHT_GRAY_WOOL,
-    Material.BLUE_WOOL,  
-    Material.PURPLE_WOOL,
-    Material.MAGENTA_WOOL,
-    Material.PINK_WOOL, 
-    Material.RED_WOOL,  
-    Material.ORANGE_WOOL, 
-    Material.YELLOW_WOOL  
+    SKY_BEACON_BLOCK
 )
-
-/**
- * Set flag colored block
- * 
- * Color based on attack progress
- */
-private fun setFlagAttackColorBlock(block: Block, progress: Int) {
-    if ( progress < 0 || progress > 9 ) {
-        return
-    }
-
-    // 1.12
-    // block.setType(Material.WOOL)
-    // block.setData(WOOL_COLORS[progress])
-
-    block.setType(FLAG_COLORS[progress])
-}
 
 public object FlagWar {
 
@@ -263,9 +206,6 @@ public object FlagWar {
         val skyBeaconColorBlocks: MutableList<Block> = mutableListOf()
         val skyBeaconWireframeBlocks: MutableList<Block> = mutableListOf()
 
-        val progressNormalized = progress.toDouble() / Config.chunkAttackTime.toDouble()
-        val progressColor = FlagWar.getProgressColor(progressNormalized)
-
         // recreate sky beacon
         FlagWar.createAttackBeacon(
             skyBeaconColorBlocks,
@@ -273,7 +213,6 @@ public object FlagWar {
             flagBase.world,
             coord,
             flagBase.y,
-            progressColor,
             true,
             true,
             true
@@ -579,7 +518,6 @@ public object FlagWar {
                 world,
                 chunk.coord,
                 flagBaseY,
-                0,
                 true, // create frame
                 true, // create color
                 true  // lighting update
@@ -592,7 +530,7 @@ public object FlagWar {
         }
 
         // initialize flag blocks
-        setFlagAttackColorBlock(flagBlock, 0)
+        flagBlock.setType(Material.DEEPSLATE)
         flagTorch.setType(Material.TORCH)
 
         // create new attack instance
@@ -635,7 +573,7 @@ public object FlagWar {
 
         return attack
     }
-    
+
     // check if territory is a border territory of a town, requirements:
     // any adjacent territory is not of the same town
     internal fun isBorderTerritory(territory: Territory): Boolean {
@@ -834,7 +772,6 @@ public object FlagWar {
         world: World,
         coord: Coord,
         flagBaseY: Int,
-        progress: Int,
         createFrame: Boolean,
         createColor: Boolean,
         updateLighting: Boolean
@@ -851,9 +788,6 @@ public object FlagWar {
         val xEnd: Int = x0 + size - 1
         val zEnd: Int = z0 + size - 1
         val yEnd: Int = Math.min(255, y0 + size) // truncate at map limit
-        
-        // max color
-        val progressColor = Math.min(progress, FLAG_COLORS.size - 1)
 
         for ( y in y0..yEnd ) {
             for ( x in x0..xEnd ) {
@@ -873,7 +807,7 @@ public object FlagWar {
                             // setFlagAttackColorBlock(block, progress) // slow
                             skyBeaconColorBlocks.add(block)
                             if ( createColor ) {
-                                edit.setBlock(x, y, z, FLAG_COLORS[progressColor])
+                                edit.setBlock(x, y, z, SKY_BEACON_BLOCK)
                             }
                         }
                     }
@@ -884,28 +818,6 @@ public object FlagWar {
         if ( createFrame || createColor ) {
             edit.execute(updateLighting)
         }
-    }
-
-    /**
-     * Update flag colors blocks based on progress color
-     */
-    internal fun updateAttackFlag(
-        flagBlock: Block,
-        skyBeaconColorBlocks: List<Block>,
-        progressColor: Int
-    ) {
-        val world = flagBlock.getWorld()
-
-        // create edit session
-        val edit = FastBlockEditSession(world)
-
-        edit.setBlock(flagBlock.x, flagBlock.y, flagBlock.z, FLAG_COLORS[progressColor])
-        for ( block in skyBeaconColorBlocks ) {
-            edit.setBlock(block.x, block.y, block.z, FLAG_COLORS[progressColor])
-        }
-
-        // dont do lighting update
-        edit.execute(false)
     }
 
     // cleanup attack instance, then dispatch signal
@@ -933,8 +845,8 @@ public object FlagWar {
             block.setType(Material.AIR)
         }
 
-        // remove town label
-        attack.armorstandTownLabel.remove()
+        // remove town and cap progress armor stands
+        attack.armorstand.remove()
 
         // remove attack instance references
         FlagWar.attackers.get(attack.attacker)?.remove(attack)
@@ -986,8 +898,8 @@ public object FlagWar {
             block.setType(Material.AIR)
         }
 
-        // remove town label
-        attack.armorstandTownLabel.remove()
+        // remove town and cap progress armor stands
+        attack.armorstand.remove()
 
         // remove attack instance references
         FlagWar.attackers.get(attack.attacker)?.remove(attack)
@@ -1129,37 +1041,20 @@ public object FlagWar {
             // update boss bar progress
             val progressNormalized: Double = progress.toDouble() / attack.attackTime.toDouble()
             attack.progressBar.setProgress(progressNormalized)
-            
-            val progressColor = (progressNormalized * WOOL_COLORS.size.toDouble()).toInt()
-            if ( progressColor != attack.progressColor ) {
-                attack.progressColor = progressColor
 
-                // update attack flag + block beacon indicator
-                // -> must schedule sync task on main thread
-                Bukkit.getScheduler().runTask(Nodes.plugin!!, object: Runnable {
-                    override fun run() {
-                        FlagWar.updateAttackFlag(
-                            attack.flagBlock,
-                            attack.skyBeaconColorBlocks,
-                            progressColor
-                        )
-                    }
-                })
-            }
-
-            // re-send armorstand label packets to players in range if armorstand
+            // re-send armorstand packets to players in range if armorstand
             // is alive. if somehow dead, schedule re-create armorstand on main thread
-            if ( attack.armorstandTownLabel.isValid() ) {
+            if ( attack.armorstand.isValid() ) {
                 try {
-                    attack.armorstandTownLabel.sendLabel()
+                    attack.armorstand.sendPackets()
                 } catch ( e: Exception ) {
                     e.printStackTrace()
-                    Nodes.logger?.warning("Error sending war flag armorstand label packet: ${e.message}")
+                    Nodes.logger?.warning("Error sending war flag armorstand packet: ${e.message}")
                 }
             } else {
                 Bukkit.getScheduler().runTask(Nodes.plugin!!, object: Runnable {
                     override fun run() {
-                        attack.armorstandTownLabel.respawn()
+                        attack.armorstand.respawn()
                     }
                 })
             }
@@ -1178,19 +1073,6 @@ public object FlagWar {
             for ( attack in currentAttacks ) {
                 attack.progressBar.addPlayer(player)
             }
-        }
-    }
-
-    /**
-     * Return progress color from normalized progress in [0.0, 1.0]
-     */
-    internal fun getProgressColor(progressNormalized: Double): Int {
-        if ( progressNormalized < 0.0 ) {
-            return 0
-        } else if ( progressNormalized > 1.0 ) {
-            return WOOL_COLORS.size - 1
-        } else {
-            return (progressNormalized * WOOL_COLORS.size.toDouble()).toInt()
         }
     }
 }
