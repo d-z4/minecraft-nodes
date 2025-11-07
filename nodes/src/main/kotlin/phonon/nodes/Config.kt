@@ -263,6 +263,15 @@ public object Config {
     // inline string list of outpost teleport cost
     public var nationTownTeleportCostString: String = ""
 
+    // allow members of the same nation to attack eachother
+    public var allowNationFriendlyFire: Boolean = false
+
+    // ===================================
+    // alliance settings
+    // ===================================
+    // allow allied nations to attack eachother
+    public var allowAllyFriendlyFire: Boolean = true
+
     // ===================================
     // captured territory tax rates:
     // (taxation is theft)
@@ -473,6 +482,10 @@ public object Config {
             Config.nationTownTeleportCost.putAll(parseTeleportCost(nationTeleportCostSection))
             Config.nationTownTeleportCostString = teleportCostToString(Config.nationTownTeleportCost)
         }
+        Config.allowNationFriendlyFire = config.getBoolean("allowNationFriendlyFire", Config.allowNationFriendlyFire)
+
+        // ally settings
+        Config.allowAllyFriendlyFire = config.getBoolean("allowAllyFriendlyFire", Config.allowAllyFriendlyFire)
 
         // tax
         Config.taxIncomeRate = config.getDouble("taxIncomeRate", Config.taxIncomeRate)

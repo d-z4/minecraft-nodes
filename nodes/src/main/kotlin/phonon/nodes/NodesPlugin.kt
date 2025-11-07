@@ -89,6 +89,7 @@ public class NodesPlugin : JavaPlugin() {
         pluginManager.registerEvents(NodesSheepShearListener(), this)
         pluginManager.registerEvents(NodesNametagListener(), this)
         pluginManager.registerEvents(NodesWarFlagArmorStandListener(), this)
+        pluginManager.registerEvents(NodesPlayerDamageListener(), this)
 
         // register commands
         this.getCommand("town")?.setExecutor(TownCommand())
