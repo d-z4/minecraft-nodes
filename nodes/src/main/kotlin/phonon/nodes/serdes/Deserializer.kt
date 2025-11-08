@@ -368,9 +368,6 @@ public object Deserializer {
                     UUID.randomUUID()
                 }
 
-                // parse capital town name
-                val capitalName = nation.get("capital").getAsString()
-
                 // parse color
                 val colorArray = nation.get("color")?.getAsJsonArray()
                 var color = if ( colorArray !== null && colorArray.size() == 3 ) {
@@ -387,7 +384,14 @@ public object Deserializer {
                         towns.add(townName.getAsString())
                     }
                 }
-                
+
+                // parse capital town name
+                var capitalName = nation.get("capital")?.getAsString()
+                if ( capitalName == null ) {
+                    System.err.println("Capital for: $name not found, setting it to ${towns[0]}")
+                    capitalName = towns[0]
+                }
+
                 // parse ally names
                 val allies: ArrayList<String> = ArrayList()
                 val alliesArray = nation.get("allies")?.getAsJsonArray()
