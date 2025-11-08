@@ -12,6 +12,8 @@ import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 import phonon.nodes.Config
 import phonon.nodes.Message
 import phonon.nodes.Nodes
@@ -66,7 +68,8 @@ private val SUBCOMMANDS: List<String> = listOf(
     "untrust",
     "capital",
     "annex",
-    "outpost"
+    "outpost",
+    "fly"
 )
 
 private val OUTPOST_SUBCOMMANDS: List<String> = listOf(
@@ -196,6 +199,7 @@ public class TownCommand : CommandExecutor, TabCompleter {
             "capital" -> setCapital(player, args)
             "annex" -> annexTerritory(player, args)
             "outpost" -> manageOutpost(sender, args)
+            "fly" -> toggleFlight(player)
             else -> { Message.error(sender, "Invalid command, use /town help") }
         }
 
@@ -349,6 +353,7 @@ public class TownCommand : CommandExecutor, TabCompleter {
         Message.print(sender, "/town capital${ChatColor.WHITE}: Set your town's home territory")
         Message.print(sender, "/town annex${ChatColor.WHITE}: Annex an occupied territory")
         Message.print(sender, "/town outpost${ChatColor.WHITE}: Town outpost commands")
+        Message.print(sender, "/town fly${ChatColor.WHITE}: Fly inside your town")
         return
     }
 
@@ -2168,4 +2173,53 @@ public class TownCommand : CommandExecutor, TabCompleter {
         // failed to match, return error
         Message.error(player, "Your town has no outpost in this location")
     }
+
+    /**
+     * @command /town fly
+     * Enable flight, player must be in their town
+     */
+    private fun toggleFlight(player: Player?) {
+        if ( player == null ) {
+            return
+        }
+
+        if ( !player.hasPermission("nodes.command.town.fly")) {
+            Message.error(player, "You do not have permission to fly")
+            return
+        }
+
+        val resident = Nodes.getResident(player)
+        if ( resident == null ) {
+            return
+        }
+
+        val town = resident.town
+        if ( town == null ) {
+            Message.error(player, "You are not a member of a town")
+            return
+        }
+
+        // do not allow during war?
+        if (Nodes.war.enabled) {
+            Message.error(player, "Cannot fly during war")
+            return
+        }
+
+        if (player.allowFlight) {
+            player.allowFlight = false
+            // give player slow falling to avoid fall damage
+            player.addPotionEffect(PotionEffect(PotionEffectType.SLOW_FALLING, 100, 0, false, false, false))
+            Message.print(player,"Disabled flight")
+            return
+        }
+
+        if ( Nodes.getTerritoryFromChunk(player.chunk)?.town != town ) {
+            Message.error(player,"You must be in your town to enable flight")
+            return
+        }
+
+        player.allowFlight = true
+        Message.print(player,"Enabled flight")
+    }
+
 }

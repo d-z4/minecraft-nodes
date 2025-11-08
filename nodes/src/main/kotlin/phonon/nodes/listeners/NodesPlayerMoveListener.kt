@@ -1,15 +1,19 @@
 package phonon.nodes.listeners
 
 import org.bukkit.ChatColor
+import org.bukkit.GameMode
 import org.bukkit.inventory.ItemStack
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerMoveEvent
 import org.bukkit.event.player.PlayerTeleportEvent
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 import phonon.nodes.Nodes
 import phonon.nodes.Config
 import phonon.nodes.Message
+import phonon.nodes.Nodes.getTownFromPlayer
 import phonon.nodes.objects.Coord
 import phonon.nodes.objects.Resident
 import phonon.nodes.objects.Territory
@@ -19,7 +23,7 @@ public class NodesPlayerMoveListener: Listener {
     
     @EventHandler
     public fun onPlayerMove(event: PlayerMoveEvent) {
-        
+
         // abort if did not change blocks
         val fromX = event.getFrom().getBlockX()
         val fromY = event.getFrom().getBlockY()
@@ -164,6 +168,20 @@ public class NodesPlayerMoveListener: Listener {
 
         // update minimap
         resident.updateMinimap(toCoord)
+
+        // check if flight needs to be disabled (e.g. player moved to different town or wilderness)
+        // ignore admins in creative and spectator
+        if (player.gameMode in listOf(GameMode.CREATIVE, GameMode.SPECTATOR)) return
+
+        val playerTown = getTownFromPlayer(player)
+
+        // if player leaves their own town while flying, disable flight
+        if (player.allowFlight && toTerritory?.town != playerTown) {
+            player.allowFlight = false
+            // give player slow falling to avoid fall damage
+            player.addPotionEffect(PotionEffect(PotionEffectType.SLOW_FALLING, 100, 0, false, false, false))
+            Message.print(player, "You are no longer in your town, disabling flight")
+        }
     }
 }
 

@@ -79,3 +79,6 @@ commands:
     aliases: []
     permission: nodes.command.territory
     usage: /territory or /territory [id]
+permissions:
+  nodes.command.town.fly:
+    default: op
