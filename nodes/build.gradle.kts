@@ -4,14 +4,13 @@
  * This generated file contains a sample Kotlin application project to get you started.
  */
 
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 // plugin versioning
 version = "0.0.14"
 
 // base of output jar name
-val OUTPUT_JAR_NAME = "nodes"
+val outputJarName = "nodes"
 
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
@@ -20,6 +19,9 @@ plugins {
     // maven() // no longer needed in gradle 7
 
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
+
+    // auto code formatting
+    //id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
 }
 
 repositories {
@@ -61,7 +63,7 @@ dependencies {
 
     // Use the Kotlin JDK 8 standard library.
     compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    if ( project.hasProperty("no-kotlin") == false ) { // shadow kotlin unless "no-kotlin" flag
+    if (project.hasProperty("no-kotlin") == false) { // shadow kotlin unless "no-kotlin" flag
         configurations["shadowImplementation"]("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     }
 
@@ -103,9 +105,8 @@ dependencies {
 
     tasks.named("reobfJar") {
         dependsOn(tasks.jar)
-        base.archivesBaseName = "${OUTPUT_JAR_NAME}"
+        base.archivesBaseName = "$outputJarName"
     }
-
 }
 
 tasks.named<ShadowJar>("shadowJar") {
@@ -127,7 +128,7 @@ tasks {
 gradle.taskGraph.whenReady {
     tasks {
         named<ShadowJar>("shadowJar") {
-            archiveBaseName.set(OUTPUT_JAR_NAME)
+            archiveBaseName.set(outputJarName)
             minimize()
         }
     }

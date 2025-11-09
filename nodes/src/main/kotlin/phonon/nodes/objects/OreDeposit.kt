@@ -1,7 +1,7 @@
 /**
  * OreDeposit
- * 
- * Represents single material hidden ore 
+ *
+ * Represents single material hidden ore
  * drop properties (chance, amount, etc...)
  */
 
@@ -28,7 +28,7 @@ data class OreDeposit(
             Math.max(this.minAmount, other.minAmount),
             Math.max(this.maxAmount, other.maxAmount),
             this.ymin,
-            this.ymax
+            this.ymax,
         )
     }
 }

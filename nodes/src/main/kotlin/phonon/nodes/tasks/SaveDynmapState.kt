@@ -5,10 +5,10 @@
 
 package phonon.nodes.tasks
 
+import phonon.nodes.utils.saveStringToFile
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
-import phonon.nodes.utils.saveStringToFile
 
 /**
  * Task for copying world.json or towns.json to dynmap folder.
@@ -17,10 +17,10 @@ public class TaskCopyToDynmap(
     val pathTownsJson: Path,
     val pathDynmapDir: Path,
     val pathDynmapJson: Path,
-): Runnable {
+) : Runnable {
     override fun run() {
         Files.createDirectories(pathDynmapDir)
-        Files.copy(pathTownsJson, pathDynmapJson, StandardCopyOption.REPLACE_EXISTING) 
+        Files.copy(pathTownsJson, pathDynmapJson, StandardCopyOption.REPLACE_EXISTING)
     }
 }
 
@@ -38,15 +38,14 @@ public class TaskSaveDynmapClaimsConfig(
     val territoryCostBase: Int,
     val territoryCostScale: Double,
     val pathDynmapConfig: Path,
-): Runnable {
-    
+) : Runnable {
+
     override fun run() {
         val configJson = (
-            "{\"meta\":{\"type\":\"config\"},"
-            + "\"territoryCost\":{\"constant\":${territoryCostBase},\"scale\":${territoryCostScale}}}"
-        )
+            "{\"meta\":{\"type\":\"config\"}," +
+                "\"territoryCost\":{\"constant\":$territoryCostBase,\"scale\":$territoryCostScale}}"
+            )
 
         saveStringToFile(configJson, pathDynmapConfig)
     }
-
 }

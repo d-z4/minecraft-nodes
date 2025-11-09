@@ -27,15 +27,14 @@ private val subcommands: List<String> = listOf(
     "town",
     "nation",
     "player",
-    "war"
+    "war",
 )
 
 public class NodesCommand : CommandExecutor, TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
-            
         // no args, print plugin info
-        if ( args.size == 0 ) {
+        if (args.size == 0) {
             Message.print(sender, "${ChatColor.BOLD}Nodes ${Nodes.version}")
 
             // print number of resource nodes and territories loaded
@@ -52,7 +51,7 @@ public class NodesCommand : CommandExecutor, TabCompleter {
         }
 
         // parse subcommand
-        when ( args[0].lowercase() ) {
+        when (args[0].lowercase()) {
             "help" -> printHelp(sender)
             "resource" -> printResourceNodeInfo(sender, args)
             "territory" -> printTerritoryInfo(sender, args)
@@ -63,7 +62,9 @@ public class NodesCommand : CommandExecutor, TabCompleter {
             "player" -> printPlayerInfo(sender, args)
             "players" -> printPlayerInfo(sender, args)
             "war" -> printWarInfo(sender, args)
-            else -> { Message.error(sender, "Invalid command, use \"/nodes help\"") }
+            else -> {
+                Message.error(sender, "Invalid command, use \"/nodes help\"")
+            }
         }
 
         return true
@@ -71,34 +72,36 @@ public class NodesCommand : CommandExecutor, TabCompleter {
 
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String> {
         // match subcommand
-        if ( args.size == 1 ) {
+        if (args.size == 1) {
             return filterByStart(subcommands, args[0])
         }
         // match each subcommand format
-        else if ( args.size > 1 ) {
+        else if (args.size > 1) {
             // handle specific subcommands
-            when ( args[0].lowercase() ) {
-
+            when (args[0].lowercase()) {
                 // /nodes town name
                 "town",
-                "towns" -> {
-                    if ( args.size == 2 ) {
+                "towns",
+                -> {
+                    if (args.size == 2) {
                         return filterTown(args[1])
                     }
                 }
 
                 // /nodes nation name
                 "nation",
-                "nations" -> {
-                    if ( args.size == 2 ) {
+                "nations",
+                -> {
+                    if (args.size == 2) {
                         return filterNation(args[1])
                     }
                 }
 
                 // /nodes player resident
                 "player",
-                "players" -> {
-                    if ( args.size == 2 ) {
+                "players",
+                -> {
+                    if (args.size == 2) {
                         return filterResident(args[1])
                     }
                 }
@@ -126,52 +129,49 @@ public class NodesCommand : CommandExecutor, TabCompleter {
     /**
      * @command /nodes resource
      * Prints list of all resource nodes
-     * 
+     *
      * @subcommand /nodes resource [name]
      * Print detailed stats of a resource node type (income, crops, animals, ore)
      */
     private fun printResourceNodeInfo(sender: CommandSender, args: Array<String>) {
-        if ( args.size < 2 ) {
+        if (args.size < 2) {
             Message.print(sender, "${ChatColor.BOLD}Resource nodes:")
-            for ( v in Nodes.resourceNodes.values ) {
+            for (v in Nodes.resourceNodes.values) {
                 Message.print(sender, "- ${v.name}")
             }
             Message.print(sender, "Use \"/nodes resource [name]\" to get more info")
-        }
-        else {
+        } else {
             // parse resource node name
             val name = args[1]
             val resource = Nodes.resourceNodes.get(name)
-            if ( resource != null ) {
+            if (resource != null) {
                 resource.printInfo(sender)
-            }
-            else {
+            } else {
                 Message.error(sender, "Invalid resource node \"${name}\"")
             }
         }
-       
     }
 
     /**
      * @command /nodes territory
      * In console, just prints total territory count.
      * Ingame, prints info about territory player is standing in.
-     * 
+     *
      * @subcommand /nodes territory [id]
      * Prints info about territory from id
      */
     private fun printTerritoryInfo(sender: CommandSender, args: Array<String>) {
-        val territory = if ( args.size < 2 ) {
+        val territory = if (args.size < 2) {
             // if command sender was player, print territory info of current location
-            val player = if ( sender is Player ) sender else null
-            if ( player != null ) {
+            val player = if (sender is Player) sender else null
+            if (player != null) {
                 val loc = player.getLocation()
                 val getTerritory = Nodes.getTerritoryFromBlock(loc.x.toInt(), loc.z.toInt())
 
                 Message.print(sender, "Territory at current location:")
                 Message.print(sender, "(Other usage: \"/nodes territory [id]\")")
 
-                if ( getTerritory == null ) {
+                if (getTerritory == null) {
                     Message.error(sender, "No territory at current location")
                     return
                 }
@@ -184,11 +184,10 @@ public class NodesCommand : CommandExecutor, TabCompleter {
                 Message.print(sender, "Usage: \"/nodes territory [id]\"")
                 return
             }
-        }
-        else {
+        } else {
             // try parse input as id, then try to get territory with that id
             val getTerritory = args[1].toIntOrNull()?.let { id -> Nodes.territories[TerritoryId(id)] }
-            if ( getTerritory == null ) {
+            if (getTerritory == null) {
                 Message.error(sender, "Invalid territory id \"${args[1]}\"")
                 return
             }
@@ -204,18 +203,18 @@ public class NodesCommand : CommandExecutor, TabCompleter {
     /**
      * @command /nodes town
      * Prints list of all towns, their player count and territory count
-     * 
+     *
      * @subcommand /nodes town [name]
      * Prints detailed info about town from [name] (territories, players, etc...)
      */
     private fun printTownInfo(sender: CommandSender, args: Array<String>) {
         // print list of all towns and their player count
-        if ( args.size < 2 ) {
+        if (args.size < 2) {
             Message.print(sender, "${ChatColor.BOLD}Towns (${Nodes.getTownCount()}): Showing [Players] [Territories]")
             val towns = Nodes.towns.values.toMutableList()
             towns.sortByDescending { it.residents.size }
 
-            for ( t in towns ) {
+            for (t in towns) {
                 Message.print(sender, "- ${t.name}${ChatColor.WHITE}: ${t.residents.size}P ${t.territories.size}T")
             }
 
@@ -224,31 +223,29 @@ public class NodesCommand : CommandExecutor, TabCompleter {
         // print specific town info
         else {
             val town = Nodes.towns.get(args[1])
-            if ( town != null ) {
+            if (town != null) {
                 town.printInfo(sender)
-            }
-            else {
+            } else {
                 Message.error(sender, "Invalid town name \"${args[1]}\"")
             }
         }
-        
     }
 
     /**
      * @command /nodes nation
      * Prints list of all nations
-     * 
+     *
      * @subcommand /nodes nation [name]
      * Prints detailed info about nation from [name] (towns, allies, enemies, etc...)
      */
     private fun printNationInfo(sender: CommandSender, args: Array<String>) {
         // print list of all nations and their town + player count
-        if ( args.size < 2 ) {
+        if (args.size < 2) {
             Message.print(sender, "${ChatColor.BOLD}Nations (${Nodes.getNationCount()}):")
             val nations = Nodes.nations.values.toMutableList()
             nations.sortBy { it.name }
 
-            for ( n in nations ) {
+            for (n in nations) {
                 Message.print(sender, "- ${n.name}${ChatColor.WHITE}")
             }
 
@@ -257,10 +254,9 @@ public class NodesCommand : CommandExecutor, TabCompleter {
         // print specific town info
         else {
             val nation = Nodes.nations.get(args[1])
-            if ( nation != null ) {
+            if (nation != null) {
                 nation.printInfo(sender)
-            }
-            else {
+            } else {
                 Message.error(sender, "Invalid nation name \"${args[1]}\"")
             }
         }
@@ -271,15 +267,13 @@ public class NodesCommand : CommandExecutor, TabCompleter {
      * Prints player info (their town and nation)
      */
     private fun printPlayerInfo(sender: CommandSender, args: Array<String>) {
-        if ( args.size < 2 ) {
+        if (args.size < 2) {
             Message.error(sender, "Usage: \"/nodes player [name]\"")
-        }
-        else {
+        } else {
             val resident = Nodes.getResidentFromName(args[1])
-            if ( resident != null ) {
+            if (resident != null) {
                 resident.printInfo(sender)
-            }
-            else {
+            } else {
                 Message.error(sender, "Invalid player name \"${args[1]}\"")
             }
         }
@@ -291,7 +285,7 @@ public class NodesCommand : CommandExecutor, TabCompleter {
      */
     private fun printWarInfo(sender: CommandSender, args: Array<String>) {
         // print general war state
-        if ( args.size < 2 ) {
+        if (args.size < 2) {
             Nodes.war.printInfo(sender, true)
         }
         // attempt modify war state

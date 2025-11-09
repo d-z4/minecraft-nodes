@@ -1,17 +1,17 @@
 /**
  * IncomeInventory
- * 
+ *
  * Inventory container for adding income to town,
  * Uses multiple containers for storing items:
  * - EnumMap<Material, Int> main internal container (maps item -> amount)
  * - Special maps included for items with special cases:
  *   - spawn eggs
- * 
+ *
  * Reason is that in >=1.13, materials are flattened so only the normal
  * EnumMap will be required. In 1.8-1.12, we have to handle special cases
  * (e.g. spawn egg + spawn egg meta), and it's easier to add in special cases
  * rather than polluting the normal EnumMap structure to handle 1 item type.
- * 
+ *
  * TODO: potentially special case storage for colored items (wool, concrete)
  * if requested by users
  */
@@ -24,16 +24,14 @@ import org.bukkit.entity.EntityType
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.meta.SpawnEggMeta
-import phonon.nodes.utils.entity.entityTypeFromOrdinal
 import java.util.*
 
-public class IncomeInventory: InventoryHolder {
+public class IncomeInventory : InventoryHolder {
 
     // normal items:
     // map material -> current amount of it in storage
     val storage: EnumMap<Material, Int> = EnumMap<Material, Int>(Material::class.java)
-    
+
     // storage for spawn eggs
     val storageSpawnEgg: EnumMap<EntityType, Int> = EnumMap<EntityType, Int>(EntityType::class.java)
 
@@ -42,7 +40,7 @@ public class IncomeInventory: InventoryHolder {
 
     // internal, add items to storage
     private fun _add(mat: Material, amount: Int) {
-        this.storage.get(mat)?.let { current -> 
+        this.storage.get(mat)?.let { current ->
             storage.put(mat, current + amount)
         } ?: run {
             storage.put(mat, amount)
@@ -51,7 +49,7 @@ public class IncomeInventory: InventoryHolder {
 
     // internal, add items to spawn egg storage
     private fun _addSpawnEgg(type: EntityType, amount: Int) {
-        this.storageSpawnEgg.get(type)?.let { current -> 
+        this.storageSpawnEgg.get(type)?.let { current ->
             storageSpawnEgg.put(type, current + amount)
         } ?: run {
             storageSpawnEgg.put(type, amount)
@@ -61,7 +59,7 @@ public class IncomeInventory: InventoryHolder {
     // public interface to add new items to storage
     // meta: integer metadata depends on material, either EntityType or damage value
     public fun add(mat: Material, amount: Int, meta: Int = 0) {
-        if ( amount <= 0 ) {
+        if (amount <= 0) {
             return
         }
 
@@ -79,26 +77,26 @@ public class IncomeInventory: InventoryHolder {
 
     // checks if any items in inventory or storage
     public fun empty(): Boolean {
-        return ( storage.size == 0 ) && ( storageSpawnEgg.size == 0 )
+        return (storage.size == 0) && (storageSpawnEgg.size == 0)
     }
 
     // implement getInventory for InventoryHolder
-    override public fun getInventory(): Inventory {
+    public override fun getInventory(): Inventory {
         // populate inventory
-        while ( this.storage.size > 0 ) {
+        while (this.storage.size > 0) {
             val item = this.storage.iterator().next()
             val material = item.key
             val amount = item.value
             this.storage.remove(material)
 
             val itemsFailedToAdd = this._inventory.addItem(ItemStack(material, amount))
-            if ( itemsFailedToAdd.size > 0 ) {
+            if (itemsFailedToAdd.size > 0) {
                 val leftoverItems = itemsFailedToAdd.get(0)!!
                 this.storage.put(material, leftoverItems.amount)
                 return this._inventory
             }
         }
-        
+
         // 1.12 spawn egg add
         // while ( this.storageSpawnEgg.size > 0 ) {
         //     val item = this.storageSpawnEgg.iterator().next()
@@ -139,9 +137,9 @@ public class IncomeInventory: InventoryHolder {
         var hasMovedItems = false
 
         val viewers = this._inventory.viewers
-        if ( viewers.size == 0 || force ) {
-            for ( itemStack in this._inventory.iterator() ) {
-                if ( itemStack != null ) {
+        if (viewers.size == 0 || force) {
+            for (itemStack in this._inventory.iterator()) {
+                if (itemStack != null) {
                     // 1.12 special path spawn eggs
                     // if ( itemStack.type == Material.MONSTER_EGG ) {
                     //     val meta: SpawnEggMeta = itemStack.getItemMeta() as SpawnEggMeta
@@ -153,7 +151,7 @@ public class IncomeInventory: InventoryHolder {
                     // }
 
                     this._add(itemStack.type, itemStack.amount)
-    
+
                     hasMovedItems = true
                 }
             }
@@ -162,5 +160,4 @@ public class IncomeInventory: InventoryHolder {
 
         return hasMovedItems
     }
-
 }

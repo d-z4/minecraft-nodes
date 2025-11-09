@@ -1,22 +1,20 @@
 /**
  * Territory
- * 
+ *
  * Data container around group of chunks,
  * contains settings for ore drop rates, crop growth, animal breeding, ...
  */
 
 package phonon.nodes.objects
 
-import java.util.logging.Logger
-import java.util.EnumMap
-import kotlin.math.max
 import com.google.gson.JsonObject
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.EntityType
 import phonon.nodes.Message
-
+import java.util.EnumMap
+import kotlin.math.max
 
 /**
  * Wrapper type for territory id int.
@@ -30,7 +28,7 @@ value class TerritoryId(private val id: Int) {
 /**
  * Wrapper type for list of territory ids as IntArray backing.
  * Used to describe territory neighbor id sets.
- * However, does not 
+ * However, does not
  */
 @JvmInline
 value class TerritoryIdArray(private val ids: IntArray) {
@@ -41,8 +39,8 @@ value class TerritoryIdArray(private val ids: IntArray) {
      * Return true if this territory id array contains given territory id.
      */
     fun contains(id: TerritoryId): Boolean {
-        for ( i in ids ) {
-            if ( id == TerritoryId(i) ) {
+        for (i in ids) {
+            if (id == TerritoryId(i)) {
                 return true
             }
         }
@@ -59,19 +57,18 @@ value class TerritoryIdArray(private val ids: IntArray) {
     /**
      * Wrapper iterator to emit TerritoryId instead of int.
      */
-    public class TerritoryIdIterator(val intIter: IntIterator): Iterator<TerritoryId> {
+    public class TerritoryIdIterator(val intIter: IntIterator) : Iterator<TerritoryId> {
         override fun hasNext(): Boolean = intIter.hasNext()
         override fun next(): TerritoryId = TerritoryId(intIter.nextInt())
     }
 }
-
 
 /**
  * Intermediary struct for building a territory, contains the fixed
  * structural properties of a territory in the world:
  * name, chunks, neighbors, etc.
  * These are all non-resource properties. These are loaded from the
- * json, then combined with a TerritoryResources object (calculated 
+ * json, then combined with a TerritoryResources object (calculated
  * from resource node names attached to the territory) to build the
  * final "compiled" Territory.
  */
@@ -92,8 +89,8 @@ data class TerritoryPreprocessing(
          * Otherwise, load all ids.
          */
         public fun loadFromJson(json: JsonObject, ids: List<TerritoryId>? = null): List<TerritoryPreprocessing> {
-            val idStrings = if ( ids != null ) {
-                ids.asSequence().map{ id -> id.toInt().toString() }
+            val idStrings = if (ids != null) {
+                ids.asSequence().map { id -> id.toInt().toString() }
             } else {
                 json.keySet().asSequence()
             }
@@ -101,7 +98,7 @@ data class TerritoryPreprocessing(
             val territories = idStrings
                 .map { id -> TerritoryPreprocessing.fromJson(id.toInt(), json[id].getAsJsonObject()) }
                 .toList()
-            
+
             return territories
         }
 
@@ -111,11 +108,11 @@ data class TerritoryPreprocessing(
          */
         public fun fromJson(id: Int, json: JsonObject): TerritoryPreprocessing {
             // territory name
-            val name: String = json.get("name")?.getAsString() ?: "";
+            val name: String = json.get("name")?.getAsString() ?: ""
 
             // territory color, 6 possible colors -> integer in range [0, 5]
             // if null (editor error?), assign 5, the least likely color
-            val color: Int = json.get("color")?.getAsInt() ?: 5;
+            val color: Int = json.get("color")?.getAsInt() ?: 5
 
             // core chunk (required)
             val coreChunkArray = json.get("coreChunk")!!.getAsJsonArray()!!
@@ -126,9 +123,9 @@ data class TerritoryPreprocessing(
             // [x1, y1, x2, y2, ... , xN, yN]
             val chunks: MutableList<Coord> = mutableListOf()
             val jsonChunkArray = json.get("chunks")?.getAsJsonArray()
-            if ( jsonChunkArray !== null ) {
-                for ( i in 0 until jsonChunkArray.size() step 2 ) {
-                    val c = Coord(jsonChunkArray[i].getAsInt(), jsonChunkArray[i+1].getAsInt())
+            if (jsonChunkArray !== null) {
+                for (i in 0 until jsonChunkArray.size() step 2) {
+                    val c = Coord(jsonChunkArray[i].getAsInt(), jsonChunkArray[i + 1].getAsInt())
                     chunks.add(c)
                 }
             }
@@ -136,17 +133,17 @@ data class TerritoryPreprocessing(
             // resource nodes
             val resourceNodes: MutableList<String> = mutableListOf()
             val jsonNodesArray = json.get("nodes")?.getAsJsonArray()
-            if ( jsonNodesArray !== null ) {
+            if (jsonNodesArray !== null) {
                 jsonNodesArray.forEach { nodeJson ->
                     val s = nodeJson.getAsString()
                     resourceNodes.add(s)
                 }
             }
-            
+
             // neighbor territory ids
             val neighbors: MutableList<Int> = mutableListOf()
             val jsonNeighborsArray = json.get("neighbors")?.getAsJsonArray()
-            if ( jsonNeighborsArray !== null ) {
+            if (jsonNeighborsArray !== null) {
                 jsonNeighborsArray.forEach { neighborId ->
                     neighbors.add(neighborId.getAsInt())
                 }
@@ -163,7 +160,7 @@ data class TerritoryPreprocessing(
                 chunks as List<Coord>,
                 bordersWilderness,
                 TerritoryIdArray(neighbors.toIntArray()),
-                resourceNodes as List<String>
+                resourceNodes as List<String>,
             )
         }
     }
@@ -217,25 +214,25 @@ data class TerritoryResources(
     // will not contain any neighbor modifiers.
     val hasNeighborModifier: Boolean = (
         neighborIncome != null ||
-        neighborIncomeSpawnEgg != null ||
-        neighborOres != null ||
-        neighborCrops != null ||
-        neighborAnimals != null ||
-        neighborTotalIncomeMultiplier != null ||
-        neighborTotalOresMultiplier != null ||
-        neighborTotalCropsMultiplier != null ||
-        neighborTotalAnimalsMultiplier != null ||
-        neighborIncomeMultiplier != null ||
-        neighborIncomeSpawnEggMultiplier != null ||
-        neighborOresMultiplier != null ||
-        neighborCropsMultiplier != null ||
-        neighborAnimalsMultiplier != null
-    )
+            neighborIncomeSpawnEgg != null ||
+            neighborOres != null ||
+            neighborCrops != null ||
+            neighborAnimals != null ||
+            neighborTotalIncomeMultiplier != null ||
+            neighborTotalOresMultiplier != null ||
+            neighborTotalCropsMultiplier != null ||
+            neighborTotalAnimalsMultiplier != null ||
+            neighborIncomeMultiplier != null ||
+            neighborIncomeSpawnEggMultiplier != null ||
+            neighborOresMultiplier != null ||
+            neighborCropsMultiplier != null ||
+            neighborAnimalsMultiplier != null
+        )
 
     /**
      * Returns a new TerritoryResources with neighbor
      * TerritoryResources object's neighbor modifiers applied
-     * onto this object's resource properties. 
+     * onto this object's resource properties.
      */
     public fun accumulateNeighborModifiers(neighbor: TerritoryResources): TerritoryResources {
         val newIncome = this.income.clone()
@@ -255,7 +252,7 @@ data class TerritoryResources(
         var maxAccumulatedNeighborOresMultiplier = this.accumulatedNeighborOresMultiplier.clone()
         var maxAccumulatedNeighborCropsMultiplier = this.accumulatedNeighborCropsMultiplier.clone()
         var maxAccumulatedNeighborAnimalsMultiplier = this.accumulatedNeighborAnimalsMultiplier.clone()
-        
+
         // income direct addition
         neighbor.neighborIncome?.forEach { (type, amount) ->
             newIncome[type] = newIncome.getOrDefault(type, 0.0) + amount
@@ -280,7 +277,7 @@ data class TerritoryResources(
 
         // ore direct addition
         neighbor.neighborOres?.forEach { (type, ore) ->
-            if ( newOres.containsKey(type) ) {
+            if (newOres.containsKey(type)) {
                 val oreDeposit = newOres[type]!!
                 newOres[type] = oreDeposit.copy(dropChance = oreDeposit.dropChance + ore.dropChance)
             } else {
@@ -352,7 +349,7 @@ data class TerritoryResources(
         val newOres = this.ores.clone()
         val newCrops = this.crops.clone()
         val newAnimals = this.animals.clone()
-        
+
         // income multiplier
         newIncome.forEach { (type, value) ->
             newIncome[type] = value * accumulatedNeighborTotalIncomeMultiplier
@@ -361,12 +358,12 @@ data class TerritoryResources(
             newIncomeSpawnEgg[type] = value * accumulatedNeighborTotalIncomeMultiplier
         }
         accumulatedNeighborIncomeMultiplier.forEach { (type, multiplier) ->
-            if ( newIncome.containsKey(type) ) {
+            if (newIncome.containsKey(type)) {
                 newIncome[type] = newIncome[type]!! * multiplier
             }
         }
         accumulatedNeighborIncomeSpawnEggMultiplier.forEach { (type, multiplier) ->
-            if ( newIncomeSpawnEgg.containsKey(type) ) {
+            if (newIncomeSpawnEgg.containsKey(type)) {
                 newIncomeSpawnEgg[type] = newIncomeSpawnEgg[type]!! * multiplier
             }
         }
@@ -376,7 +373,7 @@ data class TerritoryResources(
             newOres[type] = oreDeposit.copy(dropChance = oreDeposit.dropChance * accumulatedNeighborTotalOresMultiplier)
         }
         accumulatedNeighborOresMultiplier.forEach { (type, multiplier) ->
-            if ( newOres.containsKey(type) ) {
+            if (newOres.containsKey(type)) {
                 val oreDeposit = newOres[type]!!
                 newOres[type] = oreDeposit.copy(dropChance = oreDeposit.dropChance * multiplier)
             }
@@ -387,7 +384,7 @@ data class TerritoryResources(
             newCrops[type] = value * accumulatedNeighborTotalCropsMultiplier
         }
         accumulatedNeighborCropsMultiplier.forEach { (type, multiplier) ->
-            if ( newCrops.containsKey(type) ) {
+            if (newCrops.containsKey(type)) {
                 newCrops[type] = newCrops[type]!! * multiplier
             }
         }
@@ -397,7 +394,7 @@ data class TerritoryResources(
             newAnimals[type] = value * accumulatedNeighborTotalAnimalsMultiplier
         }
         accumulatedNeighborAnimalsMultiplier.forEach { (type, multiplier) ->
-            if ( newAnimals.containsKey(type) ) {
+            if (newAnimals.containsKey(type)) {
                 newAnimals[type] = newAnimals[type]!! * multiplier
             }
         }
@@ -413,7 +410,7 @@ data class TerritoryResources(
 }
 
 /**
- * Final territory object. Territory fixed properties and resource 
+ * Final territory object. Territory fixed properties and resource
  * properties should not change after this is built.
  */
 data class Territory(
@@ -422,7 +419,7 @@ data class Territory(
     val color: Int,
     val core: Coord,
     val chunks: List<Coord>,
-    val bordersWilderness: Boolean,  // if territory is next to wilderness (region without any territories)
+    val bordersWilderness: Boolean, // if territory is next to wilderness (region without any territories)
     val neighbors: TerritoryIdArray, // neighboring territories (touching chunks/shares border)
     val resourceNodes: List<String>,
     // resource properties, should be derived from a TerritoryResources object
@@ -451,9 +448,9 @@ data class Territory(
         this.cropsCanGrow = crops.size > 0
         this.animalsCanBreed = animals.size > 0
     }
-    
+
     // id is forced to be unique by system
-    override public fun hashCode(): Int {
+    public override fun hashCode(): Int {
         return this.id.toInt()
     }
 
@@ -476,7 +473,7 @@ data class Territory(
     // print territory info
     public fun printInfo(sender: CommandSender) {
         val town: String = this.town?.name ?: "${ChatColor.GRAY}None"
-        val occupier: String = if ( this.occupier != null ) {
+        val occupier: String = if (this.occupier != null) {
             "${ChatColor.RED}${this.occupier!!.name}"
         } else {
             "${ChatColor.GRAY}None"
@@ -484,49 +481,48 @@ data class Territory(
         val core = this.core
 
         Message.print(sender, "${ChatColor.BOLD}Territory (id = ${this.id}):")
-        if ( this.name != "" ) {
-            Message.print(sender, "- Name${ChatColor.WHITE}: ${name}")
+        if (this.name != "") {
+            Message.print(sender, "- Name${ChatColor.WHITE}: $name")
         }
-        
-        Message.print(sender, "- Town${ChatColor.WHITE}: ${town}")
-        Message.print(sender, "- Occupier${ChatColor.WHITE}: ${occupier}")
+
+        Message.print(sender, "- Town${ChatColor.WHITE}: $town")
+        Message.print(sender, "- Occupier${ChatColor.WHITE}: $occupier")
         Message.print(sender, "- Chunks${ChatColor.WHITE}: ${this.chunks.size}")
         Message.print(sender, "- Core chunk (x,z)${ChatColor.WHITE}: (${core.x}, ${core.z})")
         Message.print(sender, "- Cost${ChatColor.WHITE}: ${this.cost}")
         Message.print(sender, "- Resources:")
-        for ( name in this.resourceNodes ) {
-            Message.print(sender, "   - ${name}")
+        for (name in this.resourceNodes) {
+            Message.print(sender, "   - $name")
         }
     }
 
     // print territory net resources
     public fun printResources(sender: CommandSender) {
-
         // print income
         Message.print(sender, "- Income:")
-        for ( (k, v) in this.income ) {
-            Message.print(sender, "   - ${k}: ${v}")
+        for ((k, v) in this.income) {
+            Message.print(sender, "   - $k: $v")
         }
-        for ( (k, v) in this.incomeSpawnEgg ) {
-            Message.print(sender, "   - ${k}: ${v}")
+        for ((k, v) in this.incomeSpawnEgg) {
+            Message.print(sender, "   - $k: $v")
         }
 
         // print ore deposits
         Message.print(sender, "- Ore:")
-        for ( ore in this.ores.ores ) {
+        for (ore in this.ores.ores) {
             Message.print(sender, "   - ${ore.material}: ${String.format("%.5f", ore.dropChance)}, ${ore.minAmount} - ${ore.maxAmount}")
         }
 
         // print crops
         Message.print(sender, "- Crops:")
-        for ( (k, v) in this.crops ) {
-            Message.print(sender, "   - ${k}: ${v}")
+        for ((k, v) in this.crops) {
+            Message.print(sender, "   - $k: $v")
         }
 
         // print animals
         Message.print(sender, "- Animals:")
-        for ( (k, v) in this.animals ) {
-            Message.print(sender, "   - ${k}: ${v}")
+        for ((k, v) in this.animals) {
+            Message.print(sender, "   - $k: $v")
         }
     }
 }

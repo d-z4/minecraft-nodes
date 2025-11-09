@@ -17,7 +17,7 @@ public enum class DiplomaticRelationship {
     NATION,
     ALLY,
     NEUTRAL,
-    ENEMY
+    ENEMY,
 }
 
 // constants for setting enemy

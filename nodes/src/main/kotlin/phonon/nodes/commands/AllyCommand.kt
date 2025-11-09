@@ -20,45 +20,44 @@ import phonon.nodes.war.*
 /**
  * @command /ally
  * Offer or break alliances with towns or nations
- * 
+ *
  * @subcommand /ally [town]
  * Offer alliance to a town
- * 
+ *
  * @subcommand /ally [nation]
  * Offer alliance to a nation
  */
 public class AllyCommand : CommandExecutor, TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
-        
         // no args, print help
-        if ( args.size == 0 ) {
+        if (args.size == 0) {
             printHelp(sender)
             return true
         }
 
-        if ( !(sender is Player) ) {
+        if (!(sender is Player)) {
             return true
         }
 
         val player: Player = sender
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return true
         }
-        
+
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             return true
         }
 
         val nation = town.nation
-        if ( nation !== null && town !== nation.capital ) {
+        if (nation !== null && town !== nation.capital) {
             Message.error(player, "Only the nation's capital town can offer/accept alliances")
             return true
         }
 
-        if ( resident !== town.leader && !town.officers.contains(resident) ) {
+        if (resident !== town.leader && !town.officers.contains(resident)) {
             Message.error(player, "Only the leader and officers can offer/accept alliances")
             return true
         }
@@ -69,10 +68,10 @@ public class AllyCommand : CommandExecutor, TabCompleter {
     }
 
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String> {
-        if ( args.size > 0 ) {
+        if (args.size > 0) {
             return filterTownOrNation(args[0])
         }
-        
+
         return listOf()
     }
 
@@ -90,7 +89,7 @@ public class AllyCommand : CommandExecutor, TabCompleter {
 
         // 1. try nation
         var otherNation = Nodes.nations.get(target)
-        if ( otherNation !== null ) {
+        if (otherNation !== null) {
             offerAlliance(player, town, otherNation.capital, townNation, otherNation)
             return
         }
@@ -98,57 +97,55 @@ public class AllyCommand : CommandExecutor, TabCompleter {
         // 2. try town
         //    if town has nation, use nation
         val otherTown = Nodes.towns.get(target)
-        if ( otherTown !== null ) {
+        if (otherTown !== null) {
             otherNation = otherTown.nation
-            if ( otherNation !== null ) {
+            if (otherNation !== null) {
                 offerAlliance(player, town, otherNation.capital, townNation, otherNation)
-            }
-            else {
+            } else {
                 offerAlliance(player, town, otherTown, townNation, otherNation)
             }
             return
         }
-        
+
         Message.error(player, "Town or nation \"${target}\" does not exist")
     }
 
     // offer alliance, other side must offer alliance to accept
     private fun offerAlliance(player: Player, town: Town, other: Town, townNation: Nation?, otherNation: Nation?) {
-        if ( town === other ) {
+        if (town === other) {
             Message.error(player, "You cannot make a peace treaty with yourself.")
             return
         }
-        
+
         val result = Alliance.request(town, other)
-        if ( result.isSuccess ) {
-            val thisSideName = if ( townNation !== null ) {
+        if (result.isSuccess) {
+            val thisSideName = if (townNation !== null) {
                 townNation.name
             } else {
                 town.name
             }
 
-            val otherSideName = if ( otherNation !== null ) {
+            val otherSideName = if (otherNation !== null) {
                 otherNation.name
             } else {
                 other.name
             }
 
-            when ( result.getOrNull() ) {
-
+            when (result.getOrNull()) {
                 // message that alliance is being requested
                 AllianceRequest.NEW -> {
-                    val thisSideMsg = "You are offering an alliance to ${otherSideName}"
-                    for ( r in town.residents ) {
+                    val thisSideMsg = "You are offering an alliance to $otherSideName"
+                    for (r in town.residents) {
                         val player = r.player()
-                        if ( player !== null ) {
+                        if (player !== null) {
                             Message.print(player, thisSideMsg)
                         }
                     }
 
-                    val otherSideMsg = "${thisSideName} is offering an alliance, use \"/ally ${thisSideName}\" to accept"
-                    for ( r in other.residents ) {
+                    val otherSideMsg = "$thisSideName is offering an alliance, use \"/ally ${thisSideName}\" to accept"
+                    for (r in other.residents) {
                         val player = r.player()
-                        if ( player !== null ) {
+                        if (player !== null) {
                             Message.print(player, otherSideMsg)
                         }
                     }
@@ -156,12 +153,11 @@ public class AllyCommand : CommandExecutor, TabCompleter {
 
                 // broadcast that alliance was created
                 AllianceRequest.ACCEPTED -> {
-                    Message.broadcast("${thisSideName} has formed an alliance with ${otherSideName}")
+                    Message.broadcast("$thisSideName has formed an alliance with $otherSideName")
                 } null -> {}
             }
-        }
-        else {
-            when ( result.exceptionOrNull() ) {
+        } else {
+            when (result.exceptionOrNull()) {
                 ErrorAllyRequestEnemies -> Message.error(player, "You cannot ally an enemy")
                 ErrorAllyRequestAlreadyAllies -> Message.error(player, "You are already allied with this town or nation")
                 ErrorPeaceRequestAlreadyCreated -> Message.error(player, "You already sent an alliance request")
@@ -170,5 +166,4 @@ public class AllyCommand : CommandExecutor, TabCompleter {
 
         // TODO alliance requests
     }
-    
 }

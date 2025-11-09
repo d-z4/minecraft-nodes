@@ -24,21 +24,20 @@ import phonon.nodes.war.Truce
 public class TruceCommand : CommandExecutor, TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
-
         // no args, use sender's town
-        if ( args.size == 0 ) {
-            if ( !(sender is Player) ) {
+        if (args.size == 0) {
+            if (!(sender is Player)) {
                 return true
             }
-    
+
             val player: Player = sender
             val resident = Nodes.getResident(player)
-            if ( resident == null ) {
+            if (resident == null) {
                 return true
             }
-            
+
             val town = resident.town
-            if ( town == null ) {
+            if (town == null) {
                 Message.error(player, "You have no town")
                 return true
             }
@@ -46,17 +45,16 @@ public class TruceCommand : CommandExecutor, TabCompleter {
             printTownTruces(player, town)
         }
         // parse town name
-        else if ( args.size >= 1 ) {
+        else if (args.size >= 1) {
             val townName = args[0]
             val town = Nodes.getTownFromName(townName)
-            if ( town !== null ) {
+            if (town !== null) {
                 printTownTruces(sender, town)
 
-                if ( sender is Player ) {
+                if (sender is Player) {
                     Message.print(sender, "Use \"/peace ${townName}\" to negotiate a treaty.")
                 }
-            }
-            else {
+            } else {
                 Message.error(sender, "Town \"${townName}\" does not exist")
             }
         }
@@ -65,10 +63,10 @@ public class TruceCommand : CommandExecutor, TabCompleter {
     }
 
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String> {
-        if ( args.size == 1 ) {
+        if (args.size == 1) {
             return filterTown(args[0])
         }
-        
+
         return listOf()
     }
 
@@ -80,27 +78,26 @@ public class TruceCommand : CommandExecutor, TabCompleter {
 
         // get truce list
         val truceList = Truce.get(town)
-        for ( townPair in truceList ) {
+        for (townPair in truceList) {
             val startTime = Truce.truces.get(townPair)
-            if ( startTime !== null ) {
+            if (startTime !== null) {
                 val remainingTime = Config.trucePeriod - (time - startTime)
-                
-                val remainingTimeString = if ( remainingTime > 0 ) {
-                    val hour: Long = remainingTime/3600000L
-                    val min: Long = 1L + (remainingTime - hour * 3600000L)/60000L
+
+                val remainingTimeString = if (remainingTime > 0) {
+                    val hour: Long = remainingTime / 3600000L
+                    val min: Long = 1L + (remainingTime - hour * 3600000L) / 60000L
                     "${hour}hr ${min}min"
-                }
-                else {
+                } else {
                     "0hr 0min"
                 }
 
-                val otherTownName = if ( town === townPair.town1 ) {
+                val otherTownName = if (town === townPair.town1) {
                     townPair.town2.name
                 } else {
                     townPair.town1.name
                 }
 
-                Message.print(sender, "- ${otherTownName}${ChatColor.WHITE}: ${remainingTimeString}")
+                Message.print(sender, "- ${otherTownName}${ChatColor.WHITE}: $remainingTimeString")
             }
         }
     }

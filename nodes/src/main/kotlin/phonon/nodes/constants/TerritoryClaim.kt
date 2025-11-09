@@ -1,7 +1,7 @@
 /**
  * Enum statuses for result of claim/unclaim territory
  * for a town.
- * 
+ *
  * Allows printing/handling different error results of
  * claiming territory
  */

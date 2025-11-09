@@ -1,6 +1,6 @@
 /**
  * Enum statuses for town management functions
- * 
+ *
  */
 
 package phonon.nodes.constants

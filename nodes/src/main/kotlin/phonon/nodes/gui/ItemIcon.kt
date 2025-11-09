@@ -9,9 +9,8 @@ import org.bukkit.inventory.ItemStack
 public fun ItemIcon(
     icon: ItemStack,
     title: String,
-    tooltip: List<String>
+    tooltip: List<String>,
 ): ItemStack {
-
     val itemMeta = icon.getItemMeta()
     itemMeta.setDisplayName(title)
     itemMeta.setLore(tooltip)

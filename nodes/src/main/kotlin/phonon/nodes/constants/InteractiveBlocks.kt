@@ -1,16 +1,15 @@
 /**
  * All blocks that have an interactive event that must be
  * manually cancelled.
- * 
+ *
  * -> When player has fence in hand, must allow interact event
  * -> Force cancel when target block is in this list
  */
 
 package phonon.nodes.constants
 
-import java.util.EnumSet
 import org.bukkit.Material
-
+import java.util.EnumSet
 
 val INTERACTIVE_BLOCKS: EnumSet<Material> = EnumSet.of(
     Material.CHEST,
@@ -89,5 +88,5 @@ val INTERACTIVE_BLOCKS: EnumSet<Material> = EnumSet.of(
     Material.DISPENSER,
     Material.COMPOSTER,
     Material.BEACON,
-    Material.JUKEBOX
+    Material.JUKEBOX,
 )

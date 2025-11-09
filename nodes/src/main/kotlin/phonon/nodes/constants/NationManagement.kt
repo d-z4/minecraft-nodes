@@ -1,6 +1,6 @@
 /**
  * Enum statuses for nation management functions
- * 
+ *
  */
 
 package phonon.nodes.constants

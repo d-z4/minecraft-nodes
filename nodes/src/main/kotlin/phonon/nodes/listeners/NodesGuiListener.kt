@@ -13,9 +13,9 @@ import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.event.inventory.InventoryDragEvent
 import phonon.nodes.gui.GuiWindow
 
-public class NodesGuiListener: Listener {
+public class NodesGuiListener : Listener {
 
-    // 
+    //
     @EventHandler
     public fun onInventoryClick(event: InventoryClickEvent) {
         // println("GUI EVENT: ${event.action}")
@@ -26,26 +26,27 @@ public class NodesGuiListener: Listener {
         val topHolder = view.getTopInventory().holder
 
         // clicked inventory is the gui window
-        if ( topHolder is GuiWindow ) {
-            if ( holder != null && holder is GuiWindow ) {
+        if (topHolder is GuiWindow) {
+            if (holder != null && holder is GuiWindow) {
                 holder.runOnClick(event)
             }
             // top inventory is gui window, player inv/hotbar was clicked
             else {
                 // println("GUIWINDOW EVENT, CLICKED BOTTOM")
-                when ( event.action ) {
+                when (event.action) {
                     InventoryAction.MOVE_TO_OTHER_INVENTORY -> {
                         // println("MOVING ITEM INTO GUI WINDOW")
                         topHolder.runOnItemDeposit(event)
                     }
 
                     // cancel unsafe actions
-                    InventoryAction.COLLECT_TO_CURSOR -> { event.setCancelled(true) }
+                    InventoryAction.COLLECT_TO_CURSOR -> {
+                        event.setCancelled(true)
+                    }
                     else -> {}
                 }
             }
         }
-        
     }
 
     @EventHandler
@@ -55,7 +56,7 @@ public class NodesGuiListener: Listener {
         val inventory = event.getInventory()
         val holder = inventory?.holder
 
-        if ( holder != null && holder is GuiWindow ) {
+        if (holder != null && holder is GuiWindow) {
             holder.runOnDrag(event)
         }
     }
@@ -64,9 +65,8 @@ public class NodesGuiListener: Listener {
     public fun onInventoryClose(event: InventoryCloseEvent) {
         val inventory = event.getInventory()
         val holder = inventory?.holder
-        if ( holder != null && holder is GuiWindow ) {
+        if (holder != null && holder is GuiWindow) {
             holder.runOnClose(event)
         }
     }
-    
 }

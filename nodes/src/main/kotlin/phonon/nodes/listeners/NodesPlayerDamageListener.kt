@@ -5,9 +5,9 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import phonon.nodes.Config
+import phonon.nodes.Message
 import phonon.nodes.Nodes.getRelationshipOfPlayerToPlayer
 import phonon.nodes.constants.DiplomaticRelationship
-import phonon.nodes.Message
 
 public class NodesPlayerDamageListener : Listener {
 
@@ -37,6 +37,4 @@ public class NodesPlayerDamageListener : Listener {
             Message.error(attacker, message)
         }
     }
-
-
 }

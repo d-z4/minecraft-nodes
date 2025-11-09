@@ -2,7 +2,7 @@ package phonon.nodes.objects
 
 /**
  * TerritoryChunk
- * 
+ *
  * Wrapper around Minecraft chunk, basic unit in a territory.
  * This allows easier mapping from chunk to Territory object.
  * And it handles references to attack and occupier during war.
@@ -17,6 +17,6 @@ data class TerritoryChunk(
     val territory: Territory,
 
     // flags for war
-    var attacker: Town? = null,         // town currently attacking chunk
-    var occupier: Town? = null          // town occupying chunk
+    var attacker: Town? = null, // town currently attacking chunk
+    var occupier: Town? = null, // town occupying chunk
 )

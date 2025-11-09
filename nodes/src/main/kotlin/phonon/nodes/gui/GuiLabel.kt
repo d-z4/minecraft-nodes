@@ -14,9 +14,9 @@ public class GuiLabel(
     val y: Int,
     val icon: ItemStack,
     val title: String,
-    val tooltip: List<String>
-): GuiElement {
-    
+    val tooltip: List<String>,
+) : GuiElement {
+
     // set icon meta
     init {
         val itemMeta = icon.getItemMeta()
@@ -24,8 +24,8 @@ public class GuiLabel(
         itemMeta.setLore(tooltip)
         icon.setItemMeta(itemMeta)
     }
-    
-    override public fun render(screen: GuiWindow) {
+
+    public override fun render(screen: GuiWindow) {
         screen.draw(this, x, y, icon)
     }
 }

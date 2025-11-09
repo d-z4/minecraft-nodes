@@ -9,8 +9,6 @@ import org.bukkit.Bukkit
 import org.bukkit.plugin.Plugin
 import org.bukkit.scheduler.BukkitTask
 import phonon.nodes.Nodes
-import phonon.nodes.Config
-
 
 public object OverMaxClaimsReminder {
 
@@ -18,22 +16,24 @@ public object OverMaxClaimsReminder {
 
     // run scheduler for saving backups
     public fun start(plugin: Plugin, period: Long) {
-        if ( this.task !== null ) {
+        if (this.task !== null) {
             return
         }
 
         // scheduler for writing backups
-        val task = object: Runnable {
+        val task = object : Runnable {
 
-            override public fun run() {
+            public override fun run() {
                 // schedule main thread to run income tick
-                Bukkit.getScheduler().runTask(plugin, object: Runnable {
-                    override fun run() {
-                        Nodes.overMaxClaimsReminder()
-                    }
-                })
+                Bukkit.getScheduler().runTask(
+                    plugin,
+                    object : Runnable {
+                        override fun run() {
+                            Nodes.overMaxClaimsReminder()
+                        }
+                    },
+                )
             }
-            
         }
 
         this.task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, task, period, period)
@@ -41,7 +41,7 @@ public object OverMaxClaimsReminder {
 
     public fun stop() {
         val task = this.task
-        if ( task === null ) {
+        if (task === null) {
             return
         }
 

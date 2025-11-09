@@ -1,6 +1,6 @@
 /**
  * Utils for parsing collections to strings
- * 
+ *
  * Used by serializer
  * TODO: benchmark if string array funcs are necessary
  */
@@ -9,15 +9,15 @@ package phonon.nodes.utils.string
 
 import org.bukkit.Bukkit
 import phonon.nodes.Nodes
-import phonon.nodes.objects.Town
 import phonon.nodes.objects.Nation
+import phonon.nodes.objects.Town
 
 // serializer for a list type container
 inline fun <T> stringArrayFromList(iter: List<T>, itemName: (T) -> String): String {
     var s = "["
-    for ( (i, v) in iter.withIndex() ) {
+    for ((i, v) in iter.withIndex()) {
         s += itemName(v)
-        if ( i < iter.size - 1 ) {
+        if (i < iter.size - 1) {
             s += ","
         }
     }
@@ -28,9 +28,9 @@ inline fun <T> stringArrayFromList(iter: List<T>, itemName: (T) -> String): Stri
 
 inline fun <T> stringArrayFromSet(iter: Set<T>, itemName: (T) -> String): String {
     var s = "["
-    for ( (i, v) in iter.withIndex() ) {
+    for ((i, v) in iter.withIndex()) {
         s += itemName(v)
-        if ( i < iter.size - 1 ) {
+        if (i < iter.size - 1) {
             s += ","
         }
     }
@@ -39,13 +39,13 @@ inline fun <T> stringArrayFromSet(iter: Set<T>, itemName: (T) -> String): String
     return s
 }
 
-inline fun <K,V> stringMapFromMap(iter: Map<K,V>, keyString: (K) -> String, valString: (V) -> String ): String {
+inline fun <K, V> stringMapFromMap(iter: Map<K, V>, keyString: (K) -> String, valString: (V) -> String): String {
     var s = "{"
-    for ( (i, entry) in iter.entries.withIndex() ) {
+    for ((i, entry) in iter.entries.withIndex()) {
         val key = keyString(entry.key)
         val value = valString(entry.value)
-        s += "${key}:${value}"
-        if ( i < iter.size - 1 ) {
+        s += "$key:$value"
+        if (i < iter.size - 1) {
             s += ","
         }
     }
@@ -53,7 +53,7 @@ inline fun <K,V> stringMapFromMap(iter: Map<K,V>, keyString: (K) -> String, valS
     return s
 }
 
-// matches any string in a list of strings that 
+// matches any string in a list of strings that
 // begins with start
 public fun filterByStart(list: List<String>, start: String): List<String> {
     val startLowerCase = start.lowercase()
@@ -66,10 +66,10 @@ public fun filterPlayer(start: String): List<String> {
     val players = Bukkit.getOnlinePlayers()
     val filtered = players
         .asSequence()
-        .map{ p -> p.name }
-        .filter{ s -> s.lowercase().startsWith(startLowerCase) }
+        .map { p -> p.name }
+        .filter { s -> s.lowercase().startsWith(startLowerCase) }
         .toList()
-    
+
     return filtered
 }
 
@@ -77,10 +77,10 @@ public fun filterResident(start: String): List<String> {
     val startLowerCase = start.lowercase()
     val filtered = Nodes.residents.values
         .asSequence()
-        .map{ v -> v.name }
-        .filter{ s -> s.lowercase().startsWith(startLowerCase) }
+        .map { v -> v.name }
+        .filter { s -> s.lowercase().startsWith(startLowerCase) }
         .toList()
-    
+
     return filtered
 }
 
@@ -88,10 +88,10 @@ public fun filterTown(start: String): List<String> {
     val startLowerCase = start.lowercase()
     val filtered = Nodes.towns.values
         .asSequence()
-        .map{ v -> v.name }
-        .filter{ s -> s.lowercase().startsWith(startLowerCase) }
+        .map { v -> v.name }
+        .filter { s -> s.lowercase().startsWith(startLowerCase) }
         .toList()
-    
+
     return filtered
 }
 
@@ -99,10 +99,10 @@ public fun filterNation(start: String): List<String> {
     val startLowerCase = start.lowercase()
     val filtered = Nodes.nations.values
         .asSequence()
-        .map{ v -> v.name }
-        .filter{ s -> s.lowercase().startsWith(startLowerCase) }
+        .map { v -> v.name }
+        .filter { s -> s.lowercase().startsWith(startLowerCase) }
         .toList()
-    
+
     return filtered
 }
 
@@ -110,7 +110,7 @@ public fun filterNation(start: String): List<String> {
 public fun filterTownOrNation(start: String): List<String> {
     val filteredTowns = filterTown(start)
     val filteredNations = filterNation(start)
-    
+
     return filteredTowns.plus(filteredNations)
 }
 
@@ -119,10 +119,10 @@ public fun filterTownResident(town: Town, start: String): List<String> {
     val startLowerCase = start.lowercase()
     val filtered = town.residents
         .asSequence()
-        .map{ v -> v.name }
-        .filter{ s -> s.lowercase().startsWith(startLowerCase) }
+        .map { v -> v.name }
+        .filter { s -> s.lowercase().startsWith(startLowerCase) }
         .toList()
-    
+
     return filtered
 }
 
@@ -131,10 +131,10 @@ public fun filterNationResident(nation: Nation, start: String): List<String> {
     val startLowerCase = start.lowercase()
     val filtered = nation.residents
         .asSequence()
-        .map{ v -> v.name }
-        .filter{ s -> s.lowercase().startsWith(startLowerCase) }
+        .map { v -> v.name }
+        .filter { s -> s.lowercase().startsWith(startLowerCase) }
         .toList()
-    
+
     return filtered
 }
 
@@ -143,9 +143,9 @@ public fun filterNationTown(nation: Nation, start: String): List<String> {
     val startLowerCase = start.lowercase()
     val filtered = nation.towns
         .asSequence()
-        .map{ v -> v.name }
-        .filter{ s -> s.lowercase().startsWith(startLowerCase) }
+        .map { v -> v.name }
+        .filter { s -> s.lowercase().startsWith(startLowerCase) }
         .toList()
-    
+
     return filtered
 }

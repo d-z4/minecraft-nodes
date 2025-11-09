@@ -69,12 +69,12 @@ private val SUBCOMMANDS: List<String> = listOf(
     "capital",
     "annex",
     "outpost",
-    "fly"
+    "fly",
 )
 
 private val OUTPOST_SUBCOMMANDS: List<String> = listOf(
     "list",
-    "setspawn"
+    "setspawn",
 )
 
 // town permissions types
@@ -84,7 +84,7 @@ private val PERMISSIONS_TYPES: List<String> = listOf(
     "interact",
     "chests",
     "items",
-    "income"
+    "income",
 )
 
 // town permissions types
@@ -93,26 +93,25 @@ private val PERMISSIONS_GROUPS: List<String> = listOf(
     "nation",
     "ally",
     "outsider",
-    "trusted"
+    "trusted",
 )
 
 // town permissions flag
 private val PERMISSIONS_FLAGS: List<String> = listOf(
     "allow",
-    "deny"
+    "deny",
 )
-
 
 // ==================================================
 // Constants for /t map
-// 
+//
 // symbols
-val SHADE = "\u2592"      // medium shade
-val HOME = "\u2588"       // full solid block
-val CORE = "\u256B"       // core chunk H
+val SHADE = "\u2592" // medium shade
+val HOME = "\u2588" // full solid block
+val CORE = "\u256B" // core chunk H
 val CONQUERED0 = "\u2561" // captured chunk
 val CONQUERED1 = "\u255F" // other chunk flag symbol
-val SPACER = "\u17f2"     // spacer
+val SPACER = "\u17f2" // spacer
 
 val MAP_STR_BEGIN = "    "
 
@@ -122,35 +121,33 @@ val MAP_STR_END = arrayOf(
     "     ${ChatColor.GOLD}W + E",
     "       ${ChatColor.GOLD}S",
     "",
-    "  ${ChatColor.GRAY}${SHADE}${ChatColor.DARK_GRAY}${SHADE} ${ChatColor.GRAY}- Unclaimed",
-    "  ${ChatColor.GREEN}${SHADE}${ChatColor.DARK_GREEN}${SHADE} - Town",
-    "  ${ChatColor.YELLOW}${SHADE}${ChatColor.GOLD}${SHADE} - Neutral",
-    "  ${ChatColor.AQUA}${SHADE}${ChatColor.DARK_AQUA}${SHADE} - Ally",
-    "  ${ChatColor.RED}${SHADE}${ChatColor.DARK_RED}${SHADE} - Enemy",
+    "  ${ChatColor.GRAY}${SHADE}${ChatColor.DARK_GRAY}$SHADE ${ChatColor.GRAY}- Unclaimed",
+    "  ${ChatColor.GREEN}${SHADE}${ChatColor.DARK_GREEN}$SHADE - Town",
+    "  ${ChatColor.YELLOW}${SHADE}${ChatColor.GOLD}$SHADE - Neutral",
+    "  ${ChatColor.AQUA}${SHADE}${ChatColor.DARK_AQUA}$SHADE - Ally",
+    "  ${ChatColor.RED}${SHADE}${ChatColor.DARK_RED}$SHADE - Enemy",
     "",
-    "  ${ChatColor.WHITE}${HOME} - Home territory",
-    "  ${ChatColor.WHITE}${CORE} - Core chunk",
-    "  ${ChatColor.WHITE}${CONQUERED0},${CONQUERED1} - Captured",
+    "  ${ChatColor.WHITE}$HOME - Home territory",
+    "  ${ChatColor.WHITE}$CORE - Core chunk",
+    "  ${ChatColor.WHITE}$CONQUERED0,$CONQUERED1 - Captured",
     "",
     "",
     "",
-    ""
+    "",
 )
 // ==================================================
-
 
 public class TownCommand : CommandExecutor, TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
-        
-        val player = if ( sender is Player ) sender else null
-    
+        val player = if (sender is Player) sender else null
+
         // no args, print current town info
-        if ( args.size == 0 ) {
-            if ( player != null ) {
+        if (args.size == 0) {
+            if (player != null) {
                 // print player's town info
                 val resident = Nodes.getResident(player)
-                if ( resident != null && resident.town != null ) {
+                if (resident != null && resident.town != null) {
                     resident.town!!.printInfo(player)
                 }
                 Message.print(player, "Use \"/town help\" to view commands")
@@ -159,7 +156,7 @@ public class TownCommand : CommandExecutor, TabCompleter {
         }
 
         // parse subcommand
-        when ( args[0].lowercase() ) {
+        when (args[0].lowercase()) {
             "help" -> printHelp(sender)
             "create" -> createTown(player, args)
             "new" -> createTown(player, args)
@@ -192,7 +189,8 @@ public class TownCommand : CommandExecutor, TabCompleter {
             "map" -> printMap(player, args)
             "minimap" -> minimap(player, args)
             "perms",
-            "permissions" -> setPermissions(player, args)
+            "permissions",
+            -> setPermissions(player, args)
             "protect" -> protectChests(player, args)
             "trust" -> trustPlayer(player, args, true)
             "untrust" -> trustPlayer(player, args, false)
@@ -200,44 +198,46 @@ public class TownCommand : CommandExecutor, TabCompleter {
             "annex" -> annexTerritory(player, args)
             "outpost" -> manageOutpost(sender, args)
             "fly" -> toggleFlight(player)
-            else -> { Message.error(sender, "Invalid command, use /town help") }
+            else -> {
+                Message.error(sender, "Invalid command, use /town help")
+            }
         }
 
         return true
     }
 
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String> {
-        val player: Player = if ( sender is Player ) {
+        val player: Player = if (sender is Player) {
             sender
         } else {
             return listOf()
         }
 
         // match subcommand
-        if ( args.size == 1 ) {
+        if (args.size == 1) {
             return filterByStart(SUBCOMMANDS, args[0])
         }
         // match each subcommand format
-        else if ( args.size > 1 ) {
+        else if (args.size > 1) {
             // handle specific subcommands
-            when ( args[0].lowercase() ) {
-
+            when (args[0].lowercase()) {
                 // /town [subcommand] [resident]
                 "officer",
                 "promote",
                 "demote",
-                "leader" -> {
-                    if ( args.size == 2 ) {
+                "leader",
+                -> {
+                    if (args.size == 2) {
                         val town = Nodes.getResident(player)?.town
-                        if ( town != null ) {
+                        if (town != null) {
                             return filterTownResident(town, args[1])
                         }
                     }
                 }
-                
+
                 // /town [subcommand] [player]
                 "invite" -> {
-                    if ( args.size == 2 ) {
+                    if (args.size == 2) {
                         return filterResident(args[1])
                     }
                 }
@@ -247,8 +247,9 @@ public class TownCommand : CommandExecutor, TabCompleter {
                 "join",
                 "accept",
                 "reject",
-                "deny" -> {
-                    if ( args.size == 2 ) {
+                "deny",
+                -> {
+                    if (args.size == 2) {
                         return filterTown(args[1])
                     }
                 }
@@ -258,10 +259,11 @@ public class TownCommand : CommandExecutor, TabCompleter {
                 "trust",
                 "untrust",
                 "prefix",
-                "suffix" -> {
-                    if ( args.size == 2 ) {
+                "suffix",
+                -> {
+                    if (args.size == 2) {
                         val town = Nodes.getResident(player)?.town
-                        if ( town != null ) {
+                        if (town != null) {
                             return filterTownResident(town, args[1])
                         }
                     }
@@ -269,43 +271,41 @@ public class TownCommand : CommandExecutor, TabCompleter {
 
                 // /town info name
                 "info" -> {
-                    if ( args.size == 2 ) {
+                    if (args.size == 2) {
                         return filterTown(args[1])
                     }
                 }
 
                 // /town online name
                 "online" -> {
-                    if ( args.size == 2 ) {
+                    if (args.size == 2) {
                         return filterTown(args[1])
                     }
                 }
-                
+
                 // /town permissions [type] [group] [flag]
                 "permissions" -> {
-                    if ( args.size == 2 ) {
+                    if (args.size == 2) {
                         return filterByStart(PERMISSIONS_TYPES, args[1])
-                    }
-                    else if ( args.size == 3 ) {
+                    } else if (args.size == 3) {
                         return filterByStart(PERMISSIONS_GROUPS, args[2])
-                    }
-                    else if ( args.size == 4 ) {
+                    } else if (args.size == 4) {
                         return filterByStart(PERMISSIONS_FLAGS, args[3])
                     }
                 }
 
                 // chest protection
                 "protect" -> {
-                    if ( args.size == 2 ) {
+                    if (args.size == 2) {
                         return listOf("show")
                     }
                 }
 
                 // spawn command
                 "spawn" -> {
-                    if ( args.size == 2 ) {
+                    if (args.size == 2) {
                         val town = Nodes.getResident(player)?.town
-                        if ( town != null ) {
+                        if (town != null) {
                             return filterByStart(town.outposts.keys.toList(), args[1])
                         }
                     }
@@ -313,13 +313,13 @@ public class TownCommand : CommandExecutor, TabCompleter {
 
                 // outpost subcommand
                 "outpost" -> {
-                    if ( args.size == 2 ) {
+                    if (args.size == 2) {
                         return filterByStart(OUTPOST_SUBCOMMANDS, args[1])
                     }
                 }
             }
         }
-        
+
         return listOf()
     }
 
@@ -362,66 +362,64 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * Create a new town with the specified name at location.
      */
     private fun createTown(player: Player?, args: Array<String>) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
-        if ( args.size == 1 ) {
+        if (args.size == 1) {
             Message.print(player, "Usage: ${ChatColor.WHITE}/town create [name]")
             return
         }
-        
+
         // do not allow during war
-        if ( !Config.canCreateTownDuringWar && Nodes.war.enabled == true ) {
+        if (!Config.canCreateTownDuringWar && Nodes.war.enabled == true) {
             Message.error(player, "Cannot create towns during war")
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         // check if player has cooldown
-        if ( resident.townCreateCooldown > 0 ) {
+        if (resident.townCreateCooldown > 0) {
             val remainingTime = resident.townCreateCooldown
-            val remainingTimeString = if ( remainingTime > 0 ) {
-                val hour: Long = remainingTime/3600000L
-                val min: Long = 1L + (remainingTime - hour * 3600000L)/60000L
+            val remainingTimeString = if (remainingTime > 0) {
+                val hour: Long = remainingTime / 3600000L
+                val min: Long = 1L + (remainingTime - hour * 3600000L) / 60000L
                 "${hour}hr ${min}min"
-            }
-            else {
+            } else {
                 "0hr 0min"
             }
 
-            Message.error(player, "You cannot create another town for: ${remainingTimeString} ")
+            Message.error(player, "You cannot create another town for: $remainingTimeString ")
             return
         }
-        
+
         val name = args[1]
-        if ( !stringInputIsValid(name) ) {
+        if (!stringInputIsValid(name)) {
             Message.error(player, "Invalid town name")
             return
         }
 
         val territory = Nodes.getTerritoryFromPlayer(player)
-        if ( territory == null ) {
+        if (territory == null) {
             Message.error(player, "This chunk has no territory")
             return
         }
 
         val result = Nodes.createTown(sanitizeString(name), territory, resident)
-        if ( result.isSuccess ) {
+        if (result.isSuccess) {
             Message.broadcast("${ChatColor.BOLD}${player.name} has created the town \"${name}\"")
 
             // check how much player is over town claim limit
             val overClaimsPenalty: Int = Math.max(0, Config.initialOverClaimsAmountScale * (territory.cost - Config.townInitialClaims))
-            if ( overClaimsPenalty > 0 ) {
-                Message.print(player, "${ChatColor.DARK_RED}Your town is over the initial town claim amount ${Config.townInitialClaims}: you are receiving a -${overClaimsPenalty} starting power penalty")
+            if (overClaimsPenalty > 0) {
+                Message.print(player, "${ChatColor.DARK_RED}Your town is over the initial town claim amount ${Config.townInitialClaims}: you are receiving a -$overClaimsPenalty starting power penalty")
             }
-        }
-        else {
-            when ( result.exceptionOrNull() ) {
+        } else {
+            when (result.exceptionOrNull()) {
                 ErrorTownExists -> Message.error(player, "Town \"${name}\" already exists")
                 ErrorPlayerHasTown -> Message.error(player, "You already belong to a town")
                 ErrorTerritoryOwned -> Message.error(player, "Territory is already claimed by a town")
@@ -434,36 +432,36 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * Delete your town. Town leaders only.
      */
     private fun deleteTown(player: Player?) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         // check if player is town leader
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You are not a member of a town")
             return
         }
 
         val leader = town.leader
-        if ( resident !== leader ) {
+        if (resident !== leader) {
             Message.error(player, "You are not the town leader")
             return
         }
 
         val nation = town.nation
-        if ( nation !== null && town === nation.capital ) {
+        if (nation !== null && town === nation.capital) {
             Message.error(player, "You cannot destroy your town as the nation capital, use /n delete first")
             return
         }
 
         // do not allow during war
-        if ( !Config.canDestroyTownDuringWar && Nodes.war.enabled == true ) {
+        if (!Config.canDestroyTownDuringWar && Nodes.war.enabled == true) {
             Message.error(player, "Cannot delete your town during war")
             return
         }
@@ -479,47 +477,47 @@ public class TownCommand : CommandExecutor, TabCompleter {
     /**
      * @command /town promote [name]
      * Makes player a town officer.
-     * 
+     *
      * @command /town demote [name]
      * Removes player from town officers.
      */
     private fun setOfficer(player: Player?, args: Array<String>, toggle: Boolean?) {
-        if ( player == null || args.size < 2 ) {
+        if (player == null || args.size < 2) {
             Message.error(player, "Usage: /t promote/demote [player]")
             return
         }
 
         // check if player is town leader
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You are not a member of a town")
             return
         }
 
         val leader = town.leader
-        if ( resident !== leader ) {
+        if (resident !== leader) {
             Message.error(player, "You are not the town leader")
             return
         }
 
         // get other resident
         val target = Nodes.getResidentFromName(args[1])
-        if ( target === null ) {
+        if (target === null) {
             Message.error(player, "Player not found")
             return
         }
-        if ( target === resident ) {
+        if (target === resident) {
             Message.error(player, "You are already the town leader")
             return
         }
 
         val targetTown = target.town
-        if ( targetTown !== town ) {
+        if (targetTown !== town) {
             Message.error(player, "Player is not in this town")
             return
         }
@@ -527,47 +525,45 @@ public class TownCommand : CommandExecutor, TabCompleter {
         val targetPlayer = target.player()
 
         // if null, toggle officer
-        if ( toggle === null ) {
-            if ( town.officers.contains(target) ) {
+        if (toggle === null) {
+            if (town.officers.contains(target)) {
                 Nodes.townRemoveOfficer(town, target)
                 Message.print(player, "Removed ${target.name} from town officers")
 
-                if ( targetPlayer !== null ) {
+                if (targetPlayer !== null) {
                     Message.error(targetPlayer, "You are no longer a town officer")
                 }
-            }
-            else {
+            } else {
                 Nodes.townAddOfficer(town, target)
                 Message.print(player, "Made ${target.name} a town officer")
 
-                if ( targetPlayer !== null ) {
+                if (targetPlayer !== null) {
                     Message.print(targetPlayer, "You are now a town officer")
                 }
             }
         }
         // add officer
-        else if ( toggle === true ) {
-            if ( !town.officers.contains(target) ) {
+        else if (toggle === true) {
+            if (!town.officers.contains(target)) {
                 Nodes.townAddOfficer(town, target)
                 Message.print(player, "Made ${target.name} a town officer")
 
-                if ( targetPlayer !== null ) {
+                if (targetPlayer !== null) {
                     Message.print(targetPlayer, "You are now a town officer")
                 }
             }
         }
         // remove officer
-        else if ( toggle === false ) {
-            if ( town.officers.contains(target) ) {
+        else if (toggle === false) {
+            if (town.officers.contains(target)) {
                 Nodes.townRemoveOfficer(town, target)
                 Message.print(player, "Removed ${target.name} from town officers")
 
-                if ( targetPlayer !== null ) {
+                if (targetPlayer !== null) {
                     Message.error(targetPlayer, "You are no longer a town officer")
                 }
             }
         }
-        
     }
 
     /**
@@ -575,51 +571,51 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * Give town leadership to another player in town.
      */
     private fun setLeader(player: Player?, args: Array<String>) {
-        if ( player == null || args.size < 2 ) {
+        if (player == null || args.size < 2) {
             Message.error(player, "Usage: /t leader [player]")
             return
         }
 
         // check if player is town leader
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You are not a member of a town")
             return
         }
 
         val leader = town.leader
-        if ( resident !== leader ) {
+        if (resident !== leader) {
             Message.error(player, "You are not the town leader")
             return
         }
 
         // get other resident
         val target = Nodes.getResidentFromName(args[1])
-        if ( target === null ) {
+        if (target === null) {
             Message.error(player, "This player does not exist")
             return
         }
-        if ( target === resident ) {
+        if (target === resident) {
             Message.error(player, "You are already the town leader")
             return
         }
 
         val targetTown = target.town
-        if ( targetTown !== town ) {
+        if (targetTown !== town) {
             Message.error(player, "Player is not in this town")
             return
         }
 
         Nodes.townSetLeader(town, target)
         Message.print(player, "You made ${target.name} the new leader of ${town.name}")
-        
+
         val targetPlayer = target.player()
-        if ( targetPlayer !== null ) {
+        if (targetPlayer !== null) {
             Message.print(targetPlayer, "You are now the leader of ${town.name}")
         }
     }
@@ -633,34 +629,34 @@ public class TownCommand : CommandExecutor, TabCompleter {
             return
         }
 
-        if ( args.size != 2) {
+        if (args.size != 2) {
             Message.print(player, "Usage: /town apply [town]")
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
-        if ( resident.town != null ) {
+        if (resident.town != null) {
             Message.error(player, "You are already a member of a town")
             return
         }
 
         val town = Nodes.getTownFromName(args[1])
-        if ( town == null ) {
-            Message.error(player,"That town does not exist")
+        if (town == null) {
+            Message.error(player, "That town does not exist")
             return
         }
 
-        if ( town.isOpen == true ) {
-            Nodes.addResidentToTown(town,resident)
+        if (town.isOpen == true) {
+            Nodes.addResidentToTown(town, resident)
             Message.print(player, "You are now a resident of ${town.name}!")
             return
         }
 
-        if ( town.applications.containsKey(resident) ) {
+        if (town.applications.containsKey(resident)) {
             Message.error(player, "You have already applied to ${town.name}")
             return
         }
@@ -669,35 +665,43 @@ public class TownCommand : CommandExecutor, TabCompleter {
         Bukkit.getPlayer(town.leader!!.name)?.let { player ->
             approvers.add(player)
         }
-        town.officers.forEach() { officer ->
+        town.officers.forEach { officer ->
             Bukkit.getPlayer(officer.name)?.let { player ->
                 approvers.add(player)
             }
         }
 
-        if ( approvers.isEmpty() ) {
+        if (approvers.isEmpty()) {
             Message.error(player, "There are no officers online from ${town.name} to receive your application")
             return
         }
 
-        approvers.forEach() { approver ->
+        approvers.forEach { approver ->
             Message.print(approver, "${resident.name} has applied to join to your town. \nType \"/t accept\" to let them in or \"/t reject\" to refuse the offer.")
         }
         Message.print(player, "Your application has been sent")
 
-        town.applications.put(resident,
-                Bukkit.getScheduler().runTaskLaterAsynchronously(Nodes.plugin!!, object: Runnable {
+        town.applications.put(
+            resident,
+            Bukkit.getScheduler().runTaskLaterAsynchronously(
+                Nodes.plugin!!,
+                object : Runnable {
                     override fun run() {
-                        Bukkit.getScheduler().runTask(Nodes.plugin!!, object: Runnable {
-                            override fun run() {
-                                if ( resident.town == null ) {
-                                    Message.print(player, "No one in ${town.name} responded to your application!")
-                                    town.applications.remove(resident)
+                        Bukkit.getScheduler().runTask(
+                            Nodes.plugin!!,
+                            object : Runnable {
+                                override fun run() {
+                                    if (resident.town == null) {
+                                        Message.print(player, "No one in ${town.name} responded to your application!")
+                                        town.applications.remove(resident)
+                                    }
                                 }
-                            }
-                        })
+                            },
+                        )
                     }
-                }, 1200)
+                },
+                1200,
+            ),
         )
     }
 
@@ -710,89 +714,96 @@ public class TownCommand : CommandExecutor, TabCompleter {
             return
         }
 
-        if ( args.size != 2) {
+        if (args.size != 2) {
             Message.print(player, "Usage: /town invite [player]")
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You are not a member of a town")
             return
         }
 
         val invitee: Player? = Bukkit.getPlayer(args[1])
-        if ( invitee == null ) {
+        if (invitee == null) {
             Message.error(player, "That player is not online")
             return
-        } else if ( invitee == player ) {
+        } else if (invitee == player) {
             Message.error(player, "You're already in your town")
             return
         }
 
         val inviteeResident = Nodes.getResident(invitee)
-        if ( inviteeResident == null ) {
+        if (inviteeResident == null) {
             return
         }
-        if ( inviteeResident.invitingTown == town) {
+        if (inviteeResident.invitingTown == town) {
             Message.error(player, "This player has already been invited to the town")
             return
-        } else if ( inviteeResident.invitingTown != null) {
+        } else if (inviteeResident.invitingTown != null) {
             Message.error(player, "This player is considering another town invitation")
             return
         }
         val inviteeTown = inviteeResident.town
-        if ( inviteeTown != null ) {
+        if (inviteeTown != null) {
             Message.error(player, "This player is already a member of a town")
             return
         }
 
-        if ( town.leader === resident || town.officers.contains(resident) ) {
+        if (town.leader === resident || town.officers.contains(resident)) {
             Message.print(player, "${invitee.name} has been invited to your town.")
             Message.print(invitee, "You have been invited to become a member of ${town.name}.\nType \"/t accept\" to join the town or \"/t reject\" to refuse the offer.")
             inviteeResident.invitingTown = town
             inviteeResident.invitingPlayer = player
-            inviteeResident.inviteThread = Bukkit.getScheduler().runTaskLaterAsynchronously(Nodes.plugin!!, object: Runnable {
-                override fun run() {
-                    Bukkit.getScheduler().runTask(Nodes.plugin!!, object: Runnable {
-                        override fun run() {
-                            if ( inviteeResident.invitingPlayer == player ) {
-                                Message.print(player, "${invitee.name} didn't respond to your town invitation!")
-                                inviteeResident.invitingTown = null
-                                inviteeResident.invitingPlayer = null
-                                inviteeResident.inviteThread = null
-                            }
-                        }
-                    })
-                }
-            }, 1200)
+            inviteeResident.inviteThread = Bukkit.getScheduler().runTaskLaterAsynchronously(
+                Nodes.plugin!!,
+                object : Runnable {
+                    override fun run() {
+                        Bukkit.getScheduler().runTask(
+                            Nodes.plugin!!,
+                            object : Runnable {
+                                override fun run() {
+                                    if (inviteeResident.invitingPlayer == player) {
+                                        Message.print(player, "${invitee.name} didn't respond to your town invitation!")
+                                        inviteeResident.invitingTown = null
+                                        inviteeResident.invitingPlayer = null
+                                        inviteeResident.inviteThread = null
+                                    }
+                                }
+                            },
+                        )
+                    }
+                },
+                1200,
+            )
         } else {
             Message.error(player, "You are not allowed to invite new members")
         }
     }
 
     private fun accept(player: Player?, args: Array<String>) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
-            if ( resident.invitingTown == null ) {
-                Message.error(player,"You have not been invited to any town or your invitation expired")
+        if (town == null) {
+            if (resident.invitingTown == null) {
+                Message.error(player, "You have not been invited to any town or your invitation expired")
                 return
             }
 
-            Message.print(player,"You are now a member of ${resident.invitingTown?.name}! Type \"/t spawn\" to teleport to your new town.")
+            Message.print(player, "You are now a member of ${resident.invitingTown?.name}! Type \"/t spawn\" to teleport to your new town.")
             Message.print(resident.invitingPlayer, "${resident.name} has accepted your invitation!")
 
             Nodes.addResidentToTown(resident.invitingTown!!, resident)
@@ -800,34 +811,34 @@ public class TownCommand : CommandExecutor, TabCompleter {
             resident.invitingPlayer = null
             resident.inviteThread = null
         } else {
-            if ( town.leader != resident && !town.officers.contains(resident) ) {
+            if (town.leader != resident && !town.officers.contains(resident)) {
                 Message.error(player, "You aren't allowed to consider town applications")
                 return
             }
 
-            if ( town.applications.isEmpty() ) {
+            if (town.applications.isEmpty()) {
                 Message.error(player, "There are no active applications")
                 return
             }
 
             var applicant: Resident = resident
-            if ( town.applications.size == 1 ) {
+            if (town.applications.size == 1) {
                 town.applications.forEach { k, v ->
                     applicant = k
                 }
-                if ( args.size > 1 && args[1].lowercase() != applicant.name.lowercase()) {
+                if (args.size > 1 && args[1].lowercase() != applicant.name.lowercase()) {
                     Message.error(player, "That player has not applied or their application has expired")
                     return
                 }
             } else {
-                if ( args.size == 1) {
-                    val applicantsString = town.applications.map {application -> application.key.name}.joinToString(", ")
-                    Message.print(player, "There are multiple town applications. Please use \"/town accept [player]\".\nCurrent applicants: ${applicantsString}")
+                if (args.size == 1) {
+                    val applicantsString = town.applications.map { application -> application.key.name }.joinToString(", ")
+                    Message.print(player, "There are multiple town applications. Please use \"/town accept [player]\".\nCurrent applicants: $applicantsString")
                     return
                 }
 
                 applicant = Nodes.getResidentFromName(args[1])!!
-                if ( !town.applications.containsKey(applicant!!)) {
+                if (!town.applications.containsKey(applicant!!)) {
                     Message.error(player, "That player has not applied or their application has expired")
                     return
                 }
@@ -835,7 +846,7 @@ public class TownCommand : CommandExecutor, TabCompleter {
 
             Message.print(player, "${applicant.name} has been accepted into your town!")
             val applicantPlayer = Bukkit.getPlayer(applicant.name)
-            if ( applicantPlayer != null ) {
+            if (applicantPlayer != null) {
                 Message.print(applicantPlayer, "You have been accepted into ${town.name}!")
             }
 
@@ -845,56 +856,56 @@ public class TownCommand : CommandExecutor, TabCompleter {
     }
 
     private fun deny(player: Player?, args: Array<String>) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
-            if ( resident.invitingTown == null ) {
-                Message.error(player,"You have not been invited to any town or your invitation expired")
+        if (town == null) {
+            if (resident.invitingTown == null) {
+                Message.error(player, "You have not been invited to any town or your invitation expired")
                 return
             }
 
-            Message.print(player,"You have rejected the invitation to join ${resident.invitingTown?.name}")
+            Message.print(player, "You have rejected the invitation to join ${resident.invitingTown?.name}")
             Message.print(resident.invitingPlayer, "${resident.name} has rejected your invitation!")
             resident.invitingTown = null
             resident.invitingPlayer = null
             resident.inviteThread = null
         } else {
-            if ( town.leader != resident && !town.officers.contains(resident) ) {
+            if (town.leader != resident && !town.officers.contains(resident)) {
                 Message.error(player, "You aren't allowed to consider town applications")
                 return
             }
 
-            if ( town.applications.isEmpty() ) {
+            if (town.applications.isEmpty()) {
                 Message.error(player, "There are no active applications")
                 return
             }
 
             var applicant: Resident = resident
-            if ( town.applications.size == 1 ) {
+            if (town.applications.size == 1) {
                 town.applications.forEach { k, v ->
                     applicant = k
                 }
-                if ( args.size > 1 && args[1] != applicant.name) {
+                if (args.size > 1 && args[1] != applicant.name) {
                     Message.error(player, "That player has not applied or their application has expired")
                     return
                 }
             } else {
-                if ( args.size == 1) {
-                    val applicantsString = town.applications.map {application -> application.key.name}.joinToString(", ")
-                    Message.print(player, "There are multiple town applications. Please use \"/town accept [player]\".\nCurrent applicants: ${applicantsString}")
+                if (args.size == 1) {
+                    val applicantsString = town.applications.map { application -> application.key.name }.joinToString(", ")
+                    Message.print(player, "There are multiple town applications. Please use \"/town accept [player]\".\nCurrent applicants: $applicantsString")
                     return
                 }
 
                 applicant = Nodes.getResidentFromName(args[1])!!
-                if ( !town.applications.containsKey(applicant!!)) {
+                if (!town.applications.containsKey(applicant!!)) {
                     Message.error(player, "That player has not applied or their application has expired")
                     return
                 }
@@ -902,7 +913,7 @@ public class TownCommand : CommandExecutor, TabCompleter {
 
             Message.print(player, "${applicant.name} has been denied residence in your town!")
             val applicantPlayer = Bukkit.getPlayer(applicant.name)
-            if ( applicantPlayer != null ) {
+            if (applicantPlayer != null) {
                 Message.print(applicantPlayer, "Your application to ${town.name} has been rejected!")
             }
 
@@ -915,34 +926,34 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * Abandon membership in your town.
      */
     private fun leaveTown(player: Player?) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You are not a member of a town")
             return
         }
 
-        if ( town.leader == resident ) {
+        if (town.leader == resident) {
             Message.error(player, "You must transfer leadership before leaving the town")
             return
         }
 
         // do not allow during war?
-        if ( !Config.canLeaveTownDuringWar && Nodes.war.enabled == true ) {
+        if (!Config.canLeaveTownDuringWar && Nodes.war.enabled == true) {
             Message.error(player, "Cannot leave your town during war")
             return
         }
-        
-        Message.print(player,"You have left ${town.name}")
-        Nodes.removeResidentFromTown(town,resident)
+
+        Message.print(player, "You have left ${town.name}")
+        Nodes.removeResidentFromTown(town, resident)
     }
 
     /**
@@ -950,44 +961,44 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * Remove another player from your town. Town leader and officers only.
      */
     private fun kickFromTown(player: Player?, args: Array<String>) {
-        if ( player === null || args.size < 2 ) {
+        if (player === null || args.size < 2) {
             Message.error(player, "Usage: /t kick [player]")
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident === null ) {
+        if (resident === null) {
             return
         }
 
         val town = resident.town
-        if ( town === null ) {
+        if (town === null) {
             Message.error(player, "You are not a member of a town")
             return
         }
 
         // check if player is leader or officer
         val leader = town.leader
-        if ( resident !== leader && !town.officers.contains(resident) ) {
+        if (resident !== leader && !town.officers.contains(resident)) {
             Message.error(player, "Only leaders and officers can kick players")
             return
         }
 
         // get other resident
         val target = Nodes.getResidentFromName(args[1])
-        if ( target === null ) {
+        if (target === null) {
             Message.error(player, "Player not found")
             return
         }
 
         val targetTown = target.town
-        if ( targetTown !== town ) {
+        if (targetTown !== town) {
             Message.error(player, "Player is not in this town")
             return
         }
 
         // cannot kick leaders or officers
-        if ( target === leader || town.officers.contains(target) ) {
+        if (target === leader || town.officers.contains(target)) {
             Message.error(player, "You cannot kick the leader or other officers")
             return
         }
@@ -995,60 +1006,60 @@ public class TownCommand : CommandExecutor, TabCompleter {
         Message.print(player, "You have kicked ${target.name} from the town")
 
         val targetPlayer = target.player()
-        if ( targetPlayer !== null ) {
+        if (targetPlayer !== null) {
             Message.print(targetPlayer, "${ChatColor.DARK_RED}You have been kicked from ${town.name}")
         }
-        
+
         Nodes.removeResidentFromTown(town, target)
     }
 
     /**
      * @command /town spawn
      * Teleport to your town's main spawnpoint.
-     * 
+     *
      * @subcommand /town spawn [outpost]
      * Teleport to an outpost's spawn point.
      */
     private fun goToSpawn(player: Player?, args: Array<String>) {
-        if ( player === null ) {
+        if (player === null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident === null ) {
+        if (resident === null) {
             return
         }
 
         val town = resident.town
-        if ( town === null ) {
+        if (town === null) {
             Message.error(player, "You are not a member of a town")
             return
         }
 
         // check if already trying to teleport
-        if ( resident.teleportThread !== null ) {
+        if (resident.teleportThread !== null) {
             Message.error(player, "You are already trying to teleport")
             return
         }
 
         // parse spawn destination
-        val destination = if ( args.size > 1 ) {
+        val destination = if (args.size > 1) {
             val outpostName = args[1]
             val outpost = town.outposts.get(outpostName)
-            if ( outpost !== null ) {
+            if (outpost !== null) {
                 // pay item cost to teleport
-                if ( Config.outpostTeleportCost.size > 0 ) {
+                if (Config.outpostTeleportCost.size > 0) {
                     val inventory = player.getInventory()
-                    for ( (material, amount) in Config.outpostTeleportCost ) {
+                    for ((material, amount) in Config.outpostTeleportCost) {
                         val items = ItemStack(material)
-                        if ( !inventory.containsAtLeast(items, amount) ) {
+                        if (!inventory.containsAtLeast(items, amount)) {
                             Message.error(player, "You do not have required payment to teleport to an outpost: ${Config.outpostTeleportCostString}")
                             return
                         }
                     }
 
                     // subtract cost
-                    for ( (material, amount) in Config.outpostTeleportCost ) {
+                    for ((material, amount) in Config.outpostTeleportCost) {
                         val items = ItemStack(material, amount)
                         inventory.removeItem(items)
                     }
@@ -1058,13 +1069,11 @@ public class TownCommand : CommandExecutor, TabCompleter {
 
                 resident.isTeleportingToOutpost = true
                 outpost.spawn
-            }
-            else {
-                if ( town.outposts.size > 0 ) {
-                    Message.error(player, "Town does not have outpost named: ${outpostName}")
+            } else {
+                if (town.outposts.size > 0) {
+                    Message.error(player, "Town does not have outpost named: $outpostName")
                     Message.error(player, "Available outposts: ${town.outposts.keys}")
-                }
-                else {
+                } else {
                     Message.error(player, "Your town has no outposts")
                 }
 
@@ -1081,31 +1090,37 @@ public class TownCommand : CommandExecutor, TabCompleter {
         var teleportTimerTicks = Math.max(0.0, Config.townSpawnTime * 20.0)
 
         // multiplier during war and if home occupied
-        if ( Nodes.war.enabled && Nodes.getTerritoryFromId(town.home)?.occupier !== null ) {
+        if (Nodes.war.enabled && Nodes.getTerritoryFromId(town.home)?.occupier !== null) {
             Message.error(player, "${ChatColor.BOLD}Your home is occupied, town spawn will take much longer...")
             teleportTimerTicks *= Config.occupiedHomeTeleportMultiplier
         }
 
-        resident.teleportThread = Bukkit.getScheduler().runTaskLaterAsynchronously(Nodes.plugin!!, object: Runnable {
-            override fun run() {
-                Bukkit.getScheduler().runTask(Nodes.plugin!!, object: Runnable {
-                    override fun run() {
-                        player.teleport(destination)
-                        resident.teleportThread = null
-                        resident.isTeleportingToOutpost = false
-                    }
-                })
-            }
-        }, teleportTimerTicks.toLong())
+        resident.teleportThread = Bukkit.getScheduler().runTaskLaterAsynchronously(
+            Nodes.plugin!!,
+            object : Runnable {
+                override fun run() {
+                    Bukkit.getScheduler().runTask(
+                        Nodes.plugin!!,
+                        object : Runnable {
+                            override fun run() {
+                                player.teleport(destination)
+                                resident.teleportThread = null
+                                resident.isTeleportingToOutpost = false
+                            }
+                        },
+                    )
+                }
+            },
+            teleportTimerTicks.toLong(),
+        )
 
-        if ( teleportTimerTicks > 0 ) {
+        if (teleportTimerTicks > 0) {
             val seconds = teleportTimerTicks.toInt() / 20
 
-            if ( resident.isTeleportingToOutpost ) {
-                Message.print(player, "Teleporting to an outpost in ${seconds} seconds. Don't move...")
-            }
-            else {
-                Message.print(player, "Teleporting to town spawn in ${seconds} seconds. Don't move...")
+            if (resident.isTeleportingToOutpost) {
+                Message.print(player, "Teleporting to an outpost in $seconds seconds. Don't move...")
+            } else {
+                Message.print(player, "Teleporting to town spawn in $seconds seconds. Don't move...")
             }
         }
     }
@@ -1115,58 +1130,57 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * Change your town's spawnpoint to another location in the home territory. Town leader only.
      */
     private fun setSpawn(player: Player?) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You are not a member of a town")
             return
         }
 
         val leader = town.leader
-        if ( resident !== leader && !town.officers.contains(resident) ) {
+        if (resident !== leader && !town.officers.contains(resident)) {
             Message.error(player, "You are not a town leader or officer")
             return
         }
 
         val result = Nodes.setTownSpawn(town, player.location)
-        
-        if ( result == true ) {
+
+        if (result == true) {
             Message.print(player, "Town spawn set to current location")
-        }
-        else {
-            Message.error(player,"Spawn location must be within town's home territory")
+        } else {
+            Message.error(player, "Spawn location must be within town's home territory")
         }
     }
+
     /**
      * @command /town list
      * View list of all established towns
      */
     private fun listTowns(player: Player?) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null) {
+        if (resident == null) {
             return
         }
 
-        Message.print(player,"${ChatColor.BOLD}Town - Population")
+        Message.print(player, "${ChatColor.BOLD}Town - Population")
         val townsList = ArrayList(Nodes.towns.values)
         townsList.sortByDescending { it.residents.size }
         townsList.forEach { town ->
             Message.print(player, "${town.name}${ChatColor.WHITE} - ${town.residents.size}")
         }
     }
-
 
     /**
      * @command /town info
@@ -1175,23 +1189,23 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * View details of another town
      */
     private fun getInfo(player: Player?, args: Array<String>) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null) {
+        if (resident == null) {
             return
         }
 
         var town: Town? = null
-        if ( args.size == 1 ) {
-            if ( resident.town == null ) {
+        if (args.size == 1) {
+            if (resident.town == null) {
                 Message.error(player, "You do not belong to a town")
                 return
             }
             town = resident.town
-        } else if ( args.size == 2 ) {
+        } else if (args.size == 2) {
             if (!Nodes.towns.containsKey(args[1])) {
                 Message.error(player, "That town does not exist")
                 return
@@ -1212,24 +1226,24 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * View another town's online players
      */
     private fun getOnline(player: Player?, args: Array<String>) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null) {
+        if (resident == null) {
             return
         }
 
         var town: Town? = null
-        if ( args.size == 1 ) {
-            if ( resident.town == null ) {
+        if (args.size == 1) {
+            if (resident.town == null) {
                 Message.error(player, "You do not belong to a town")
                 return
             }
             town = resident.town
-        } else if ( args.size == 2 ) {
-            if ( !Nodes.towns.containsKey(args[1]) ) {
+        } else if (args.size == 2) {
+            if (!Nodes.towns.containsKey(args[1])) {
                 Message.error(player, "That town does not exist")
                 return
             }
@@ -1239,13 +1253,13 @@ public class TownCommand : CommandExecutor, TabCompleter {
             return
         }
 
-        if ( town == null ) {
+        if (town == null) {
             return
         }
 
         val numPlayersOnline = town.playersOnline.size
-        val playersOnline = town.playersOnline.map({p -> p.name}).joinToString(", ")
-        Message.print(player, "Players online in town ${town.name} [${numPlayersOnline}]: ${ChatColor.WHITE}${playersOnline}")
+        val playersOnline = town.playersOnline.map({ p -> p.name }).joinToString(", ")
+        Message.print(player, "Players online in town ${town.name} [$numPlayersOnline]: ${ChatColor.WHITE}$playersOnline")
     }
 
     /**
@@ -1253,29 +1267,29 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * Set town territory color for dynmap. Town leader only.
      */
     private fun setColor(player: Player?, args: Array<String>) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
-        if ( args.size < 4 ) {
+        if (args.size < 4) {
             Message.print(player, "Usage: ${ChatColor.WHITE}/town color [r] [g] [b]")
             return
         }
 
         // check if player is town leader
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             return
         }
 
         val leader = town.leader
-        if ( resident !== leader ) {
-            Message.error(player,"Only town leaders can do this")
+        if (resident !== leader) {
+            Message.error(player, "Only town leaders can do this")
             return
         }
 
@@ -1284,14 +1298,12 @@ public class TownCommand : CommandExecutor, TabCompleter {
             val r = args[1].toInt().coerceIn(0, 255)
             val g = args[2].toInt().coerceIn(0, 255)
             val b = args[3].toInt().coerceIn(0, 255)
-            
+
             Nodes.setTownColor(town, r, g, b)
-            Message.print(player, "Town color set: ${ChatColor.WHITE}${r} ${g} ${b}")
-        }
-        catch (e: NumberFormatException) {
+            Message.print(player, "Town color set: ${ChatColor.WHITE}$r $g $b")
+        } catch (e: NumberFormatException) {
             Message.error(player, "Invalid color (must be [r] [g] [b] in range 0-255)")
         }
-        
     }
 
     /**
@@ -1299,19 +1311,19 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * Claim a contiguous territory for your town. Town leader and officers only.
      */
     private fun claimTerritory(player: Player?) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         // get town from player
         val resident = Nodes.getResident(player)
         val town = resident?.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "Cannot claim without being in a town")
             return
         }
-        
-        if ( resident !== town.leader && !town.officers.contains(resident) ) {
+
+        if (resident !== town.leader && !town.officers.contains(resident)) {
             Message.error(player, "You are not a town leader or officer")
             return
         }
@@ -1319,17 +1331,16 @@ public class TownCommand : CommandExecutor, TabCompleter {
         // get territory from chunk and run claim process
         val loc = player.getLocation()
         val territory = Nodes.getTerritoryFromBlock(loc.x.toInt(), loc.z.toInt())
-        if ( territory == null ) {
+        if (territory == null) {
             Message.error(player, "This chunk has no territory")
             return
         }
-        
+
         val result = Nodes.claimTerritory(town, territory)
-        if ( result.isSuccess ) {
+        if (result.isSuccess) {
             Message.print(player, "Territory(id=${territory.id}) claimed")
-        }
-        else {
-            when ( result.exceptionOrNull() ) {
+        } else {
+            when (result.exceptionOrNull()) {
                 ErrorTooManyClaims -> Message.error(player, "Not enough claim power")
                 ErrorTerritoryNotConnected -> Message.error(player, "Territory must neighbor existing claims")
                 ErrorTerritoryHasClaim -> Message.error(player, "Territory is already claimed by a town")
@@ -1342,37 +1353,36 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * Abandon your town's claim over a territory
      */
     private fun unclaimTerritory(player: Player?) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         // get town from player
         val resident = Nodes.getResident(player)
         val town = resident?.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You do not belong to a town")
             return
         }
-        
-        if ( resident !== town.leader && !town.officers.contains(resident) ) {
+
+        if (resident !== town.leader && !town.officers.contains(resident)) {
             Message.error(player, "You are not a town leader or officer")
             return
         }
-        
+
         // get territory from chunk and run claim process
         val loc = player.getLocation()
         val territory = Nodes.getTerritoryFromBlock(loc.x.toInt(), loc.z.toInt())
-        if ( territory == null ) {
+        if (territory == null) {
             Message.error(player, "This chunk has no territory")
             return
         }
-        
+
         val result = Nodes.unclaimTerritory(town, territory)
-        if ( result.isSuccess ) {
+        if (result.isSuccess) {
             Message.print(player, "Territory(id=${territory.id}) unclaimed, claim power used will regenerate over time")
-        }
-        else {
-            when ( result.exceptionOrNull() ) {
+        } else {
+            when (result.exceptionOrNull()) {
                 ErrorTerritoryNotInTown -> Message.error(player, "Territory not owned by town")
                 ErrorTerritoryIsTownHome -> Message.error(player, "Cannot unclaim home territory")
             }
@@ -1385,37 +1395,33 @@ public class TownCommand : CommandExecutor, TabCompleter {
      */
     // TODO: check if player is leader or officer to collect income
     private fun getIncome(player: Player?) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
-        
+
         // get town from player
         val resident = Nodes.getResident(player)
         val town = resident?.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You do not belong to a town")
             return
         }
 
         // check player permissions
-        val hasPermissions = if ( resident === town.leader || town.officers.contains(resident) ) {
+        val hasPermissions = if (resident === town.leader || town.officers.contains(resident)) {
             true
-        }
-        else if ( town.permissions[TownPermissions.INCOME].contains(PermissionsGroup.TOWN) && resident.town === town ) {
+        } else if (town.permissions[TownPermissions.INCOME].contains(PermissionsGroup.TOWN) && resident.town === town) {
             true
-        }
-        else if ( town.permissions[TownPermissions.INCOME].contains(PermissionsGroup.TRUSTED) && resident.town === town && resident.trusted ) {
+        } else if (town.permissions[TownPermissions.INCOME].contains(PermissionsGroup.TRUSTED) && resident.town === town && resident.trusted) {
             true
-        }
-        else {
+        } else {
             false
         }
 
         // open town inventory
-        if ( hasPermissions ) {
+        if (hasPermissions) {
             player.openInventory(Nodes.getTownIncomeInventory(town))
-        }
-        else {
+        } else {
             Message.error(player, "You do not have permissions to view town income")
         }
     }
@@ -1423,22 +1429,22 @@ public class TownCommand : CommandExecutor, TabCompleter {
     /**
      * @command /town prefix [prefix]
      * Set personal chat prefix
-     * 
+     *
      * @subcommand /town prefix [player] [prefix]
      * Set a player's prefix (leader and officers only)
      */
     private fun prefix(player: Player?, args: Array<String>) {
-        if ( player === null ) {
+        if (player === null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident === null ) {
+        if (resident === null) {
             return
         }
-        
+
         // reset prefix
-        if ( args.size == 1 ) {            
+        if (args.size == 1) {
             // print usage
             Message.error(player, "Usage: \"/town prefix [name]\" to set your prefix")
             Message.error(player, "Usage: \"/town prefix remove\" to remove your prefix")
@@ -1446,51 +1452,49 @@ public class TownCommand : CommandExecutor, TabCompleter {
             Message.error(player, "Usage: \"/town prefix [player] remove\" to remove a player's prefix")
         }
         // setting personal prefix
-        else if ( args.size == 2 ) {
+        else if (args.size == 2) {
             val prefix = args[1]
-            if ( prefix.lowercase() == "remove" ) {
+            if (prefix.lowercase() == "remove") {
                 Nodes.setResidentPrefix(resident, "")
                 Message.print(player, "Removed your prefix.")
-            }
-            else {
+            } else {
                 Nodes.setResidentPrefix(resident, args[1])
                 Message.print(player, "Your prefix set to: ${args[1]}")
             }
         }
         // setting a player's prefix in town
-        else if ( args.size > 2 ) {
+        else if (args.size > 2) {
             val town = resident.town
-            if ( town == null ) {
+            if (town == null) {
                 Message.error(player, "You are not a member of a town")
                 return
             }
 
             // check if player is leader or officer
             val leader = town.leader
-            if ( resident !== leader && !town.officers.contains(resident) ) {
+            if (resident !== leader && !town.officers.contains(resident)) {
                 Message.error(player, "Only leaders and officers can set other player's prefix/suffix")
                 return
             }
 
             // get other resident
             val target = Nodes.getResidentFromName(args[1])
-            if ( target === null ) {
+            if (target === null) {
                 Message.error(player, "Player not found")
                 return
             }
 
             val targetTown = target.town
-            if ( targetTown !== town ) {
+            if (targetTown !== town) {
                 Message.error(player, "Player is not in this town")
                 return
             }
 
             val prefix = args[2]
-            if ( prefix.lowercase() == "remove" ) {
+            if (prefix.lowercase() == "remove") {
                 Nodes.setResidentPrefix(target, "")
                 Message.print(player, "Removed ${target.name} prefix.")
-            }
-            else {
+            } else {
                 Nodes.setResidentPrefix(target, args[2])
                 Message.print(player, "${target.name} prefix set to: ${args[2]}")
             }
@@ -1500,22 +1504,22 @@ public class TownCommand : CommandExecutor, TabCompleter {
     /**
      * @command /town suffix [suffix]
      * Set personal chat suffix
-     * 
+     *
      * @subcommand /town suffix [player] [suffix]
      * Set a player's suffix (leader and officers only)
      */
     private fun suffix(player: Player?, args: Array<String>) {
-        if ( player === null ) {
+        if (player === null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident === null ) {
+        if (resident === null) {
             return
         }
-        
+
         // reset prefix
-        if ( args.size == 1 ) {
+        if (args.size == 1) {
             // print usage
             Message.error(player, "Usage: \"/town suffix [name]\" to set your suffix")
             Message.error(player, "Usage: \"/town suffix remove\" to remove your suffix")
@@ -1523,51 +1527,49 @@ public class TownCommand : CommandExecutor, TabCompleter {
             Message.error(player, "Usage: \"/town suffix [player] remove\" to remove a player's suffix")
         }
         // setting personal prefix
-        else if ( args.size == 2 ) {
+        else if (args.size == 2) {
             val prefix = args[1]
-            if ( prefix.lowercase() == "remove" ) {
+            if (prefix.lowercase() == "remove") {
                 Nodes.setResidentSuffix(resident, "")
                 Message.print(player, "Removed your suffix.")
-            }
-            else {
+            } else {
                 Nodes.setResidentSuffix(resident, args[1])
                 Message.print(player, "Your suffix set to: ${args[1]}")
             }
         }
         // setting a player's prefix in town
-        else if ( args.size > 2 ) {
+        else if (args.size > 2) {
             val town = resident.town
-            if ( town == null ) {
+            if (town == null) {
                 Message.error(player, "You are not a member of a town")
                 return
             }
 
             // check if player is leader or officer
             val leader = town.leader
-            if ( resident !== leader && !town.officers.contains(resident) ) {
+            if (resident !== leader && !town.officers.contains(resident)) {
                 Message.error(player, "Only leaders and officers can set other player's prefix/suffix")
                 return
             }
 
             // get other resident
             val target = Nodes.getResidentFromName(args[1])
-            if ( target === null ) {
+            if (target === null) {
                 Message.error(player, "Player not found")
                 return
             }
 
             val targetTown = target.town
-            if ( targetTown !== town ) {
+            if (targetTown !== town) {
                 Message.error(player, "Player is not in this town")
                 return
             }
 
             val prefix = args[2]
-            if ( prefix.lowercase() == "remove" ) {
+            if (prefix.lowercase() == "remove") {
                 Nodes.setResidentSuffix(target, "")
                 Message.print(player, "Removed ${target.name} suffix.")
-            }
-            else {
+            } else {
                 Nodes.setResidentSuffix(target, args[2])
                 Message.print(player, "${target.name} suffix set to: ${args[2]}")
             }
@@ -1579,48 +1581,48 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * Rename your town. Town leader only.
      */
     private fun renameTown(player: Player?, args: Array<String>) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
-        if ( args.size == 1 ) {
+        if (args.size == 1) {
             Message.print(player, "Usage: /n rename [new_name]")
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You do not belong to a town")
             return
         }
 
-        if ( resident != town.leader ) {
+        if (resident != town.leader) {
             Message.error(player, "Only town leaders can do this")
             return
         }
 
         val name = args[1]
-        if ( !stringInputIsValid(name) ) {
+        if (!stringInputIsValid(name)) {
             Message.error(player, "Invalid town name")
             return
         }
 
-        if ( town.name.lowercase() == args[1].lowercase() ) {
+        if (town.name.lowercase() == args[1].lowercase()) {
             Message.error(player, "Your town is already named ${town.name}")
             return
         }
 
-        if ( Nodes.towns.containsKey(args[1]) ) {
+        if (Nodes.towns.containsKey(args[1])) {
             Message.error(player, "There is already a town with this name")
             return
         }
 
-        Nodes.renameTown(town,name)
+        Nodes.renameTown(town, name)
         Message.print(player, "Town renamed to ${town.name}!")
     }
 
@@ -1629,26 +1631,26 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * Prints territory map into chat for player
      */
     private fun printMap(player: Player?, args: Array<String>) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
-        
+
         val loc = player.getLocation()
         val coordX = kotlin.math.floor(loc.x).toInt()
         val coordZ = kotlin.math.floor(loc.z).toInt()
         val coord = Coord.fromBlockCoords(coordX, coordZ)
-        
+
         // minimap size
         val sizeY = 8
         val sizeX = 10
 
         Message.print(player, "\n${ChatColor.WHITE}--------------- Territory Map ---------------")
-        for ( (i, y) in (sizeY downTo -sizeY).withIndex() ) {
+        for ((i, y) in (sizeY downTo -sizeY).withIndex()) {
             val renderedLine = WorldMap.renderLine(resident, coord, coord.z - y, coord.x - sizeX, coord.x + sizeX)
             Message.print(player, MAP_STR_BEGIN + renderedLine + MAP_STR_END[i])
         }
@@ -1661,18 +1663,18 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * Optionally specify size value: 3, 4, or 5.
      */
     private fun minimap(player: Player?, args: Array<String>) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         // if size input, create new minimap of that size
         // note: minimap creation internally handles removing old minimaps
-        if ( args.size >= 2 ) {
+        if (args.size >= 2) {
             val size = try {
                 Math.min(5, Math.max(3, args[1].toInt()))
             } catch (e: NumberFormatException) {
@@ -1680,17 +1682,15 @@ public class TownCommand : CommandExecutor, TabCompleter {
                 5
             }
             resident.createMinimap(player, size)
-            Message.print(player, "Minimap enabled (size = ${size})")
-        }
-        else { // toggle minimap
-            if ( resident.minimap != null ) {
+            Message.print(player, "Minimap enabled (size = $size)")
+        } else { // toggle minimap
+            if (resident.minimap != null) {
                 resident.destroyMinimap()
                 Message.print(player, "Minimap disabled")
-            }
-            else {
+            } else {
                 val size = 5
                 resident.createMinimap(player, size)
-                Message.print(player, "Minimap enabled (size = ${size})")
+                Message.print(player, "Minimap enabled (size = $size)")
             }
         }
     }
@@ -1703,80 +1703,86 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * Last entry is either "allow" or "deny"
      */
     private fun setPermissions(player: Player?, args: Array<String>) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You do not belong to a town")
             return
         }
 
-        if ( args.size < 4 ) {
+        if (args.size < 4) {
             // print current town permissions
             Message.print(player, "Town Permissions:")
-            for ( perm in enumValues<TownPermissions>() ) {
+            for (perm in enumValues<TownPermissions>()) {
                 val groups = town.permissions[perm]
-                Message.print(player, "- ${perm}${ChatColor.WHITE}: ${groups}")
+                Message.print(player, "- ${perm}${ChatColor.WHITE}: $groups")
             }
 
             // print usage for leader, officers
-            if ( resident === town.leader || town.officers.contains(resident) ) {
+            if (resident === town.leader || town.officers.contains(resident)) {
                 Message.error(player, "Usage: /town permissions [type] [group] [allow/deny]")
                 Message.error(player, "[type]: build, destroy, interact, chests, items, income")
                 Message.error(player, "[group]: town, nation, ally, outsider, trusted")
                 Message.error(player, "[allow/deny]: either \"allow\" or \"deny\"")
             }
-            
+
             return
         }
 
-        if ( resident !== town.leader && !town.officers.contains(resident) ) {
+        if (resident !== town.leader && !town.officers.contains(resident)) {
             Message.error(player, "Only the town leader or officers can do this")
             return
         }
 
         // match permissions and group
-        val permissions: TownPermissions = when ( args[1].lowercase() ) {
+        val permissions: TownPermissions = when (args[1].lowercase()) {
             "build" -> TownPermissions.BUILD
             "destroy" -> TownPermissions.DESTROY
             "interact" -> TownPermissions.INTERACT
             "chests" -> TownPermissions.CHESTS
             "items" -> TownPermissions.USE_ITEMS
             "income" -> TownPermissions.INCOME
-            else -> { 
+            else -> {
                 Message.error(player, "Invalid permissions type ${args[1]}. Valid options: build, destroy, interact, items, income")
                 return
             }
         }
 
-        val group: PermissionsGroup = when ( args[2].lowercase() ) {
+        val group: PermissionsGroup = when (args[2].lowercase()) {
             "town" -> PermissionsGroup.TOWN
             "nation" -> PermissionsGroup.NATION
             "ally" -> PermissionsGroup.ALLY
             "outsider" -> PermissionsGroup.OUTSIDER
             "trusted" -> PermissionsGroup.TRUSTED
-            else -> { 
+            else -> {
                 Message.error(player, "Invalid permissions group ${args[2]}. Valid options: town, nation, ally, outsider, trusted")
                 return
             }
         }
 
         // get flag state (allow/deny)
-        val flag = when ( args[3].lowercase() ) {
+        val flag = when (args[3].lowercase()) {
             "allow",
-            "true" -> { true }
-            
+            "true",
+            -> {
+                true
+            }
+
             "deny",
-            "false" -> { false }
-            
-            else -> { 
+            "false",
+            -> {
+                false
+            }
+
+            else -> {
                 Message.error(player, "Invalid permissions flag ${args[3]}. Valid options: allow, deny")
                 return
             }
@@ -1784,43 +1790,42 @@ public class TownCommand : CommandExecutor, TabCompleter {
 
         Nodes.setTownPermissions(town, permissions, group, flag)
 
-        Message.print(player, "Set permissions for ${town.name}: ${permissions} ${group} ${flag}")
+        Message.print(player, "Set permissions for ${town.name}: $permissions $group $flag")
     }
 
     /**
      * @command /town protect
      * Toggle protecting/unprotecting chests with mouse click.
-     * 
+     *
      * @subcommand /town protect show
      * Shows protected chests with particles
      */
     private fun protectChests(player: Player?, args: Array<String>) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You are not a member of a town")
             return
         }
-        
-        if ( args.size > 1 ) {
-            if ( args[1].lowercase() == "show" ) {
+
+        if (args.size > 1) {
+            if (args[1].lowercase() == "show") {
                 Message.print(player, "Protected chests:")
                 // print protected chests
-                for ( block in town.protectedBlocks ) {
+                for (block in town.protectedBlocks) {
                     Message.print(player, "${ChatColor.WHITE}${block.type}: x: ${block.x}, y: ${block.y}, z: ${block.z}")
                 }
 
                 Nodes.showProtectedChests(town, resident)
-            }
-            else {
+            } else {
                 Message.error(player, "Usage: \"/t protect\" to toggle protecting chests")
                 Message.error(player, "Usage: \"/t protect show\" to show protected chests")
             }
@@ -1829,16 +1834,15 @@ public class TownCommand : CommandExecutor, TabCompleter {
 
         // check if player is town leader or officer
         val leader = town.leader
-        if ( resident !== leader && !town.officers.contains(resident) ) {
+        if (resident !== leader && !town.officers.contains(resident)) {
             Message.error(player, "Only leaders and officers can protect chests")
             return
         }
 
-        if ( resident.isProtectingChests ) {
+        if (resident.isProtectingChests) {
             Nodes.stopProtectingChests(resident)
             Message.print(player, "${ChatColor.DARK_AQUA}Stopped protecting chests.")
-        }
-        else {
+        } else {
             Nodes.startProtectingChests(resident)
             player.playSound(player.location, NODES_SOUND_CHEST_PROTECT, 1.0f, 1.0f)
             Message.print(player, "Click on a chest to protect or unprotect it. Use \"/t protect\" again to stop protecting, or click a non-chest block to stop.")
@@ -1848,57 +1852,55 @@ public class TownCommand : CommandExecutor, TabCompleter {
     /**
      * @command /town trust [name]
      * Mark player in town as trusted. Leader and officers only.
-     * 
+     *
      * @command /town untrust [name]
      * Mark player in town as untrusted. Leader and officers only.
      */
     private fun trustPlayer(player: Player?, args: Array<String>, trust: Boolean) {
-        if ( player == null || args.size < 2 ) {
+        if (player == null || args.size < 2) {
             Message.error(player, "Usage: /t trust/untrust [player]")
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You are not a member of a town")
             return
         }
 
         // check if player is leader or officer
         val leader = town.leader
-        if ( resident !== leader && !town.officers.contains(resident) ) {
+        if (resident !== leader && !town.officers.contains(resident)) {
             Message.error(player, "Only leaders and officers can trust/untrust players")
             return
         }
 
         // get other resident
         val target = Nodes.getResidentFromName(args[1])
-        if ( target == null ) {
+        if (target == null) {
             Message.error(player, "Player not found")
             return
         }
 
         val targetTown = target.town
-        if ( targetTown !== town ) {
+        if (targetTown !== town) {
             Message.error(player, "Player is not in this town")
             return
         }
-        
+
         // set player trust
-        if ( trust ) {
+        if (trust) {
             Nodes.setResidentTrust(target, true)
             Message.print(player, "${target.name} is now marked as trusted")
-        }
-        else {
+        } else {
             Nodes.setResidentTrust(target, false)
             Message.print(player, "${ChatColor.DARK_AQUA}${target.name} is marked as untrusted")
         }
-
     }
 
     /**
@@ -1907,54 +1909,53 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * (This also changes town spawn location.)
      */
     private fun setCapital(player: Player?, args: Array<String>) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You are not a member of a town")
             return
         }
 
         // check if player is leader or officer
         val leader = town.leader
-        if ( resident !== leader && !town.officers.contains(resident) ) {
+        if (resident !== leader && !town.officers.contains(resident)) {
             Message.error(player, "Only leaders and officers can move the town's home capital territory")
             return
         }
 
         // check if territory belongs to town and isnt home already
         val territory = Nodes.getTerritoryFromPlayer(player)
-        if ( territory == null ) {
+        if (territory == null) {
             Message.error(player, "This region has no territory")
             return
         }
-        if ( town !== territory.town ) {
+        if (town !== territory.town) {
             Message.error(player, "This is not your territory")
             return
         }
-        if ( town.home == territory.id ) {
+        if (town.home == territory.id) {
             Message.error(player, "This is already your home territory")
             return
         }
-        if ( town.moveHomeCooldown > 0 ) {
+        if (town.moveHomeCooldown > 0) {
             val remainingTime = town.moveHomeCooldown
-            val remainingTimeString = if ( remainingTime > 0 ) {
-                val hour: Long = remainingTime/3600000L
-                val min: Long = 1L + (remainingTime - hour * 3600000L)/60000L
+            val remainingTimeString = if (remainingTime > 0) {
+                val hour: Long = remainingTime / 3600000L
+                val min: Long = 1L + (remainingTime - hour * 3600000L) / 60000L
                 "${hour}hr ${min}min"
-            }
-            else {
+            } else {
                 "0hr 0min"
             }
 
-            Message.error(player, "You cannot move the town's home territory for: ${remainingTimeString} ")
+            Message.error(player, "You cannot move the town's home territory for: $remainingTimeString ")
             return
         }
 
@@ -1968,121 +1969,120 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * Annex an occupied territory and add it to your town
      */
     private fun annexTerritory(player: Player?, args: Array<String>) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
-        if ( Config.annexDisabled ) {
+        if (Config.annexDisabled) {
             Message.error(player, "Annexing disabled")
             return
         }
 
-        if ( !Nodes.war.enabled || !Nodes.war.canAnnexTerritories ) {
+        if (!Nodes.war.enabled || !Nodes.war.canAnnexTerritories) {
             Message.error(player, "You can only annex territories during war")
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You are not a member of a town")
             return
         }
 
         // check if player is leader or officer
         val leader = town.leader
-        if ( resident !== leader && !town.officers.contains(resident) ) {
+        if (resident !== leader && !town.officers.contains(resident)) {
             Message.error(player, "Only leaders and officers can annex territories")
             return
         }
 
         // check if territory belongs to town and isnt home already
         val territory = Nodes.getTerritoryFromPlayer(player)
-        if ( territory == null ) {
+        if (territory == null) {
             Message.error(player, "This region has no territory")
             return
         }
 
         val territoryTown = territory.town
-        if ( territoryTown === null ) {
+        if (territoryTown === null) {
             Message.error(player, "There is no town here")
             return
         }
-        
+
         // check blacklist
-        if ( Config.warUseBlacklist && Config.warBlacklist.contains(territoryTown.uuid) ) {
+        if (Config.warUseBlacklist && Config.warBlacklist.contains(territoryTown.uuid)) {
             Message.error(player, "Cannot annex this town (blacklisted)")
             return
         }
-        if ( Config.useAnnexBlacklist && Config.annexBlacklist.contains(territoryTown.uuid) ) {
+        if (Config.useAnnexBlacklist && Config.annexBlacklist.contains(territoryTown.uuid)) {
             Message.error(player, "Cannot annex this town (blacklisted)")
             return
         }
 
         // check whitelist
-        if ( Config.warUseWhitelist ) {
-            if ( !Config.warWhitelist.contains(territoryTown.uuid) ) {
+        if (Config.warUseWhitelist) {
+            if (!Config.warWhitelist.contains(territoryTown.uuid)) {
                 Message.error(player, "Cannot annex this town (not whitelisted)")
                 return
-            }
-            else if ( Config.onlyWhitelistCanAnnex && !Config.warWhitelist.contains(town.uuid) ) {
+            } else if (Config.onlyWhitelistCanAnnex && !Config.warWhitelist.contains(town.uuid)) {
                 Message.error(player, "Cannot annex territories because your town is not white listed")
                 return
             }
         }
 
-        if ( town === territoryTown ) {
+        if (town === territoryTown) {
             Message.error(player, "This already your territory")
             return
         }
-        if ( territory.occupier !== town ) {
+        if (territory.occupier !== town) {
             Message.error(player, "You have not occupied this territory")
             return
         }
-        if ( territoryTown.home == territory.id && territoryTown.territories.size > 1 ) {
+        if (territoryTown.home == territory.id && territoryTown.territories.size > 1) {
             Message.error(player, "You must annex all of this town's other territories before you can annex its home territory")
             return
         }
 
         val result = Nodes.annexTerritory(town, territory)
-        if ( result == true ) {
+        if (result == true) {
             Message.print(player, "Annexed territory (id = ${territory.id})")
-        }
-        else {
+        } else {
             Message.error(player, "Failed to annex territory")
         }
     }
 
     // =====================================
     // town outpost management subcommands
-    // 
+    //
     // general usage: /town outpost [subcommand] [args]
     // =====================================
-    
+
     /**
      * @command /town outpost
      * Commands to manage town outposts.
      */
     private fun manageOutpost(sender: CommandSender, args: Array<String>) {
-        val player = if ( sender is Player ) sender else null
-        if ( player == null ) {
+        val player = if (sender is Player) sender else null
+        if (player == null) {
             printOutpostHelp(sender)
             return
         }
 
-        if ( args.size < 2 ) {
+        if (args.size < 2) {
             printOutpostHelp(sender)
-        }
-        else {
+        } else {
             // route subcommand function
-            when ( args[1].lowercase() ) {
+            when (args[1].lowercase()) {
                 "list" -> outpostList(player, args)
                 "setspawn" -> outpostSetSpawn(player, args)
-                else -> { printOutpostHelp(sender) }
+                else -> {
+                    printOutpostHelp(sender)
+                }
             }
         }
     }
@@ -2093,31 +2093,30 @@ public class TownCommand : CommandExecutor, TabCompleter {
         Message.print(sender, "/town outpost setspawn${ChatColor.WHITE}: Set town outpost spawn to your current location")
         Message.print(sender, "Run a command with no args to see usage.")
     }
-    
+
     /**
      * @subcommand /town outpost list
      * Print list of town's outposts.
      */
     private fun outpostList(player: Player, args: Array<String>) {
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You are not a member of a town")
             return
         }
 
-        if ( town.outposts.size > 0 ) {
+        if (town.outposts.size > 0) {
             Message.print(player, "Town outposts:")
-            for ( (name, outpost) in town.outposts ) {
+            for ((name, outpost) in town.outposts) {
                 val spawn = outpost.spawn
                 Message.print(player, "- ${name}${ChatColor.WHITE}: Territory (id=${outpost.territory}, Spawn = (${spawn.x}, ${spawn.y}, ${spawn.z})")
             }
-        }
-        else {
+        } else {
             Message.error(player, "Town has no outposts")
         }
     }
@@ -2128,42 +2127,41 @@ public class TownCommand : CommandExecutor, TabCompleter {
      */
     private fun outpostSetSpawn(player: Player, args: Array<String>) {
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You are not a member of a town")
             return
         }
 
         // check if player is leader or officer
         val leader = town.leader
-        if ( resident !== leader && !town.officers.contains(resident) ) {
+        if (resident !== leader && !town.officers.contains(resident)) {
             Message.error(player, "Only leaders and officers can move an outpost's spawn location")
             return
         }
 
         // check if territory belongs to town and isnt home already
         val territory = Nodes.getTerritoryFromPlayer(player)
-        if ( territory == null ) {
+        if (territory == null) {
             Message.error(player, "This region has no territory")
             return
         }
-        if ( town !== territory.town ) {
+        if (town !== territory.town) {
             Message.error(player, "This is not your territory")
             return
         }
-        
+
         // match outpost to territory
-        for ( outpost in town.outposts.values ) {
-            if ( outpost.territory == territory.id ) {
+        for (outpost in town.outposts.values) {
+            if (outpost.territory == territory.id) {
                 val result = Nodes.setOutpostSpawn(town, outpost, player.location)
-                if ( result == true ) {
+                if (result == true) {
                     Message.print(player, "Set outpost \"${outpost.name}\" spawn to current location")
-                }
-                else {
+                } else {
                     Message.error(player, "Failed to set outpost spawn in current location")
                 }
                 return
@@ -2179,22 +2177,22 @@ public class TownCommand : CommandExecutor, TabCompleter {
      * Enable flight, player must be in their town
      */
     private fun toggleFlight(player: Player?) {
-        if ( player == null ) {
+        if (player == null) {
             return
         }
 
-        if ( !player.hasPermission("nodes.command.town.fly")) {
+        if (!player.hasPermission("nodes.command.town.fly")) {
             Message.error(player, "You do not have permission to fly")
             return
         }
 
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         val town = resident.town
-        if ( town == null ) {
+        if (town == null) {
             Message.error(player, "You are not a member of a town")
             return
         }
@@ -2209,17 +2207,16 @@ public class TownCommand : CommandExecutor, TabCompleter {
             player.allowFlight = false
             // give player slow falling to avoid fall damage
             player.addPotionEffect(PotionEffect(PotionEffectType.SLOW_FALLING, 100, 0, false, false, false))
-            Message.print(player,"Disabled flight")
+            Message.print(player, "Disabled flight")
             return
         }
 
-        if ( Nodes.getTerritoryFromChunk(player.chunk)?.town != town ) {
-            Message.error(player,"You must be in your town to enable flight")
+        if (Nodes.getTerritoryFromChunk(player.chunk)?.town != town) {
+            Message.error(player, "You must be in your town to enable flight")
             return
         }
 
         player.allowFlight = true
-        Message.print(player,"Enabled flight")
+        Message.print(player, "Enabled flight")
     }
-
 }

@@ -10,7 +10,7 @@ import org.bukkit.Location
 public data class TownOutpost(
     var name: String,
     val territory: TerritoryId,
-    var spawn: Location
+    var spawn: Location,
 ) {
 
     // serialize territory id + spawn location to json string

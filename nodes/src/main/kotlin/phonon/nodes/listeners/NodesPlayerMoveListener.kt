@@ -2,28 +2,27 @@ package phonon.nodes.listeners
 
 import org.bukkit.ChatColor
 import org.bukkit.GameMode
-import org.bukkit.inventory.ItemStack
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerMoveEvent
 import org.bukkit.event.player.PlayerTeleportEvent
+import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
-import phonon.nodes.Nodes
 import phonon.nodes.Config
 import phonon.nodes.Message
+import phonon.nodes.Nodes
 import phonon.nodes.Nodes.getTownFromPlayer
 import phonon.nodes.objects.Coord
 import phonon.nodes.objects.Resident
 import phonon.nodes.objects.Territory
 import phonon.nodes.objects.Town
 
-public class NodesPlayerMoveListener: Listener {
-    
+public class NodesPlayerMoveListener : Listener {
+
     @EventHandler
     public fun onPlayerMove(event: PlayerMoveEvent) {
-
         // abort if did not change blocks
         val fromX = event.getFrom().getBlockX()
         val fromY = event.getFrom().getBlockY()
@@ -31,37 +30,37 @@ public class NodesPlayerMoveListener: Listener {
         val toX = event.getTo().getBlockX()
         val toY = event.getTo().getBlockY()
         val toZ = event.getTo().getBlockZ()
-		if ( fromX == toX && fromZ == toZ && fromY == toY ) {
-			return
+        if (fromX == toX && fromZ == toZ && fromY == toY) {
+            return
         }
-        
+
         // handle event effects
         val player = event.player
         val resident = Nodes.getResident(player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
         // player moved -> cancel any home teleport
-        if ( resident?.teleportThread != null ) {
+        if (resident?.teleportThread != null) {
             resident.teleportThread!!.cancel()
             resident.teleportThread = null // remove reference
             Message.error(event.player, "You moved, teleport cancelled")
 
             // provide cost refund if player teleporting to outpost
-            if ( resident.isTeleportingToOutpost == true ) {
+            if (resident.isTeleportingToOutpost == true) {
                 Message.error(event.player, "Refunding outpost teleport items")
 
                 val world = player.world
                 val location = player.location
                 val inventory = player.getInventory()
 
-                for ( (material, amount) in Config.outpostTeleportCost ) {
+                for ((material, amount) in Config.outpostTeleportCost) {
                     val items = ItemStack(material, amount)
                     val leftover = inventory.addItem(items)
 
                     // drop remaining items at player
-                    for ( items in leftover.values ) {
+                    for (items in leftover.values) {
                         world.dropItem(location, items)
                     }
                 }
@@ -70,19 +69,19 @@ public class NodesPlayerMoveListener: Listener {
             }
 
             // provide cost refund if player teleporting to a nation town
-            if ( resident.isTeleportingToNationTown == true ) {
+            if (resident.isTeleportingToNationTown == true) {
                 Message.error(event.player, "Refunding teleport items")
 
                 val world = player.world
                 val location = player.location
                 val inventory = player.getInventory()
 
-                for ( (material, amount) in Config.nationTownTeleportCost ) {
+                for ((material, amount) in Config.nationTownTeleportCost) {
                     val items = ItemStack(material, amount)
                     val leftover = inventory.addItem(items)
 
                     // drop remaining items at player
-                    for ( items in leftover.values ) {
+                    for (items in leftover.values) {
                         world.dropItem(location, items)
                     }
                 }
@@ -95,16 +94,14 @@ public class NodesPlayerMoveListener: Listener {
         val fromCoord = Coord.fromBlockCoords(fromX, fromZ)
         val toCoord = Coord.fromBlockCoords(toX, toZ)
 
-        if ( fromCoord != toCoord ) {
+        if (fromCoord != toCoord) {
             onPlayerMoveChunk(event.player, resident, fromCoord, toCoord)
         }
-        
     }
 
     // handle player teleport (e.g. /t spawn)
     @EventHandler
     public fun onPlayerTeleport(event: PlayerTeleportEvent) {
-
         // abort if did not change blocks
         val fromX = event.getFrom().getBlockX()
         val fromY = event.getFrom().getBlockY()
@@ -112,14 +109,14 @@ public class NodesPlayerMoveListener: Listener {
         val toX = event.getTo().getBlockX()
         val toY = event.getTo().getBlockY()
         val toZ = event.getTo().getBlockZ()
-		if ( fromX == toX && fromZ == toZ && fromY == toY ) {
-			return
+        if (fromX == toX && fromZ == toZ && fromY == toY) {
+            return
         }
 
         // handle event effects
 
         val resident = Nodes.getResident(event.player)
-        if ( resident == null ) {
+        if (resident == null) {
             return
         }
 
@@ -127,7 +124,7 @@ public class NodesPlayerMoveListener: Listener {
         val fromCoord = Coord.fromBlockCoords(fromX, fromZ)
         val toCoord = Coord.fromBlockCoords(toX, toZ)
 
-        if ( fromCoord != toCoord ) {
+        if (fromCoord != toCoord) {
             onPlayerMoveChunk(event.player, resident, fromCoord, toCoord)
         }
     }
@@ -137,31 +134,26 @@ public class NodesPlayerMoveListener: Listener {
         val fromTerritory = Nodes.getTerritoryFromCoord(fromCoord)
         val toTerritory = Nodes.getTerritoryFromCoord(toCoord)
 
-        if ( fromTerritory != null && toTerritory != null ) {
+        if (fromTerritory != null && toTerritory != null) {
             val toTown = toTerritory.town
             val fromTown = fromTerritory.town
-            if ( toTerritory.name != fromTerritory.name ) {
-                if ( toTown != null ) {
+            if (toTerritory.name != fromTerritory.name) {
+                if (toTown != null) {
                     printTownMessage(player, resident, toTown, toTerritory)
-                }
-                else {
+                } else {
                     Message.announcement(player, "${ChatColor.GRAY}${toTerritory.name}")
                 }
-            }
-            else if ( fromTown !== null && toTown !== null ) {
-                if ( toTown !== fromTown || fromTerritory.occupier !== toTerritory.occupier ) {
+            } else if (fromTown !== null && toTown !== null) {
+                if (toTown !== fromTown || fromTerritory.occupier !== toTerritory.occupier) {
                     printTownMessage(player, resident, toTown, toTerritory)
                 }
-            }
-            else if ( fromTown !== null && toTown === null ) {
-                if ( toTerritory.name != fromTerritory.name ) {
+            } else if (fromTown !== null && toTown === null) {
+                if (toTerritory.name != fromTerritory.name) {
                     Message.announcement(player, "${ChatColor.GRAY}${toTerritory.name}")
-                }
-                else {
+                } else {
                     Message.announcement(player, "${ChatColor.GRAY}Wilderness")
                 }
-            }
-            else if ( toTown !== null ) {
+            } else if (toTown !== null) {
                 printTownMessage(player, resident, toTown, toTerritory)
             }
         }
@@ -197,7 +189,7 @@ private fun printTownMessage(player: Player, resident: Resident, toTown: Town, t
     val territoryOccupier = toTerritory.occupier
 
     // territory name token
-    val territoryName = if ( toTerritory.name != "" ) {
+    val territoryName = if (toTerritory.name != "") {
         "${toTerritory.name} (${toTown.name})"
     } else {
         "${toTown.name}"
@@ -207,36 +199,31 @@ private fun printTownMessage(player: Player, resident: Resident, toTown: Town, t
     var territoryNameColor = ""
     var ownerStatus = ""
 
-    if ( residentTown !== null ) {
-        if ( toTown === residentTown ) {
+    if (residentTown !== null) {
+        if (toTown === residentTown) {
             territoryNameColor = "${ChatColor.DARK_GREEN}"
-        }
-        else if ( residentTown.enemies.contains(toTown) ) {
+        } else if (residentTown.enemies.contains(toTown)) {
             territoryNameColor = "${ChatColor.DARK_RED}"
-        }
-        else {
+        } else {
             territoryNameColor = "${ChatColor.DARK_AQUA}"
         }
 
         // set occupation status
-        if ( territoryOccupier !== null ) {
-            if ( territoryOccupier === residentTown ) {
+        if (territoryOccupier !== null) {
+            if (territoryOccupier === residentTown) {
                 ownerStatus = " ${ChatColor.DARK_GREEN}(Captured)"
-            }
-            else if ( toTown === residentTown ) {
+            } else if (toTown === residentTown) {
                 ownerStatus = " ${ChatColor.DARK_RED}(Occupied)"
-            }
-            else {
+            } else {
                 ownerStatus = " ${ChatColor.DARK_AQUA}(Occupied)"
             }
         }
-    }
-    else {
+    } else {
         territoryNameColor = "${ChatColor.DARK_AQUA}"
-        if ( territoryOccupier !== null ) {
+        if (territoryOccupier !== null) {
             ownerStatus = " (Occupied)"
         }
     }
 
-    Message.announcement(player, "${territoryNameColor}${territoryName}${ownerStatus}")
+    Message.announcement(player, "${territoryNameColor}${territoryName}$ownerStatus")
 }

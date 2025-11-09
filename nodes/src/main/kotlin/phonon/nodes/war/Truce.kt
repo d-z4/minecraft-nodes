@@ -1,6 +1,6 @@
 /**
  * Truce storage
- * 
+ *
  * truce.json storage format:
  * Array of truce array objects: [town1, town2, count]
  * {
@@ -13,20 +13,13 @@
 
 package phonon.nodes.war
 
-import java.nio.file.Path
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import org.bukkit.Bukkit
-import org.bukkit.ChatColor
-import org.bukkit.scheduler.BukkitTask
-import phonon.nodes.Nodes
-import phonon.nodes.Message
 import phonon.nodes.Config
-import phonon.nodes.objects.Resident
+import phonon.nodes.Nodes
 import phonon.nodes.objects.Town
 import phonon.nodes.objects.TownPair
 import phonon.nodes.utils.saveStringToFile
+import java.nio.file.Path
 
 /**
  * Simplified truce state for serialization.
@@ -43,14 +36,14 @@ public data class TruceSaveState(
 public fun trucesToJsonStr(truces: List<TruceSaveState>): String {
     val size = truces.size
     var i = 0
-    
+
     val s = StringBuilder()
     s.append("{\"truce\":[")
-    for ( truce in truces ) {
+    for (truce in truces) {
         s.append("[\"${truce.town1}\", \"${truce.town2}\", ${truce.time}]")
 
         // add comma
-        if ( i < size-1 ) {
+        if (i < size - 1) {
             s.append(",")
             i += 1
         }
@@ -66,7 +59,7 @@ public fun trucesToJsonStr(truces: List<TruceSaveState>): String {
 public class TaskSaveTruce(
     val truces: List<TruceSaveState>,
     val pathTruce: Path,
-): Runnable {
+) : Runnable {
     override fun run() {
         // serialize world state
         val jsonStr = trucesToJsonStr(truces)
@@ -86,20 +79,19 @@ public object Truce {
 
     // creates new truce between two towns
     public fun create(town1: Town, town2: Town, startTime: Long) {
-        
         val towns = TownPair(town1, town2)
         Truce.truces.put(towns, startTime)
 
         // put references from each town -> TownPair
         val town1Truces = Truce.trucesByTown.get(town1)
-        if ( town1Truces !== null ) {
+        if (town1Truces !== null) {
             town1Truces.add(towns)
         } else {
             Truce.trucesByTown.put(town1, hashSetOf(towns))
         }
 
         val town2Truces = Truce.trucesByTown.get(town2)
-        if ( town2Truces !== null ) {
+        if (town2Truces !== null) {
             town2Truces.add(towns)
         } else {
             Truce.trucesByTown.put(town2, hashSetOf(towns))
@@ -116,12 +108,12 @@ public object Truce {
 
         // remove references from each town -> TownPair
         val town1Truces = Truce.trucesByTown.get(town1)
-        if ( town1Truces !== null ) {
+        if (town1Truces !== null) {
             town1Truces.remove(towns)
         }
 
         val town2Truces = Truce.trucesByTown.get(town2)
-        if ( town2Truces !== null ) {
+        if (town2Truces !== null) {
             town2Truces.remove(towns)
         }
 
@@ -137,7 +129,7 @@ public object Truce {
     // get list of truces involving input town
     public fun get(town: Town): List<TownPair> {
         val townTruces = Truce.trucesByTown.get(town)
-        if ( townTruces !== null ) {
+        if (townTruces !== null) {
             return townTruces.toList()
         }
 
@@ -159,8 +151,8 @@ public object Truce {
         val json = JsonParser().parse(jsonString).getAsJsonObject()
 
         val truceList = json.get("truce")?.getAsJsonArray()
-        if ( truceList !== null ) {
-            for ( truceJson in truceList ) {
+        if (truceList !== null) {
+            for (truceJson in truceList) {
                 val truce = truceJson.getAsJsonArray()
                 val town1Name: String = truce[0].getAsString()
                 val town2Name: String = truce[1].getAsString()
@@ -168,12 +160,12 @@ public object Truce {
 
                 // get towns
                 val town1 = Nodes.getTownFromName(town1Name)
-                if ( town1 === null ) {
+                if (town1 === null) {
                     continue
                 }
 
                 val town2 = Nodes.getTownFromName(town2Name)
-                if ( town2 === null ) {
+                if (town2 === null) {
                     continue
                 }
 

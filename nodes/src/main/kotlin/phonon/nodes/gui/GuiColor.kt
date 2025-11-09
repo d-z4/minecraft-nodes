@@ -23,7 +23,7 @@ public enum class GuiColor {
     BROWN,
     GREEN,
     RED,
-    BLACK
+    BLACK,
 }
 
 private val STAINED_GLASS_LIST = listOf(
@@ -42,7 +42,7 @@ private val STAINED_GLASS_LIST = listOf(
     Material.BROWN_STAINED_GLASS_PANE,
     Material.GREEN_STAINED_GLASS_PANE,
     Material.RED_STAINED_GLASS_PANE,
-    Material.BLACK_STAINED_GLASS_PANE
+    Material.BLACK_STAINED_GLASS_PANE,
 )
 
 private val CONCRETE_LIST = listOf(
@@ -61,11 +61,11 @@ private val CONCRETE_LIST = listOf(
     Material.BROWN_CONCRETE,
     Material.GREEN_CONCRETE,
     Material.RED_CONCRETE,
-    Material.BLACK_CONCRETE
+    Material.BLACK_CONCRETE,
 )
 
 // pre-generated item stacks
-public val GUI_STAINED_GLASS: List<ItemStack> = enumValues<GuiColor>().map({ c: GuiColor -> 
+public val GUI_STAINED_GLASS: List<ItemStack> = enumValues<GuiColor>().map({ c: GuiColor ->
     // 1.16
     val item = ItemStack(STAINED_GLASS_LIST[c.ordinal], 1)
 
@@ -79,7 +79,7 @@ public val GUI_STAINED_GLASS: List<ItemStack> = enumValues<GuiColor>().map({ c: 
     item
 })
 
-public val GUI_CONCRETE: List<ItemStack> = enumValues<GuiColor>().map({ c: GuiColor -> 
+public val GUI_CONCRETE: List<ItemStack> = enumValues<GuiColor>().map({ c: GuiColor ->
     // 1.16
     val item = ItemStack(CONCRETE_LIST[c.ordinal], 1)
 

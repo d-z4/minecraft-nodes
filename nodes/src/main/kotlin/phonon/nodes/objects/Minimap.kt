@@ -1,14 +1,14 @@
 /**
  * Minimap object for player
- * 
+ *
  * Displays a fixed 11x11 chunk area around player
  * [-x, x] chunks in each direction, x in [3, 4, 5]
- * 
+ *
  * Internally uses the Bukkit scoreboard api for rendering.
  * Limitations of API:
  * Team names: max 16 chars
  * Score names: max 40 chars
- * 
+ *
  * Each glyph in minimap is 3 chars (color code "&x" = 2 chars)
  * For [-5, 5] extent -> 33 chars
  * For [-6, 6] extent -> 39 chars
@@ -24,13 +24,12 @@ import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
 import org.bukkit.scoreboard.Objective
 import org.bukkit.scoreboard.Scoreboard
-import org.bukkit.scoreboard.Team
-import phonon.nodes.WorldMap
 import phonon.nodes.PlayerScoreboardManager
+import phonon.nodes.WorldMap
 
 // max min allowed sizes
 private val MAP_RADIUS_MIN = 5
-private val MAP_RADIUS_MAX = 9 
+private val MAP_RADIUS_MAX = 9
 
 // used to start each line in scoreboard
 // ensures each line name is unique
@@ -50,20 +49,20 @@ private val LINE_ID = arrayOf(
     "${ChatColor.LIGHT_PURPLE}${ChatColor.RESET}",
     "${ChatColor.RED}${ChatColor.RESET}",
     "${ChatColor.WHITE}${ChatColor.RESET}",
-    "${ChatColor.YELLOW}${ChatColor.RESET}"
+    "${ChatColor.YELLOW}${ChatColor.RESET}",
 )
 
 // line header displaying X edges
 private val HEADER = arrayOf(
     "${ChatColor.RED}-3    0      3",
     "${ChatColor.RED}-4      0        4",
-    "${ChatColor.RED}-5         0          5"
+    "${ChatColor.RED}-5         0          5",
 )
 
 public class Minimap(
     val resident: Resident,
     val player: Player,
-    var size: Int // display square half extend, renders [-size, size]
+    var size: Int, // display square half extend, renders [-size, size]
 ) {
     // rendering targets for Scoreboard API
     val scoreboard: Scoreboard
@@ -78,7 +77,7 @@ public class Minimap(
 
         // team required for objective
         val team = scoreboard.getTeam("player") ?: scoreboard.registerNewTeam("player")
-        if ( !team.hasEntry(player.getName()) ) {
+        if (!team.hasEntry(player.getName())) {
             team.addEntry(player.getName())
         }
 
@@ -103,19 +102,19 @@ public class Minimap(
     // render minimap centered at coord (current player location)
     public fun render(coord: Coord) {
         // clear previous render
-        for ( entry in this.scoreboard.getEntries() ) {
+        for (entry in this.scoreboard.getEntries()) {
             this.scoreboard.resetScores(entry)
         }
 
         // create new render
-        val score = this.objective.getScore(HEADER[size-3])
-        score.setScore(size+1)
+        val score = this.objective.getScore(HEADER[size - 3])
+        score.setScore(size + 1)
 
         val size = this.size
-        for ( (i, y) in (size downTo -size).withIndex() ) {
+        for ((i, y) in (size downTo -size).withIndex()) {
             val lineIdString = LINE_ID[i]
             val renderedLine = WorldMap.renderLine(resident, coord, coord.z - y, coord.x - size, coord.x + size)
-            val score = this.objective.getScore("${lineIdString}${renderedLine}")
+            val score = this.objective.getScore("${lineIdString}$renderedLine")
             score.setScore(y)
         }
     }
@@ -125,5 +124,4 @@ public class Minimap(
         this.scoreboard.clearSlot(DisplaySlot.SIDEBAR)
         player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard())
     }
-
 }

@@ -12,7 +12,7 @@ import org.bukkit.event.HandlerList
  * Event when entire world is reloaded
  * (territories, towns, nations, war, etc.)
  */
-public class NodesWorldLoadedEvent(): Event() {
+public class NodesWorldLoadedEvent() : Event() {
     override fun getHandlers(): HandlerList {
         return HANDLERS
     }
@@ -30,7 +30,7 @@ public class NodesWorldLoadedEvent(): Event() {
 /**
  * Event when territories are loaded or reloaded.
  */
-public class NodesTerritoriesLoadedEvent(): Event() {
+public class NodesTerritoriesLoadedEvent() : Event() {
     override fun getHandlers(): HandlerList {
         return HANDLERS
     }

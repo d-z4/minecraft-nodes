@@ -4,20 +4,20 @@
 
 package phonon.nodes.event
 
-import java.util.UUID
+import org.bukkit.block.Block
+import org.bukkit.event.Cancellable
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
-import org.bukkit.event.Cancellable
-import org.bukkit.block.Block
-import phonon.nodes.objects.Town
 import phonon.nodes.objects.Territory
+import phonon.nodes.objects.Town
+import java.util.UUID
 
 public class WarAttackFinishEvent(
     public val attacker: UUID,
     public val attackingTown: Town,
     public val territory: Territory,
-    public val block: Block
-): Event(), Cancellable {
+    public val block: Block,
+) : Event(), Cancellable {
 
     private var isCancelled: Boolean = false
 

@@ -20,10 +20,9 @@ import phonon.nodes.utils.string.filterResident
 public class PlayerCommand : CommandExecutor, TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
-
         // no args, use sender's town
-        if ( args.size == 0 ) {
-            if ( sender is Player ) {
+        if (args.size == 0) {
+            if (sender is Player) {
                 val resident = Nodes.getResident(sender)
                 if (resident != null) {
                     resident.printInfo(sender)
@@ -33,12 +32,11 @@ public class PlayerCommand : CommandExecutor, TabCompleter {
             }
         }
         // parse player name
-        else if ( args.size >= 1 ) {
+        else if (args.size >= 1) {
             val resident = Nodes.getResidentFromName(args[0])
-            if ( resident != null ) {
+            if (resident != null) {
                 resident.printInfo(sender)
-            }
-            else {
+            } else {
                 Message.error(sender, "Invalid player name \"${args[0]}\"")
             }
         }
@@ -47,11 +45,10 @@ public class PlayerCommand : CommandExecutor, TabCompleter {
     }
 
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String> {
-        if ( args.size == 1 ) {
+        if (args.size == 1) {
             return filterResident(args[0])
         }
-        
+
         return listOf()
     }
-
 }

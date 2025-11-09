@@ -1,6 +1,6 @@
 /**
  * An inventory gui window instance
- * 
+ *
  * Draws items at (x,y) coordinate in inventory from top-left
  * (0, 0) ------->
  *   |                  Same as HTML DOM screen
@@ -18,7 +18,7 @@ import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
 
-public class GuiWindow(val size: Int, val title: String): InventoryHolder {
+public class GuiWindow(val size: Int, val title: String) : InventoryHolder {
 
     // screen size
     public val cols: Int = 9
@@ -28,14 +28,14 @@ public class GuiWindow(val size: Int, val title: String): InventoryHolder {
     public val _inventory: Inventory = Bukkit.createInventory(this, size, title)
 
     // map inventory slot index -> GuiElement
-    public val elements: Array<GuiElement?> = Array(size, {i -> null})
+    public val elements: Array<GuiElement?> = Array(size, { i -> null })
 
     // inventory event handlers
     private val _onCloseHandlers: ArrayList<() -> Unit> = ArrayList()
     private val _onItemDepositHandlers: ArrayList<(InventoryClickEvent) -> Unit> = ArrayList()
 
     // implement getInventory for InventoryHolder
-    override public fun getInventory(): Inventory {
+    public override fun getInventory(): Inventory {
         return _inventory
     }
 
@@ -51,20 +51,19 @@ public class GuiWindow(val size: Int, val title: String): InventoryHolder {
 
     // route onCick to gui object
     public fun runOnClick(event: InventoryClickEvent) {
-        
         // check if this is the clicked inventory
         val view = event.getView()
         val inventory = event.getClickedInventory()
 
         // println("runOnClick(): ${event.action}, ${inventory.type}")
 
-        if ( inventory == this._inventory ) {
+        if (inventory == this._inventory) {
             // cancel event by default, element callback can override
             event.setCancelled(true)
-            
+
             val index = event.getSlot()
             val elem = this.elements[index]
-            if ( elem != null ) {
+            if (elem != null) {
                 elem.onClick(event)
             }
         }
@@ -74,7 +73,7 @@ public class GuiWindow(val size: Int, val title: String): InventoryHolder {
         // cancel event by default, any callback can override
         event.setCancelled(true)
 
-        for ( callback in this._onItemDepositHandlers ) {
+        for (callback in this._onItemDepositHandlers) {
             callback(event)
         }
     }
@@ -83,14 +82,14 @@ public class GuiWindow(val size: Int, val title: String): InventoryHolder {
     public fun runOnDrag(event: InventoryDragEvent) {
         // check if this is the clicked inventory
         val inventory = event.getInventory()
-        if ( inventory == this._inventory ) {
+        if (inventory == this._inventory) {
             event.setCancelled(true)
         }
     }
 
     // add inventory window close handler
     public fun runOnClose(event: InventoryCloseEvent) {
-        for ( callback in this._onCloseHandlers ) {
+        for (callback in this._onCloseHandlers) {
             callback()
         }
     }
@@ -98,10 +97,9 @@ public class GuiWindow(val size: Int, val title: String): InventoryHolder {
     // draw item at location
     public fun draw(element: GuiElement, x: Int, y: Int, items: ItemStack) {
         val index = y * 9 + x
-        if ( index < this.size ) {
+        if (index < this.size) {
             this.elements[index] = element
             this._inventory.setItem(index, items)
         }
     }
-
 }

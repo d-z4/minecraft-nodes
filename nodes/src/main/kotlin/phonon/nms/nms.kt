@@ -1,23 +1,22 @@
 package phonon.nodes.nms
 
+import net.minecraft.network.chat.Component
+import org.bukkit.craftbukkit.CraftWorld
+import org.bukkit.craftbukkit.entity.CraftEntity
+import org.bukkit.craftbukkit.entity.CraftPlayer
+import org.bukkit.craftbukkit.util.CraftMagicNumbers
+import org.bukkit.entity.ArmorStand
+import org.bukkit.entity.Player
 import java.util.Optional
 import net.minecraft.core.BlockPos as NMSBlockPos
-import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.Packet as NMSPacket
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket as NMSPacketLevelChunkWithLightPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket as NMSPacketSetEntityData
 import net.minecraft.network.syncher.EntityDataSerializers as NMSEntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData as NMSSynchedEntityData
 import net.minecraft.server.level.ServerPlayer as NMSPlayer
-import net.minecraft.world.entity.decoration.ArmorStand as NMSArmorStand
 import net.minecraft.world.level.block.state.BlockState as NMSBlockState
 import net.minecraft.world.level.chunk.LevelChunk as NMSChunk
-import org.bukkit.craftbukkit.CraftWorld
-import org.bukkit.craftbukkit.entity.CraftEntity
-import org.bukkit.craftbukkit.entity.CraftPlayer
-import org.bukkit.craftbukkit.util.CraftMagicNumbers
-import org.bukkit.entity.Player
-import org.bukkit.entity.ArmorStand
 
 // re-exported type aliases
 internal typealias NMSBlockPos = NMSBlockPos
@@ -52,7 +51,7 @@ public fun ArmorStand.createArmorStandNamePacket(name: String): NMSPacketSetEnti
 
     val constructor = NMSPacketSetEntityData::class.java.getDeclaredConstructor(
         Int::class.javaPrimitiveType,
-        List::class.java
+        List::class.java,
     )
     constructor.isAccessible = true
 

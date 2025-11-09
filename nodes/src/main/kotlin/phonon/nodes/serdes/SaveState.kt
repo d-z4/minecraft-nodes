@@ -9,17 +9,16 @@ interface JsonSaveState {
     public var jsonString: String?
 
     // create the json string
-    public fun createJsonString(): String 
+    public fun createJsonString(): String
 
     // memoized access to json string
     public fun toJsonString(): String {
         val jsonString = this.jsonString
-        if ( jsonString === null ) {
+        if (jsonString === null) {
             val json = this.createJsonString()
             this.jsonString = json
             return json
-        }
-        else {
+        } else {
             return jsonString
         }
     }

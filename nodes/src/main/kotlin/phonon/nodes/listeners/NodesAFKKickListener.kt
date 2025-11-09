@@ -1,5 +1,5 @@
 /**
- * Listen to players kicked for AFK, reduce 
+ * Listen to players kicked for AFK, reduce
  * claims progress by amount in Config
  */
 
@@ -14,23 +14,21 @@ import phonon.nodes.Config
 import phonon.nodes.Nodes
 
 val AFK_MESSAGES = listOf(
-    "You have been idle for too long!"
+    "You have been idle for too long!",
 )
 
-public class NodesPlayerAFKKickListener: Listener {
+public class NodesPlayerAFKKickListener : Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
-	public fun onPlayerKick(event: PlayerKickEvent) {
-
+    public fun onPlayerKick(event: PlayerKickEvent) {
         val reason: String = event.getReason()
 
-        for ( msg in AFK_MESSAGES ) {
-            if ( msg == reason ) {
-
+        for (msg in AFK_MESSAGES) {
+            if (msg == reason) {
                 // get resident
-                val player: Player = event.getPlayer()        
+                val player: Player = event.getPlayer()
                 val resident = Nodes.getResident(player)
-                if ( resident === null ) {
+                if (resident === null) {
                     return
                 }
 
@@ -40,7 +38,5 @@ public class NodesPlayerAFKKickListener: Listener {
                 return
             }
         }
-
     }
-    
 }

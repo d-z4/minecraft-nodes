@@ -11,8 +11,8 @@ import phonon.nodes.objects.Town
 
 public class AllianceCreatedEvent(
     public val town1: Town,
-    public val town2: Town
-): Event() {
+    public val town2: Town,
+) : Event() {
 
     override fun getHandlers(): HandlerList {
         return HANDLERS

@@ -21,7 +21,7 @@ public fun entityTypeFromOrdinal(i: Int): EntityType {
  * Get spawn egg material from entity type
  */
 public fun spawnEggFromEntity(entityType: EntityType): Material? {
-    return when ( entityType ) {
+    return when (entityType) {
         EntityType.BEE -> Material.BEE_SPAWN_EGG
         EntityType.BLAZE -> Material.BLAZE_SPAWN_EGG
         EntityType.CAT -> Material.CAT_SPAWN_EGG

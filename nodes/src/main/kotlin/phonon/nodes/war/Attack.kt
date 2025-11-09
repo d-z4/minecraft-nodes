@@ -6,39 +6,37 @@
 
 package phonon.nodes.war
 
-import java.util.UUID
 import org.bukkit.Bukkit
 import org.bukkit.Location
+import org.bukkit.NamespacedKey
 import org.bukkit.World
-import org.bukkit.scheduler.BukkitTask
 import org.bukkit.block.Block
 import org.bukkit.boss.*
 import org.bukkit.entity.ArmorStand
-import org.bukkit.NamespacedKey
 import org.bukkit.persistence.PersistentDataType
-import phonon.nodes.Nodes
+import org.bukkit.scheduler.BukkitTask
 import phonon.nodes.Config
-import phonon.nodes.objects.Coord
-import phonon.nodes.objects.TerritoryChunk
-import phonon.nodes.objects.Town
-import phonon.nodes.objects.townNametagViewedByPlayer // in nametag
+import phonon.nodes.Nodes
 import phonon.nodes.nms.createArmorStandNamePacket
 import phonon.nodes.nms.sendPacket
-
+import phonon.nodes.objects.Coord
+import phonon.nodes.objects.Town
+import phonon.nodes.objects.townNametagViewedByPlayer // in nametag
+import java.util.UUID
 
 public class Attack(
-    val attacker: UUID,        // attacker's UUID
-    val town: Town,            // attacker's town
-    val coord: Coord,          // chunk coord under attack
-    val flagBase: Block,       // fence base of flag
-    val flagBlock: Block,      // wool block for flag
-    val flagTorch: Block,      // torch block of flag
+    val attacker: UUID, // attacker's UUID
+    val town: Town, // attacker's town
+    val coord: Coord, // chunk coord under attack
+    val flagBase: Block, // fence base of flag
+    val flagBlock: Block, // wool block for flag
+    val flagTorch: Block, // torch block of flag
     val skyBeaconColorBlocks: List<Block>,
     val skyBeaconWireframeBlocks: List<Block>,
-    val progressBar: BossBar,  // progress bar
-    val attackTime: Long,      // 
-    var progress: Long         // initial progress, current tick count
-): Runnable {
+    val progressBar: BossBar, // progress bar
+    val attackTime: Long, //
+    var progress: Long, // initial progress, current tick count
+) : Runnable {
     // no build region
     val noBuildXMin: Int
     val noBuildXMax: Int
@@ -67,7 +65,7 @@ public class Attack(
         this.noBuildZMin = flagZ - Config.flagNoBuildDistance
         this.noBuildZMax = flagZ + Config.flagNoBuildDistance
         this.noBuildYMin = flagY + Config.flagNoBuildYOffset
-        
+
         // set boss bar progress
         val progressNormalized: Double = this.progress.toDouble() / this.attackTime.toDouble()
         this.progressBar.setProgress(progressNormalized)
@@ -85,26 +83,29 @@ public class Attack(
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        
+
         // full json StringBuilder, initialize capacity to be
         // base capacity + room for progress ticks length
         val jsonStringBufferSize = this.jsonStringBase.capacity() + 20
         this.jsonString = StringBuilder(jsonStringBufferSize)
     }
 
-    override public fun run() {
+    public override fun run() {
         FlagWar.attackTick(this)
     }
-    
+
     public fun cancel() {
         this.thread.cancel()
-        
+
         val attack = this
-        Bukkit.getScheduler().runTask(Nodes.plugin!!, object: Runnable {
-            override fun run() {
-                FlagWar.cancelAttack(attack)
-            }
-        })
+        Bukkit.getScheduler().runTask(
+            Nodes.plugin!!,
+            object : Runnable {
+                override fun run() {
+                    FlagWar.cancelAttack(attack)
+                }
+            },
+        )
     }
 
     // returns json format string as a StringBuilder
@@ -117,7 +118,7 @@ public class Attack(
         this.jsonString.append(this.jsonStringBase)
 
         // add progress in ticks
-        this.jsonString.append("\"p\":${this.progress.toString()}") 
+        this.jsonString.append("\"p\":${this.progress}")
         this.jsonString.append("}")
 
         return this.jsonString
@@ -136,14 +137,14 @@ public class Attack(
 private fun generateFixedJsonBase(
     attacker: UUID,
     coord: Coord,
-    block: Block
+    block: Block,
 ): StringBuilder {
     val s = StringBuilder()
 
     s.append("{")
 
     // attacker uuid
-    s.append("\"id\":\"${attacker.toString()}\",")
+    s.append("\"id\":\"$attacker\",")
 
     // chunk coord [c.x, c.z]
     s.append("\"c\":[${coord.x},${coord.z}],")
@@ -161,7 +162,7 @@ public class AttackArmorStand(
     val maxViewDistance: Int = 3,
 ) {
     var townNameArmorstand = createArmorStand(world, loc)
-    var progressArmorstand = createArmorStand(world, loc.add(0.0,-0.25,0.0))
+    var progressArmorstand = createArmorStand(world, loc.add(0.0, -0.25, 0.0))
 
     // min/max x/z chunk view distance from this armor stand
     val minViewChunkX: Int
@@ -203,7 +204,7 @@ public class AttackArmorStand(
         this.townNameArmorstand.remove()
         this.townNameArmorstand = createArmorStand(this.world, this.loc)
         this.progressArmorstand.remove()
-        this.progressArmorstand = createArmorStand(this.world, this.loc.add(0.0,-0.25,0.0))
+        this.progressArmorstand = createArmorStand(this.world, this.loc.add(0.0, -0.25, 0.0))
     }
 
     /**
@@ -212,17 +213,18 @@ public class AttackArmorStand(
      */
     public fun sendPackets() {
         // if this chunk not loaded, skip
-        if ( !this.world.isChunkLoaded(this.loc.chunk) ) {
+        if (!this.world.isChunkLoaded(this.loc.chunk)) {
             return
         }
 
-        for ( player in world.players ) {
+        for (player in world.players) {
             val playerChunk = player.location.chunk
             val playerChunkX = playerChunk.x
             val playerChunkZ = playerChunk.z
 
-            if ( playerChunkX < minViewChunkX || playerChunkX > maxViewChunkX ||
-                 playerChunkZ < minViewChunkZ || playerChunkZ > maxViewChunkZ ) {
+            if (playerChunkX < minViewChunkX || playerChunkX > maxViewChunkX ||
+                playerChunkZ < minViewChunkZ || playerChunkZ > maxViewChunkZ
+            ) {
                 continue
             }
 
@@ -253,7 +255,7 @@ internal val NODES_ARMORSTAND_KEY = NamespacedKey("nodes", "armorstand")
  * Helper function to create a new armorstand with associated metadata.
  */
 private fun createArmorStand(
-    world: World,    
+    world: World,
     loc: Location,
 ): ArmorStand {
     val armorstand = world.spawn(loc, ArmorStand::class.java)

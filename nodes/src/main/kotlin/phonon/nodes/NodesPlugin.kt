@@ -8,15 +8,12 @@ import org.bukkit.command.TabCompleter
 import org.bukkit.plugin.java.JavaPlugin
 import phonon.nodes.commands.*
 import phonon.nodes.listeners.*
-import phonon.nodes.objects.Nametag
 import phonon.nodes.tasks.*
 import phonon.nodes.utils.loadLongFromFile
-import java.io.File
 
 public class NodesPlugin : JavaPlugin() {
-    
+
     override fun onEnable() {
-        
         // measure load time
         val timeStart = System.currentTimeMillis()
 
@@ -31,7 +28,7 @@ public class NodesPlugin : JavaPlugin() {
         // ===================================
         // dynmap hook, just flag that dynmap exists
         val dynmap = pluginManager.getPlugin("dynmap")
-        if ( dynmap !== null ) {
+        if (dynmap !== null) {
             Nodes.hookDynmap()
             logger.info("Using Dynmap v${dynmap.getDescription().getVersion()}")
         }
@@ -45,9 +42,9 @@ public class NodesPlugin : JavaPlugin() {
 
         // try load world
         val pluginPath = Config.pathPlugin
-        logger.info("Loading world from: ${pluginPath}")
+        logger.info("Loading world from: $pluginPath")
         try {
-            if ( Nodes.loadWorld() == true ) { // successful load
+            if (Nodes.loadWorld() == true) { // successful load
                 // print number of resource nodes and territories loaded
                 logger.info("- Resource Nodes: ${Nodes.getResourceNodeCount()}")
                 logger.info("- Territories: ${Nodes.getTerritoryCount()}")
@@ -55,8 +52,8 @@ public class NodesPlugin : JavaPlugin() {
                 logger.info("- Towns: ${Nodes.getTownCount()}")
                 logger.info("- Nations: ${Nodes.getNationCount()}")
             } else {
-                logger.severe("Error loading world: Invalid world file at ${pluginPath}/${Config.pathWorld}")
-                if ( Config.disableWorldWhenLoadFails ) {
+                logger.severe("Error loading world: Invalid world file at $pluginPath/${Config.pathWorld}")
+                if (Config.disableWorldWhenLoadFails) {
                     logger.severe("Disabling world interactions due to world load error")
                     pluginManager.registerEvents(DisabledWorldListener(), this)
                     return
@@ -64,8 +61,8 @@ public class NodesPlugin : JavaPlugin() {
             }
         } catch (err: Exception) {
             err.printStackTrace()
-            logger.severe("Error loading world: ${err}")
-            if ( Config.disableWorldWhenLoadFails ) {
+            logger.severe("Error loading world: $err")
+            if (Config.disableWorldWhenLoadFails) {
                 logger.severe("Disabling world interactions due to world load error")
                 pluginManager.registerEvents(DisabledWorldListener(), this)
                 return
@@ -107,7 +104,7 @@ public class NodesPlugin : JavaPlugin() {
         this.getCommand("allychat")?.setExecutor(AllyChatCommand())
         this.getCommand("player")?.setExecutor(PlayerCommand())
         this.getCommand("territory")?.setExecutor(TerritoryCommand())
-        
+
         // override command aliases tab complete if they exist
         this.getCommand("t")?.setTabCompleter(this.getCommand("town")?.getExecutor() as TabCompleter)
         this.getCommand("n")?.setTabCompleter(this.getCommand("nation")?.getExecutor() as TabCompleter)
@@ -115,7 +112,7 @@ public class NodesPlugin : JavaPlugin() {
         this.getCommand("nda")?.setTabCompleter(this.getCommand("nodesadmin")?.getExecutor() as TabCompleter)
         this.getCommand("gc")?.setTabCompleter(this.getCommand("globalchat")?.getExecutor() as TabCompleter)
         this.getCommand("p")?.setTabCompleter(this.getCommand("player")?.getExecutor() as TabCompleter)
-        
+
         // load current income tick
         val currTime = System.currentTimeMillis()
         Nodes.lastBackupTime = loadLongFromFile(Config.pathLastBackupTime) ?: currTime
@@ -148,11 +145,11 @@ public class NodesPlugin : JavaPlugin() {
 
         // world cleanup
         Nodes.cleanup()
-        
+
         // final synchronous save of world
         // -> only save when world was properly initialized,
         //    to avoid saving junk empty data when plugin fails load
-        if ( Nodes.initialized ) {
+        if (Nodes.initialized) {
             Nodes.saveWorld(checkIfNeedsSave = false, async = false)
             Nodes.saveTruce(async = false)
         }

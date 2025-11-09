@@ -1,34 +1,34 @@
 /**
  * Config
- * 
- * Contains global config state variables read in from 
+ *
+ * Contains global config state variables read in from
  * plugin config.yml file
  */
 
 package phonon.nodes
 
-import java.nio.file.Paths
-import java.util.UUID
-import java.util.EnumSet
-import java.util.EnumMap
+import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.FileConfiguration
-import org.bukkit.Material
 import org.bukkit.entity.EntityType
-import phonon.nodes.objects.TerritoryResources
 import phonon.nodes.objects.OreDeposit
+import phonon.nodes.objects.TerritoryResources
+import java.nio.file.Paths
+import java.util.EnumMap
+import java.util.EnumSet
+import java.util.UUID
 
 public object Config {
 
     // ===================================
     // engine configs
     // ===================================
-    // main plugin path for config and saves 
+    // main plugin path for config and saves
     public var pathPlugin = "plugins/nodes"
-    
+
     // folder for backups of json state files
     public var pathBackup = Paths.get("plugins/nodes/backup").normalize()
-    
+
     // file names for world, towns, war json files
     public var pathWorld = Paths.get(pathPlugin, "world.json").normalize()
     public var pathTowns = Paths.get(pathPlugin, "towns.json").normalize()
@@ -36,13 +36,13 @@ public object Config {
     public var pathTruce = Paths.get(pathPlugin, "truce.json").normalize()
     public var pathLastBackupTime = Paths.get(pathPlugin, "lastBackupTime.txt").normalize()
     public var pathLastIncomeTime = Paths.get(pathPlugin, "lastIncomeTime.txt").normalize()
-    
+
     // disable world when nodes world.json or towns.json fails due to errors
     public var disableWorldWhenLoadFails = true
 
     // period for running world save
     public var savePeriod: Long = 600L
-    
+
     // all long tick cycle values
     // 1 hour = 3600000 ms
     // 2 hour = 7200000 ms
@@ -53,7 +53,7 @@ public object Config {
 
     // period to send reminder to players that town over max claims
     public var overMaxClaimsReminderPeriod: Long = 24000L
-    
+
     // nametag update period
     public var nametagUpdatePeriod: Long = 80L
     public var nametagPipelineTicks: Int = 16
@@ -81,8 +81,8 @@ public object Config {
     //       = 60 / 100
     //       = 0.6
     public var incomeScaleByClaimPower: Boolean = true
-    public var incomeScaleMin: Double = 0.1  // minimum income scaling factor
-    public var incomeScaleMax: Double = 1.0  // maximum income scaling factor, >1.0 allowed
+    public var incomeScaleMin: Double = 0.1 // minimum income scaling factor
+    public var incomeScaleMax: Double = 1.0 // maximum income scaling factor, >1.0 allowed
 
     // global resource node in all territories
     public var globalResources = TerritoryResources()
@@ -92,7 +92,7 @@ public object Config {
         Material.STONE, // note: granite, diorite, and andesite are variants of stone in 1.12.2
         Material.ANDESITE,
         Material.GRANITE,
-        Material.DIORITE
+        Material.DIORITE,
     )
 
     // harvestable crop types affected by occupied territory tax
@@ -123,13 +123,13 @@ public object Config {
         Material.PUMPKIN,
         Material.SUGAR_CANE,
         Material.SWEET_BERRY_BUSH,
-        Material.WHEAT
+        Material.WHEAT,
     )
 
     // map block type -> alternative editor name
     public var cropAlternativeNames: EnumMap<Material, Material> = {
         val alternativeNames: EnumMap<Material, Material> = EnumMap<Material, Material>(Material::class.java)
-        
+
         alternativeNames.put(Material.MELON_STEM, Material.MELON)
         alternativeNames.put(Material.PUMPKIN_STEM, Material.PUMPKIN)
         alternativeNames.put(Material.SWEET_BERRY_BUSH, Material.SWEET_BERRIES)
@@ -157,7 +157,7 @@ public object Config {
     public var cropsMaxYHeight: Int = 255
     public var breedingMinYHeight: Int = 10
     public var breedingMaxYHeight: Int = 255
-    
+
     // ===================================
     // afk kick time
     // ===================================
@@ -213,10 +213,10 @@ public object Config {
     public var townPenaltyDecay: Int = 2
 
     // claim power per player
-    public var playerClaimsInitial: Int = 0     // initial player claims on town join
-    public var playerClaimsMax: Int = 20        // max player claims for town
-    public var playerClaimsIncrease: Int = 1    // claims increase per tick period
-    
+    public var playerClaimsInitial: Int = 0 // initial player claims on town join
+    public var playerClaimsMax: Int = 20 // max player claims for town
+    public var playerClaimsIncrease: Int = 1 // claims increase per tick period
+
     // time periods for town claims penalty decay and player power gain, milliseconds
     // 1 hour = 3600000 ms
     // 2 hour = 7200000 ms
@@ -228,7 +228,7 @@ public object Config {
     // breeding, etc...)
     // TODO: make fine grained over claims penalty for each system
     public var overClaimsPenalty: Boolean = true
-    
+
     // reduced resource rate when over max claim (runs Math.random() < rate)
     public var overClaimsMaxPenalty: Double = 0.5
 
@@ -296,7 +296,7 @@ public object Config {
     public var onlyAllowExplosionsDuringWar: Boolean = true
 
     public var flagMaterialDefault: Material = Material.OAK_FENCE
-    
+
     public var flagMaterials: EnumSet<Material> = EnumSet.of(
         Material.ACACIA_FENCE,
         Material.BIRCH_FENCE,
@@ -306,7 +306,7 @@ public object Config {
         Material.JUNGLE_FENCE,
         Material.MANGROVE_FENCE,
         Material.OAK_FENCE,
-        Material.SPRUCE_FENCE
+        Material.SPRUCE_FENCE,
     )
 
     // disable building within this distance of flag (square range)
@@ -314,13 +314,13 @@ public object Config {
 
     // disable building for y > flag base block + flagNoBuildYOffset
     public var flagNoBuildYOffset: Int = -1
-    
+
     // ticks required to capture chunk
     public var chunkAttackTime: Long = 200
 
     // multiplier for chunk attacks
     public var chunkAttackFromWastelandMultiplier: Double = 2.0 // territory next to wilderness
-    public var chunkAttackHomeMultiplier: Double = 2.0       // in home territory
+    public var chunkAttackHomeMultiplier: Double = 2.0 // in home territory
 
     // number of chunks a player can attack at same time
     public var maxPlayerChunkAttacks: Int = 1
@@ -331,7 +331,7 @@ public object Config {
     // flag sky beacon config
     public var flagBeaconSize: Int = 6 // be in range [2, 16]
     public var flagBeaconMinSkyLevel: Int = 100 // minimum height level in sky
-    public var flagBeaconSkyLevel: Int = 50    // height level above blocks
+    public var flagBeaconSkyLevel: Int = 50 // height level above blocks
 
     // allow war permissions during skirmish mode
     public var allowDestructionDuringSkirmish: Boolean = false
@@ -353,7 +353,7 @@ public object Config {
     // use whitelist/blacklist for war (derived from list.size > 0 for lists below)
     public var warUseWhitelist: Boolean = false
     public var warUseBlacklist: Boolean = false
-    
+
     // war whitelist: only allow attacking these town UUIDs
     public var warWhitelist: HashSet<UUID> = hashSetOf()
 
@@ -391,12 +391,10 @@ public object Config {
     // 72 hour = 259200000 ms
     public var trucePeriod: Long = 172800000L
 
-    
     // ===================================================
     // Load config
     // ===================================================
     public fun load(config: FileConfiguration) {
-
         // engine settings
         Config.disableWorldWhenLoadFails = config.getBoolean("disableWorldWhenLoadFails", Config.disableWorldWhenLoadFails)
         Config.savePeriod = config.getLong("savePeriod", Config.savePeriod)
@@ -412,7 +410,7 @@ public object Config {
 
         // afk kick time
         Config.afkKickTime = config.getLong("afkKickTime", Config.afkKickTime)
-        
+
         // generic permissions
         Config.canInteractInEmpty = config.getBoolean("canInteractInEmpty", Config.canInteractInEmpty)
         Config.canInteractInUnclaimed = config.getBoolean("canInteractInUnclaimed", Config.canInteractInUnclaimed)
@@ -442,7 +440,7 @@ public object Config {
 
         // global resources in all territories
         val globalResourcesSection = config.getConfigurationSection("globalResources")
-        if ( globalResourcesSection !== null ) {
+        if (globalResourcesSection !== null) {
             Config.globalResources = parseGlobalResources(globalResourcesSection)
         }
 
@@ -453,11 +451,11 @@ public object Config {
         Config.initialOverClaimsAmountScale = config.getInt("initialOverClaimsAmountScale", Config.initialOverClaimsAmountScale)
         Config.townClaimsBase = config.getInt("townClaimsBase", Config.townClaimsBase)
         Config.townClaimsMax = config.getInt("townClaimsMax", Config.townClaimsMax)
-        
+
         Config.playerClaimsInitial = config.getInt("playerClaimsInitial", Config.playerClaimsInitial)
         Config.playerClaimsMax = config.getInt("playerClaimsMax", Config.playerClaimsMax)
         Config.playerClaimsIncrease = config.getInt("playerClaimsIncrease", Config.playerClaimsIncrease)
-        
+
         Config.townPenaltyDecay = config.getInt("townPenaltyDecay", Config.townPenaltyDecay)
         Config.townClaimsPenaltyDecayPeriod = config.getLong("townClaimsPenaltyDecayPeriod", Config.townClaimsPenaltyDecayPeriod)
         Config.playerClaimsIncreasePeriod = config.getLong("playerClaimsIncreasePeriod", Config.playerClaimsIncreasePeriod)
@@ -470,7 +468,7 @@ public object Config {
         // town settings
         Config.townSpawnTime = config.getInt("townSpawnTime", Config.townSpawnTime)
         val outpostTeleportCostSection = config.getConfigurationSection("outpostTeleportCost")
-        if ( outpostTeleportCostSection !== null ) {
+        if (outpostTeleportCostSection !== null) {
             Config.outpostTeleportCost.putAll(parseTeleportCost(outpostTeleportCostSection))
             Config.outpostTeleportCostString = teleportCostToString(Config.outpostTeleportCost)
         }
@@ -478,7 +476,7 @@ public object Config {
         // nation settings
         Config.allowNationTownSpawn = config.getBoolean("allowNationTownSpawn", Config.allowNationTownSpawn)
         val nationTeleportCostSection = config.getConfigurationSection("nationTownTeleportCost")
-        if ( nationTeleportCostSection !== null ) {
+        if (nationTeleportCostSection !== null) {
             Config.nationTownTeleportCost.putAll(parseTeleportCost(nationTeleportCostSection))
             Config.nationTownTeleportCostString = teleportCostToString(Config.nationTownTeleportCost)
         }
@@ -524,10 +522,10 @@ public object Config {
         Config.warUseBlacklist = Config.warBlacklist.size > 0
         Config.annexBlacklist = parseUUIDSet(config, "annexBlacklist")
         Config.useAnnexBlacklist = Config.annexBlacklist.size > 0
-        
+
         Config.onlyWhitelistCanAnnex = config.getBoolean("onlyWhitelistCanAnnex", Config.onlyWhitelistCanAnnex)
         Config.onlyWhitelistCanClaim = config.getBoolean("onlyWhitelistCanClaim", Config.onlyWhitelistCanClaim)
-        
+
         Config.occupiedHomeTeleportMultiplier = config.getDouble("occupiedHomeTeleportMultiplier", Config.occupiedHomeTeleportMultiplier)
 
         Config.allowControlInOccupiedTownList = parseUUIDSet(config, "allowControlInOccupiedTownList")
@@ -547,33 +545,33 @@ private fun parseGlobalResources(globalResourcesSection: ConfigurationSection): 
     val animals: EnumMap<EntityType, Double> = EnumMap<EntityType, Double>(EntityType::class.java)
 
     globalResourcesSection.getConfigurationSection("income")?.let { section ->
-        for ( item in section.getKeys(false) ) {
+        for (item in section.getKeys(false)) {
             val itemName = item.uppercase()
             // spawn egg
-            if ( itemName.startsWith("SPAWN_EGG_")) {
+            if (itemName.startsWith("SPAWN_EGG_")) {
                 val entityType = EntityType.valueOf(itemName.replace("SPAWN_EGG_", ""))
-                if ( entityType !== null ) {
+                if (entityType !== null) {
                     incomeSpawnEgg.put(entityType, section.getDouble(item))
                 }
             }
             // regular material
             else {
                 val material = Material.matchMaterial(item)
-                if ( material !== null ) {
+                if (material !== null) {
                     income.put(material, section.getDouble(item))
                 }
             }
         }
     }
-    
-    globalResourcesSection.getConfigurationSection("ore")?.let{ section ->
-        for ( item in section.getKeys(false) ) {
+
+    globalResourcesSection.getConfigurationSection("ore")?.let { section ->
+        for (item in section.getKeys(false)) {
             val material = Material.matchMaterial(item)
-            if ( material !== null ) {
+            if (material !== null) {
                 // list format [chance, min, max]
-                if ( section.isList(item) ) {
+                if (section.isList(item)) {
                     val list = section.getDoubleList(item)
-                    if ( list.size === 3 ) {
+                    if (list.size === 3) {
                         val chance = list[0]
                         val min = list[1].toInt()
                         val max = list[2].toInt()
@@ -588,23 +586,22 @@ private fun parseGlobalResources(globalResourcesSection: ConfigurationSection): 
             }
         }
     }
-    
+
     globalResourcesSection.getConfigurationSection("crops")?.let { section ->
-        for ( item in section.getKeys(false) ) {
+        for (item in section.getKeys(false)) {
             val material = Material.matchMaterial(item)
-            if ( material !== null ) {
+            if (material !== null) {
                 crops.put(material, section.getDouble(item))
             }
         }
     }
-    
-    globalResourcesSection.getConfigurationSection("animals")?.let { section -> 
-        for ( item in section.getKeys(false) ) {
+
+    globalResourcesSection.getConfigurationSection("animals")?.let { section ->
+        for (item in section.getKeys(false)) {
             try {
                 val entityType = EntityType.valueOf(item.uppercase())
                 animals.put(entityType, section.getDouble(item))
-            }
-            catch ( err: Exception ) {
+            } catch (err: Exception) {
                 err.printStackTrace()
             }
         }
@@ -624,9 +621,9 @@ private fun parseGlobalResources(globalResourcesSection: ConfigurationSection): 
 private fun parseTeleportCost(section: ConfigurationSection): EnumMap<Material, Int> {
     val materials: EnumMap<Material, Int> = EnumMap<Material, Int>(Material::class.java)
 
-    for ( item in section.getKeys(false) ) {
+    for (item in section.getKeys(false)) {
         val material = Material.matchMaterial(item)
-        if ( material !== null ) {
+        if (material !== null) {
             materials.put(material, section.getInt(item))
         }
     }
@@ -639,11 +636,10 @@ private fun teleportCostToString(materials: EnumMap<Material, Int>): String {
     var s = ""
 
     var index = 0
-    for ( (mat, amount) in materials ) {
+    for ((mat, amount) in materials) {
+        s += "$amount $mat"
 
-        s += "${amount} ${mat}"
-
-        if ( index < materials.size - 1 ) {
+        if (index < materials.size - 1) {
             s += ", "
         }
 
@@ -659,14 +655,14 @@ private fun teleportCostToString(materials: EnumMap<Material, Int>): String {
 private fun parseUUIDSet(config: ConfigurationSection, listName: String): HashSet<UUID> {
     val uuids: HashSet<UUID> = hashSetOf()
 
-    if ( config.isList(listName) ) {
+    if (config.isList(listName)) {
         val uuidList = config.getStringList(listName)
-        if ( uuidList !== null ) {
-            for ( uuidString in uuidList ) {
+        if (uuidList !== null) {
+            for (uuidString in uuidList) {
                 val uuid = try {
                     UUID.fromString(uuidString)
-                } catch ( err: Exception ) {
-                    System.err.println("[Config] Invalid UUID: ${uuidString}")
+                } catch (err: Exception) {
+                    System.err.println("[Config] Invalid UUID: $uuidString")
                     continue
                 }
 

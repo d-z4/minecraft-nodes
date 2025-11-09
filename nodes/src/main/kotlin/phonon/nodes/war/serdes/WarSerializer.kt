@@ -21,22 +21,18 @@
 
 package phonon.nodes.war
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
+import org.bukkit.Bukkit
+import phonon.nodes.Config
+import phonon.nodes.Nodes
+import phonon.nodes.utils.estimateNumDigits
+import java.nio.ByteBuffer
+import java.nio.CharBuffer
+import java.nio.channels.*
 import java.nio.charset.CharsetEncoder
 import java.nio.charset.StandardCharsets
-import java.nio.CharBuffer
-import java.nio.ByteBuffer
-import java.nio.channels.*
+import java.nio.file.Path
+import java.nio.file.StandardOpenOption
 import java.util.concurrent.Future
-import kotlin.system.measureNanoTime
-import org.bukkit.Bukkit
-import phonon.nodes.Nodes
-import phonon.nodes.Config
-import phonon.nodes.war.FlagWar
-import phonon.nodes.utils.estimateNumDigits
 
 public object WarSerializer {
 
@@ -56,18 +52,18 @@ public object WarSerializer {
         // convert occupiedChunks to json string
         WarSerializer.occupiedChunks.clear()
 
-        for ( coord in FlagWar.occupiedChunks ) {
+        for (coord in FlagWar.occupiedChunks) {
             val chunk = Nodes.getTerritoryChunkFromCoord(coord)
-            if ( chunk === null ) {
+            if (chunk === null) {
                 continue
             }
             val town = chunk.occupier?.name
-            if ( town != null ) {
+            if (town != null) {
                 val coord = chunk.coord
                 val cx = coord.x
                 val cz = coord.z
 
-                WarSerializer.occupiedChunks.get(town)?.let { chunkList -> 
+                WarSerializer.occupiedChunks.get(town)?.let { chunkList ->
                     chunkList.add(cx)
                     chunkList.add(cz)
                 } ?: run {
@@ -78,31 +74,31 @@ public object WarSerializer {
 
         // update json strings for each attack
         WarSerializer.attacksJsonList.clear()
-        for ( attack in FlagWar.chunkToAttacker.values ) {
+        for (attack in FlagWar.chunkToAttacker.values) {
             WarSerializer.attacksJsonList.add(attack.toJson())
         }
-        
+
         // }
 
         // println("[WAR] PRE-PROCESS TIME: ${timePreprocess.toString()}ns")
 
-        if ( async == true ) {
+        if (async == true) {
             // write file in worker thread
-            Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, object: Runnable {
-                override public fun run() {
-                    WarSerializer.writeToJson(Config.pathWar)
-                }
-            })
-        }
-        else {
+            Bukkit.getScheduler().runTaskAsynchronously(
+                Nodes.plugin!!,
+                object : Runnable {
+                    public override fun run() {
+                        WarSerializer.writeToJson(Config.pathWar)
+                    }
+                },
+            )
+        } else {
             WarSerializer.writeToJson(Config.pathWar)
         }
-
     }
 
     // save war json file synchronously on main thread
     public fun writeToJson(path: Path) {
-        
         // =============================================
         // calculate string builder capacity
 
@@ -116,12 +112,12 @@ public object WarSerializer {
         // captured chunks format:
         // "town": [0, 1, 2, 3, ...]
         // -> get each integer size, then include brackets [] and commas ,
-        for ( (townName, coordList) in WarSerializer.occupiedChunks ) {
+        for ((townName, coordList) in WarSerializer.occupiedChunks) {
             // size of "townName":[]
             bufferSize += (5 + townName.length + coordList.size)
-            
+
             // size of each integer
-            for ( c in coordList ) {
+            for (c in coordList) {
                 val intLength = 2 + estimateNumDigits(c)
                 bufferSize += intLength
             }
@@ -129,7 +125,7 @@ public object WarSerializer {
 
         // list of attack json objects
         // add 1 to length to account for comma
-        for ( s in WarSerializer.attacksJsonList) {
+        for (s in WarSerializer.attacksJsonList) {
             bufferSize += (1 + s.length)
         }
         // =============================================
@@ -140,7 +136,7 @@ public object WarSerializer {
         var bytes: ByteBuffer = ByteBuffer.allocate(0)
 
         // val timeBuffers = measureNanoTime {
-        
+
         // ===============================
         // War status and flags
         // ===============================
@@ -155,17 +151,17 @@ public object WarSerializer {
         jsonString.append("\"occupied\":{")
 
         var index = 1
-        for ( (townName, coordList) in WarSerializer.occupiedChunks ) {
+        for ((townName, coordList) in WarSerializer.occupiedChunks) {
             jsonString.append("\"${townName}\":[")
-            for ( (i, c) in coordList.withIndex() ) {
+            for ((i, c) in coordList.withIndex()) {
                 jsonString.append(c)
-                if ( i < coordList.size - 1 ) {
+                if (i < coordList.size - 1) {
                     jsonString.append(",")
                 }
             }
 
             // add comma
-            if ( index < WarSerializer.occupiedChunks.size ) {
+            if (index < WarSerializer.occupiedChunks.size) {
                 jsonString.append("],")
                 index += 1
             }
@@ -182,11 +178,11 @@ public object WarSerializer {
         // ===============================
         jsonString.append("\"attacks\":[")
 
-        for ( (i, attack) in WarSerializer.attacksJsonList.iterator().withIndex() ) {
+        for ((i, attack) in WarSerializer.attacksJsonList.iterator().withIndex()) {
             jsonString.append(attack)
 
             // add comma
-            if ( i < WarSerializer.attacksJsonList.size - 1 ) {
+            if (i < WarSerializer.attacksJsonList.size - 1) {
                 jsonString.append(",")
             }
         }
@@ -209,10 +205,10 @@ public object WarSerializer {
         // ===============================
         // val timeWrite = measureNanoTime {
 
-        val fileChannel: AsynchronousFileChannel = AsynchronousFileChannel.open(path, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        
-        val operation: Future<Int> = fileChannel.write(bytes, 0);
-        
+        val fileChannel: AsynchronousFileChannel = AsynchronousFileChannel.open(path, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+
+        val operation: Future<Int> = fileChannel.write(bytes, 0)
+
         operation.get()
         // }
 
