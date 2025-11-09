@@ -27,7 +27,9 @@ import phonon.nodes.utils.string.filterTownOrNation
  * @subcommand /unally [nation]
  * Break alliance with a nation
  */
-public class UnallyCommand : CommandExecutor, TabCompleter {
+public class UnallyCommand :
+    CommandExecutor,
+    TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
         // no args, print help

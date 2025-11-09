@@ -10,7 +10,16 @@ import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
 import phonon.nodes.Nodes
-import phonon.nodes.gui.*
+import phonon.nodes.gui.GUI_CONCRETE
+import phonon.nodes.gui.GuiButton
+import phonon.nodes.gui.GuiColor
+import phonon.nodes.gui.GuiElement
+import phonon.nodes.gui.GuiElementList
+import phonon.nodes.gui.GuiFillColor
+import phonon.nodes.gui.GuiLabel
+import phonon.nodes.gui.GuiSlot
+import phonon.nodes.gui.GuiWindow
+import phonon.nodes.gui.itemIcon
 import phonon.nodes.objects.Town
 
 // constant array for (x,y) slots for your town's treaty side
@@ -37,7 +46,7 @@ val OTHER_TERM_SLOTS: Array<GuiSlot> = arrayOf(
 val ICON_EMPTY = ItemStack(Material.AIR, 1)
 
 // icon for letting other party occupy your territory
-val ICON_OCCUPY = ItemIcon(
+val ICON_OCCUPY = itemIcon(
     ItemStack(Material.DIRT, 1, 2.toShort()),
     "${ChatColor.RED}${ChatColor.BOLD}Territory Occupation",
     listOf(
@@ -47,7 +56,7 @@ val ICON_OCCUPY = ItemIcon(
 )
 
 // icon for letting other party annex your territory
-val ICON_ANNEX = ItemIcon(
+val ICON_ANNEX = itemIcon(
     ItemStack(Material.GRASS_BLOCK, 1),
     "${ChatColor.RED}${ChatColor.BOLD}Cede Territory",
     listOf(
@@ -57,7 +66,7 @@ val ICON_ANNEX = ItemIcon(
 )
 
 // icon for rejecting deal
-val ICON_REJECT = ItemIcon(
+val ICON_REJECT = itemIcon(
     GUI_CONCRETE[GuiColor.RED.ordinal].clone(),
     "${ChatColor.DARK_RED}${ChatColor.BOLD}Reject Treaty",
     listOf(
@@ -67,7 +76,7 @@ val ICON_REJECT = ItemIcon(
 )
 
 // icon for offering terms
-val ICON_OFFER = ItemIcon(
+val ICON_OFFER = itemIcon(
     GUI_CONCRETE[GuiColor.GREEN.ordinal].clone(),
     "${ChatColor.GREEN}${ChatColor.BOLD}Offer Treaty",
     listOf(
@@ -77,7 +86,7 @@ val ICON_OFFER = ItemIcon(
 )
 
 // icon for revising terms
-val ICON_REVISE = ItemIcon(
+val ICON_REVISE = itemIcon(
     GUI_CONCRETE[GuiColor.ORANGE.ordinal].clone(),
     "${ChatColor.WHITE}${ChatColor.BOLD}Revise Treaty",
     listOf(
@@ -86,7 +95,7 @@ val ICON_REVISE = ItemIcon(
 )
 
 // icon for confirming terms
-val ICON_CONFIRM = ItemIcon(
+val ICON_CONFIRM = itemIcon(
     GUI_CONCRETE[GuiColor.GREEN.ordinal].clone(),
     "${ChatColor.GREEN}${ChatColor.BOLD}Confirm Treaty",
     listOf(

@@ -27,7 +27,5 @@ public data class TownPair(
         return (this.town1 === other.town1 || this.town1 === other.town2) && (this.town2 === other.town1 || this.town2 === other.town2)
     }
 
-    public override fun hashCode(): Int {
-        return this.town1.hashCode() + this.town2.hashCode()
-    }
+    public override fun hashCode(): Int = this.town1.hashCode() + this.town2.hashCode()
 }

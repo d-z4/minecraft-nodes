@@ -26,64 +26,62 @@ import org.bukkit.event.inventory.InventoryType
 import org.bukkit.event.player.PlayerInteractEvent
 import phonon.nodes.Message
 import phonon.nodes.Nodes
+import phonon.nodes.Nodes.getResident
 import phonon.nodes.constants.NODES_SOUND_CHEST_PROTECT
 import phonon.nodes.constants.PROTECTED_BLOCKS
 import phonon.nodes.objects.Resident
 import phonon.nodes.objects.Territory
 import phonon.nodes.objects.Town
 
-public fun NodesPlayerChestProtectListener(player: Player, resident: Resident, town: Town): Listener {
-    return object : Listener {
-
-        @EventHandler(priority = EventPriority.HIGHEST)
-        public fun onBlockInteract(event: PlayerInteractEvent) {
-            val eventPlayer: Player = event.player
-            if (eventPlayer !== player || resident.isProtectingChests == false) {
-                return
-            }
-
-            val block = event.getClickedBlock()
-            if (block !== null) {
-                if (PROTECTED_BLOCKS.contains(block.type)) {
-                    val territory: Territory? = Nodes.getTerritoryFromChunk(block.chunk)
-                    val territoryTown: Town? = territory?.town
-
-                    if (town !== territoryTown) {
-                        Message.error(player, "This is not your town (stopping, use /t protect to start protecting again)")
-                        Nodes.stopProtectingChests(resident)
-                        return
-                    }
-
-                    // unprotect
-                    if (town.protectedBlocks.contains(block)) {
-                        Nodes.protectTownChest(town, block, false)
-
-                        player.playSound(player.location, NODES_SOUND_CHEST_PROTECT, 1.0f, 0.5f)
-                        Message.print(player, "${ChatColor.DARK_AQUA}Removed chest protection")
-                    }
-                    // protect
-                    else {
-                        Nodes.protectTownChest(town, block, true)
-
-                        player.playSound(player.location, NODES_SOUND_CHEST_PROTECT, 1.0f, 1.0f)
-                        Message.print(player, "You have protected this chest")
-                    }
-
-                    event.setCancelled(true)
-                    return
-                }
-            }
-
-            Message.error(player, "Not a chest (stopping, use /t protect to start protecting again)")
-            Nodes.stopProtectingChests(resident)
-        }
-    }
-}
-
 /**
  * Listener for any special chest protection
  */
 public class NodesChestProtectionListener : Listener {
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public fun onBlockInteract(event: PlayerInteractEvent) {
+        val player: Player = event.player
+        val resident: Resident = getResident(player)!!
+        if (!resident.isProtectingChests) {
+            return
+        }
+
+        val block = event.getClickedBlock()
+        if (block !== null) {
+            if (PROTECTED_BLOCKS.contains(block.type)) {
+                val town: Town = resident.town!!
+                val territory: Territory? = Nodes.getTerritoryFromChunk(block.chunk)
+                val territoryTown: Town? = territory?.town
+
+                if (town !== territoryTown) {
+                    Message.error(player, "This is not your town (stopping, use /t protect to start protecting again)")
+                    Nodes.stopProtectingChests(resident)
+                    return
+                }
+
+                // unprotect
+                if (town.protectedBlocks.contains(block)) {
+                    Nodes.protectTownChest(town, block, false)
+
+                    player.playSound(player.location, NODES_SOUND_CHEST_PROTECT, 1.0f, 0.5f)
+                    Message.print(player, "${ChatColor.DARK_AQUA}Removed chest protection")
+                }
+                // protect
+                else {
+                    Nodes.protectTownChest(town, block, true)
+
+                    player.playSound(player.location, NODES_SOUND_CHEST_PROTECT, 1.0f, 1.0f)
+                    Message.print(player, "You have protected this chest")
+                }
+
+                event.setCancelled(true)
+                return
+            }
+        }
+
+        Message.error(player, "Not a chest (stopping, use /t protect to start protecting again)")
+        Nodes.stopProtectingChests(resident)
+    }
 
     // disable hopper events
     @EventHandler(priority = EventPriority.LOW)

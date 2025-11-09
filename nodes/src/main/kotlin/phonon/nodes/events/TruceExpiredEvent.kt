@@ -13,16 +13,12 @@ public class TruceExpiredEvent(
     public val town2: Town,
 ) : Event() {
 
-    override fun getHandlers(): HandlerList {
-        return HANDLERS
-    }
+    override fun getHandlers(): HandlerList = HANDLERS
 
     companion object {
         private val HANDLERS: HandlerList = HandlerList()
 
         @JvmStatic
-        fun getHandlerList(): HandlerList {
-            return HANDLERS
-        }
+        fun getHandlerList(): HandlerList = HANDLERS
     }
 }

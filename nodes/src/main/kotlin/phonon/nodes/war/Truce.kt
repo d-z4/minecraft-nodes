@@ -122,9 +122,7 @@ public object Truce {
     }
 
     // returns true if truce exists between (town1, town2)
-    public fun contains(town1: Town, town2: Town): Boolean {
-        return Truce.truces.contains(TownPair(town1, town2))
-    }
+    public fun contains(town1: Town, town2: Town): Boolean = Truce.truces.contains(TownPair(town1, town2))
 
     // get list of truces involving input town
     public fun get(town: Town): List<TownPair> {

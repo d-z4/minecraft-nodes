@@ -80,9 +80,7 @@ data class ResourceNode(
     /**
      * Apply resource node attributes to a TerritoryResources.
      */
-    public fun apply(terr: TerritoryResources): TerritoryResources {
-        return this.attributesSorted.fold(terr, { t, attribute -> attribute.apply(t) })
-    }
+    public fun apply(terr: TerritoryResources): TerritoryResources = this.attributesSorted.fold(terr, { t, attribute -> attribute.apply(t) })
 
     /**
      * Print resource node attributes info to sender.
@@ -952,11 +950,9 @@ public data class ResourceAttributeAttackerTimeMultiplier(
     /**
      * Multiply together multipliers.
      */
-    override fun apply(resources: TerritoryResources): TerritoryResources {
-        return resources.copy(
-            attackerTimeMultiplier = resources.attackerTimeMultiplier * multiplier,
-        )
-    }
+    override fun apply(resources: TerritoryResources): TerritoryResources = resources.copy(
+        attackerTimeMultiplier = resources.attackerTimeMultiplier * multiplier,
+    )
 
     override fun describe(): String = this.description
 }
@@ -970,11 +966,9 @@ public data class ResourceAttributeDefenderTimeMultiplier(
     /**
      * Multiply together multipliers.
      */
-    override fun apply(resources: TerritoryResources): TerritoryResources {
-        return resources.copy(
-            defenderTimeMultiplier = resources.defenderTimeMultiplier * multiplier,
-        )
-    }
+    override fun apply(resources: TerritoryResources): TerritoryResources = resources.copy(
+        defenderTimeMultiplier = resources.defenderTimeMultiplier * multiplier,
+    )
 
     override fun describe(): String = this.description
 }

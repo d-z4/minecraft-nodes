@@ -17,28 +17,23 @@ public class WarAttackStartEvent(
     public val attackingTown: Town,
     public val territory: Territory,
     public val block: Block,
-) : Event(), Cancellable {
+) : Event(),
+    Cancellable {
 
     private var isCancelled: Boolean = false
 
-    override fun isCancelled(): Boolean {
-        return isCancelled
-    }
+    override fun isCancelled(): Boolean = isCancelled
 
     override fun setCancelled(cancel: Boolean) {
         this.isCancelled = cancel
     }
 
-    override fun getHandlers(): HandlerList {
-        return WarAttackStartEvent.handlers
-    }
+    override fun getHandlers(): HandlerList = WarAttackStartEvent.handlers
 
     companion object {
         private val handlers: HandlerList = HandlerList()
 
         @JvmStatic
-        fun getHandlerList(): HandlerList {
-            return WarAttackStartEvent.handlers
-        }
+        fun getHandlerList(): HandlerList = WarAttackStartEvent.handlers
     }
 }

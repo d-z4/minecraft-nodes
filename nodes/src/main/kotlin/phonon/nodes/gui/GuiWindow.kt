@@ -25,19 +25,21 @@ public class GuiWindow(val size: Int, val title: String) : InventoryHolder {
     public val rows: Int = size / 9
 
     // inventory backend
+    @Suppress("PropertyName")
     public val _inventory: Inventory = Bukkit.createInventory(this, size, title)
 
     // map inventory slot index -> GuiElement
     public val elements: Array<GuiElement?> = Array(size, { i -> null })
 
     // inventory event handlers
+    @Suppress("PropertyName")
     private val _onCloseHandlers: ArrayList<() -> Unit> = ArrayList()
+
+    @Suppress("PropertyName")
     private val _onItemDepositHandlers: ArrayList<(InventoryClickEvent) -> Unit> = ArrayList()
 
     // implement getInventory for InventoryHolder
-    public override fun getInventory(): Inventory {
-        return _inventory
-    }
+    public override fun getInventory(): Inventory = _inventory
 
     // add handler for inventory window close handler
     public fun onClose(callback: () -> Unit) {

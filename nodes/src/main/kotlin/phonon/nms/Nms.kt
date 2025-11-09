@@ -32,9 +32,7 @@ internal typealias CraftMagicNumbers = CraftMagicNumbers
 /**
  * Wrapper for getting Bukkit player connection and sending packet.
  */
-internal fun Player.sendPacket(p: NMSPacket<*>) {
-    return (this as CraftPlayer).handle.connection.send(p)
-}
+internal fun Player.sendPacket(p: NMSPacket<*>) = (this as CraftPlayer).handle.connection.send(p)
 
 /**
  * Create custom name packet for armor stand entity.

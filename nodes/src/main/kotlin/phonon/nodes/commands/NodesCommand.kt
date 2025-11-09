@@ -30,7 +30,9 @@ private val subcommands: List<String> = listOf(
     "war",
 )
 
-public class NodesCommand : CommandExecutor, TabCompleter {
+public class NodesCommand :
+    CommandExecutor,
+    TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
         // no args, print plugin info

@@ -21,7 +21,9 @@ import phonon.nodes.war.Truce
  * @command /truce
  * Print list of player's town's truces and list of times
  */
-public class TruceCommand : CommandExecutor, TabCompleter {
+public class TruceCommand :
+    CommandExecutor,
+    TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
         // no args, use sender's town

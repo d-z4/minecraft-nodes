@@ -11,7 +11,13 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import phonon.nodes.Nodes
-import phonon.nodes.gui.*
+import phonon.nodes.gui.GUI_CONCRETE
+import phonon.nodes.gui.GUI_SLOTS
+import phonon.nodes.gui.GuiButton
+import phonon.nodes.gui.GuiColor
+import phonon.nodes.gui.GuiElement
+import phonon.nodes.gui.GuiWindow
+import phonon.nodes.gui.itemIcon
 import phonon.nodes.objects.Territory
 import phonon.nodes.objects.TerritoryId
 import phonon.nodes.objects.Town
@@ -19,7 +25,7 @@ import phonon.nodes.objects.Town
 // constant icons
 
 // icon for going back
-val ICON_BACK = ItemIcon(
+val ICON_BACK = itemIcon(
     GUI_CONCRETE[GuiColor.RED.ordinal].clone(),
     "${ChatColor.DARK_RED}${ChatColor.BOLD}Back",
     listOf(),
@@ -30,7 +36,7 @@ val ICON_TERRITORY = ItemStack(Material.GRASS_BLOCK, 1)
 val ICON_OCCUPIED = ItemStack(Material.DIRT, 1, 2.toShort()) // podzol
 
 // render a territory button with territory info and callback on press
-public fun TerritoryButton(
+public fun territoryButton(
     screen: GuiWindow,
     x: Int,
     y: Int,
@@ -98,7 +104,7 @@ public class TerritorySelectGui(
             }
 
             // render territory button
-            TerritoryButton(
+            territoryButton(
                 screen,
                 x,
                 y,
@@ -135,7 +141,7 @@ public class TerritorySelectGui(
             }
 
             // render territory button
-            TerritoryButton(
+            territoryButton(
                 screen,
                 x,
                 y,

@@ -12,13 +12,12 @@ import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import org.bukkit.event.Listener
 import org.bukkit.scheduler.BukkitTask
 import phonon.nodes.Config
 import phonon.nodes.Message
 import phonon.nodes.chat.ChatMode
-import phonon.nodes.serdes.JsonSaveState
-import java.util.*
+import phonon.nodes.serdes.SaveState
+import java.util.UUID
 
 public class Resident(val uuid: UUID, val name: String) {
     var town: Town? = null
@@ -36,7 +35,6 @@ public class Resident(val uuid: UUID, val name: String) {
 
     // player is protecting chest with right click
     var isProtectingChests: Boolean = false
-    var chestProtectListener: Listener? = null
 
     // chat mode config
     var chatMode: ChatMode = ChatMode.GLOBAL
@@ -59,21 +57,19 @@ public class Resident(val uuid: UUID, val name: String) {
 
     // save state needs update flag
     private var saveState: ResidentSaveState
+
+    @Suppress("PropertyName")
     private var _needsUpdate = false
 
     init {
         this.saveState = ResidentSaveState(this)
     }
 
-    public override fun hashCode(): Int {
-        return this.uuid.hashCode()
-    }
+    public override fun hashCode(): Int = this.uuid.hashCode()
 
     // returns player associated with resident
     // returns null when player is offline
-    public fun player(): Player? {
-        return Bukkit.getPlayer(this.uuid)
-    }
+    public fun player(): Player? = Bukkit.getPlayer(this.uuid)
 
     // ===================================
     // Minimap functions
@@ -119,7 +115,7 @@ public class Resident(val uuid: UUID, val name: String) {
      * Immutable save snapshot, must be composed of immutable primitives.
      * Used to generate json string serialization.
      */
-    public class ResidentSaveState(r: Resident) : JsonSaveState {
+    public class ResidentSaveState(r: Resident) : SaveState {
         public val uuid = r.uuid
         public val name = r.name
         public val town = r.town?.name

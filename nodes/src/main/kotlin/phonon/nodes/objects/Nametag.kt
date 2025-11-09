@@ -90,9 +90,7 @@ public object Nametag {
      * create new nametag for player
      * KEPT ONLY FOR 1.12 API COMPATIBILITY
      */
-    public fun create(player: Player): Nametag? {
-        return null
-    }
+    public fun create(player: Player): Nametag? = null
 
     /**
      * destroy player's nametag

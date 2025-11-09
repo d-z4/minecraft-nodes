@@ -21,7 +21,7 @@ plugins {
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
 
     // auto code formatting
-    //id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
+    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
 }
 
 repositories {
@@ -29,10 +29,12 @@ repositories {
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
 
-    maven { // paper
+    maven {
+        // paper
         url = uri("https://repo.papermc.io/repository/maven-public/")
     }
-    maven { // protocol lib
+    maven {
+        // protocol lib
         url = uri("https://repo.dmulloy2.net/nexus/repository/public/")
     }
 }

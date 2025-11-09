@@ -4,7 +4,7 @@
 
 package phonon.nodes.serdes
 
-interface JsonSaveState {
+interface SaveState {
     // json string, lazily created
     public var jsonString: String?
 

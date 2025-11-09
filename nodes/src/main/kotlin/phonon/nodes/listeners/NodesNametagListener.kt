@@ -8,7 +8,7 @@ package phonon.nodes.listeners
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
-import org.bukkit.event.player.*
+import org.bukkit.event.player.PlayerJoinEvent
 import phonon.nodes.Nodes
 import phonon.nodes.objects.Nametag
 

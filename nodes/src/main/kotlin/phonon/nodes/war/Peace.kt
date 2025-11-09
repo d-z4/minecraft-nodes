@@ -20,7 +20,6 @@ import org.bukkit.ChatColor
 import org.bukkit.scheduler.BukkitTask
 import phonon.nodes.Message
 import phonon.nodes.Nodes
-import phonon.nodes.constants.*
 import phonon.nodes.objects.Town
 
 // peace request status results
@@ -54,9 +53,7 @@ public data class PeaceRequestInstance(
         return (this.town1 === other.town1 || this.town1 === other.town2) && (this.town2 === other.town1 || this.town2 === other.town2)
     }
 
-    public override fun hashCode(): Int {
-        return this.town1.hashCode() + this.town2.hashCode()
-    }
+    public override fun hashCode(): Int = this.town1.hashCode() + this.town2.hashCode()
 }
 
 public object Peace {

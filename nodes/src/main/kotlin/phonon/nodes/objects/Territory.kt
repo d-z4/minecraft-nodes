@@ -50,9 +50,7 @@ value class TerritoryIdArray(private val ids: IntArray) {
     /**
      * Return iterator over territory ids.
      */
-    operator fun iterator(): TerritoryIdIterator {
-        return TerritoryIdIterator(ids.iterator())
-    }
+    operator fun iterator(): TerritoryIdIterator = TerritoryIdIterator(ids.iterator())
 
     /**
      * Wrapper iterator to emit TerritoryId instead of int.
@@ -450,25 +448,21 @@ data class Territory(
     }
 
     // id is forced to be unique by system
-    public override fun hashCode(): Int {
-        return this.id.toInt()
-    }
+    public override fun hashCode(): Int = this.id.toInt()
 
     // Returns territory structural properties (chunks, id, neighbors, etc.)
     // as a TerritoryPreprocessing object. Used when rebuilding territories
     // in territory hot reloading.
-    public fun toPreprocessing(): TerritoryPreprocessing {
-        return TerritoryPreprocessing(
-            id = this.id,
-            name = this.name,
-            color = this.color,
-            core = this.core,
-            chunks = this.chunks,
-            bordersWilderness = this.bordersWilderness,
-            neighbors = this.neighbors,
-            resourceNodes = this.resourceNodes,
-        )
-    }
+    public fun toPreprocessing(): TerritoryPreprocessing = TerritoryPreprocessing(
+        id = this.id,
+        name = this.name,
+        color = this.color,
+        core = this.core,
+        chunks = this.chunks,
+        bordersWilderness = this.bordersWilderness,
+        neighbors = this.neighbors,
+        resourceNodes = this.resourceNodes,
+    )
 
     // print territory info
     public fun printInfo(sender: CommandSender) {

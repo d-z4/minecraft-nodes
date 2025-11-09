@@ -10,9 +10,10 @@ import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import phonon.nodes.Message
-import phonon.nodes.serdes.JsonSaveState
+import phonon.nodes.serdes.SaveState
 import phonon.nodes.utils.Color
-import java.util.*
+import java.util.Random
+import java.util.UUID
 
 // random number generator
 private val random = Random()
@@ -39,6 +40,8 @@ public class Nation(
 
     // json string and memoization flag
     private var saveState: NationSaveState
+
+    @Suppress("PropertyName")
     private var _needsUpdate = false
 
     init {
@@ -52,9 +55,7 @@ public class Nation(
         this.saveState = NationSaveState(this)
     }
 
-    public override fun hashCode(): Int {
-        return this.uuid.hashCode()
-    }
+    public override fun hashCode(): Int = this.uuid.hashCode()
 
     // prints out nation object info
     public fun printInfo(sender: CommandSender) {
@@ -100,7 +101,7 @@ public class Nation(
      * Immutable save snapshot, must be composed of immutable primitives.
      * Used to generate json string serialization.
      */
-    public class NationSaveState(n: Nation) : JsonSaveState {
+    public class NationSaveState(n: Nation) : SaveState {
         public val uuid = n.uuid
         public val name = n.name
         public val capital = n.capital.name

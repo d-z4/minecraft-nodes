@@ -13,7 +13,8 @@ import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.entity.EntityType
 import phonon.nodes.Nodes
-import phonon.nodes.constants.*
+import phonon.nodes.constants.PermissionsGroup
+import phonon.nodes.constants.TownPermissions
 import phonon.nodes.objects.Nation
 import phonon.nodes.objects.Town
 import phonon.nodes.utils.Color

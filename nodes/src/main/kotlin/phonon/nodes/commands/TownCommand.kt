@@ -18,7 +18,17 @@ import phonon.nodes.Config
 import phonon.nodes.Message
 import phonon.nodes.Nodes
 import phonon.nodes.WorldMap
-import phonon.nodes.constants.*
+import phonon.nodes.constants.ErrorPlayerHasTown
+import phonon.nodes.constants.ErrorTerritoryHasClaim
+import phonon.nodes.constants.ErrorTerritoryIsTownHome
+import phonon.nodes.constants.ErrorTerritoryNotConnected
+import phonon.nodes.constants.ErrorTerritoryNotInTown
+import phonon.nodes.constants.ErrorTerritoryOwned
+import phonon.nodes.constants.ErrorTooManyClaims
+import phonon.nodes.constants.ErrorTownExists
+import phonon.nodes.constants.NODES_SOUND_CHEST_PROTECT
+import phonon.nodes.constants.PermissionsGroup
+import phonon.nodes.constants.TownPermissions
 import phonon.nodes.objects.Coord
 import phonon.nodes.objects.Resident
 import phonon.nodes.objects.Town
@@ -137,7 +147,9 @@ val MAP_STR_END = arrayOf(
 )
 // ==================================================
 
-public class TownCommand : CommandExecutor, TabCompleter {
+public class TownCommand :
+    CommandExecutor,
+    TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
         val player = if (sender is Player) sender else null

@@ -18,7 +18,6 @@ import org.bukkit.ChatColor
 import org.bukkit.scheduler.BukkitTask
 import phonon.nodes.Message
 import phonon.nodes.Nodes
-import phonon.nodes.constants.*
 import phonon.nodes.objects.Town
 import phonon.nodes.objects.TownPair
 

@@ -14,7 +14,5 @@ public data class TownOutpost(
 ) {
 
     // serialize territory id + spawn location to json string
-    public fun toJsonString(): String {
-        return "[${territory.toInt()}, ${spawn.x}, ${spawn.y}, ${spawn.z}]"
-    }
+    public fun toJsonString(): String = "[${territory.toInt()}, ${spawn.x}, ${spawn.y}, ${spawn.z}]"
 }

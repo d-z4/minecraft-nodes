@@ -20,7 +20,9 @@ import phonon.nodes.objects.TerritoryId
  * @subcommand /territory [id]
  * View info about territory from id
  */
-public class TerritoryCommand : CommandExecutor, TabCompleter {
+public class TerritoryCommand :
+    CommandExecutor,
+    TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
         // if command sender was player, print territory info of current location
@@ -65,7 +67,5 @@ public class TerritoryCommand : CommandExecutor, TabCompleter {
         return true
     }
 
-    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String> {
-        return listOf()
-    }
+    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String> = listOf()
 }

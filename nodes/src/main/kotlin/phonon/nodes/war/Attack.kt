@@ -11,7 +11,7 @@ import org.bukkit.Location
 import org.bukkit.NamespacedKey
 import org.bukkit.World
 import org.bukkit.block.Block
-import org.bukkit.boss.*
+import org.bukkit.boss.BossBar
 import org.bukkit.entity.ArmorStand
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.scheduler.BukkitTask
@@ -193,9 +193,7 @@ public class AttackArmorStand(
     /**
      * Check if armorstand is still valid.
      */
-    public fun isValid(): Boolean {
-        return this.townNameArmorstand.isValid && this.progressArmorstand.isValid
-    }
+    public fun isValid(): Boolean = this.townNameArmorstand.isValid && this.progressArmorstand.isValid
 
     /**
      * Re-create new armorstand.
@@ -222,8 +220,10 @@ public class AttackArmorStand(
             val playerChunkX = playerChunk.x
             val playerChunkZ = playerChunk.z
 
-            if (playerChunkX < minViewChunkX || playerChunkX > maxViewChunkX ||
-                playerChunkZ < minViewChunkZ || playerChunkZ > maxViewChunkZ
+            if (playerChunkX < minViewChunkX ||
+                playerChunkX > maxViewChunkX ||
+                playerChunkZ < minViewChunkZ ||
+                playerChunkZ > maxViewChunkZ
             ) {
                 continue
             }

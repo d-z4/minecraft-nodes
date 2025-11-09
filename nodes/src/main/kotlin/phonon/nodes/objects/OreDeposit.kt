@@ -21,14 +21,12 @@ data class OreDeposit(
     // merge rules:
     // - sum together dropChance (going >1.0 is okay)
     // - take MAX of both minAmount and maxAmount
-    public fun merge(other: OreDeposit): OreDeposit {
-        return OreDeposit(
-            this.material,
-            this.dropChance + other.dropChance,
-            Math.max(this.minAmount, other.minAmount),
-            Math.max(this.maxAmount, other.maxAmount),
-            this.ymin,
-            this.ymax,
-        )
-    }
+    public fun merge(other: OreDeposit): OreDeposit = OreDeposit(
+        this.material,
+        this.dropChance + other.dropChance,
+        Math.max(this.minAmount, other.minAmount),
+        Math.max(this.maxAmount, other.maxAmount),
+        this.ymin,
+        this.ymax,
+    )
 }

@@ -6,8 +6,7 @@ package phonon.nodes.utils
  * allocated lists during initialization, so avoid using this
  * repeatedly in hot paths.
  */
-inline fun <reified K : Enum<K>, reified T> createEnumArrayMap(init: (K) -> T): EnumArrayMap<K, T> =
-    EnumArrayMap(enumValues<K>().map(init).toTypedArray())
+inline fun <reified K : Enum<K>, reified T> createEnumArrayMap(init: (K) -> T): EnumArrayMap<K, T> = EnumArrayMap(enumValues<K>().map(init).toTypedArray())
 
 /**
  * Alternative to EnumMap where all enum values must be mapped
@@ -41,7 +40,5 @@ public class EnumArrayMap<K : Enum<K>, T>(
      * Return a copy with backing array cloned.
      * Note actual internal elements are just shallow-copied references.
      */
-    public fun copyOf(): EnumArrayMap<K, T> {
-        return EnumArrayMap(this.array.copyOf())
-    }
+    public fun copyOf(): EnumArrayMap<K, T> = EnumArrayMap(this.array.copyOf())
 }

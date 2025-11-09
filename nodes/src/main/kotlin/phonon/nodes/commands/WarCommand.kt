@@ -27,7 +27,9 @@ import phonon.nodes.war.Truce
  * @subcommand /war [nation]
  * Declares war on a nation
  */
-public class WarCommand : CommandExecutor, TabCompleter {
+public class WarCommand :
+    CommandExecutor,
+    TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
         // no args, print help

@@ -13,9 +13,10 @@ import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
 import phonon.nodes.Message
 import phonon.nodes.Nodes
-import phonon.nodes.chat.*
+import phonon.nodes.chat.Chat
+import phonon.nodes.chat.ChatMode
 import phonon.nodes.objects.Resident
-import phonon.nodes.utils.string.*
+import phonon.nodes.utils.string.filterByStart
 
 // toggle chat mode then print message
 private fun toggleChatMode(player: Player, resident: Resident, chatMode: ChatMode) {
@@ -47,7 +48,9 @@ private val globalChatSubcommands: List<String> = listOf(
  * @subcommand /globalchat unmute
  * Enable global chat
  */
-public class GlobalChatCommand : CommandExecutor, TabCompleter {
+public class GlobalChatCommand :
+    CommandExecutor,
+    TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
         if (!(sender is Player)) {
@@ -102,7 +105,9 @@ public class GlobalChatCommand : CommandExecutor, TabCompleter {
  * @command /townchat (or /tc)
  * Set chat to town members only
  */
-public class TownChatCommand : CommandExecutor, TabCompleter {
+public class TownChatCommand :
+    CommandExecutor,
+    TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
         if (!(sender is Player)) {
@@ -131,9 +136,7 @@ public class TownChatCommand : CommandExecutor, TabCompleter {
         return true
     }
 
-    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String> {
-        return listOf()
-    }
+    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String> = listOf()
 
     private fun leaveChannel(player: Player) {
         // TODO
@@ -144,7 +147,9 @@ public class TownChatCommand : CommandExecutor, TabCompleter {
  * @command /nationchat (or /nc)
  * Set chat to all members of nation.
  */
-public class NationChatCommand : CommandExecutor, TabCompleter {
+public class NationChatCommand :
+    CommandExecutor,
+    TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
         if (!(sender is Player)) {
@@ -173,9 +178,7 @@ public class NationChatCommand : CommandExecutor, TabCompleter {
         return true
     }
 
-    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String> {
-        return listOf()
-    }
+    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String> = listOf()
 
     private fun leaveChannel(player: Player) {
         // TODO
@@ -186,7 +189,9 @@ public class NationChatCommand : CommandExecutor, TabCompleter {
  * @command /allychat (or /ac)
  * Set chat to town and all allied towns.
  */
-public class AllyChatCommand : CommandExecutor, TabCompleter {
+public class AllyChatCommand :
+    CommandExecutor,
+    TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
         if (!(sender is Player)) {
@@ -215,9 +220,7 @@ public class AllyChatCommand : CommandExecutor, TabCompleter {
         return true
     }
 
-    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String> {
-        return listOf()
-    }
+    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String> = listOf()
 
     private fun leaveChannel(player: Player) {
         // TODO

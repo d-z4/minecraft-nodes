@@ -17,16 +17,12 @@ import java.util.Collections
 
 public class OreBlockCache(val maxSize: Int) {
     private val cache: MutableSet<Block> = Collections.newSetFromMap(object : LinkedHashMap<Block, Boolean>() {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Block, Boolean>): Boolean {
-            return this.size > maxSize
-        }
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Block, Boolean>): Boolean = this.size > maxSize
     })
 
     public fun add(block: Block) {
         this.cache.add(block)
     }
 
-    public fun contains(block: Block): Boolean {
-        return cache.contains(block)
-    }
+    public fun contains(block: Block): Boolean = cache.contains(block)
 }

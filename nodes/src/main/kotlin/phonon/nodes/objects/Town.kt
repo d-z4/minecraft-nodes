@@ -16,7 +16,7 @@ import org.bukkit.scheduler.BukkitTask
 import phonon.nodes.Message
 import phonon.nodes.constants.PermissionsGroup
 import phonon.nodes.constants.TownPermissions
-import phonon.nodes.serdes.JsonSaveState
+import phonon.nodes.serdes.SaveState
 import phonon.nodes.utils.Color
 import phonon.nodes.utils.EnumArrayMap
 import phonon.nodes.utils.createEnumArrayMap
@@ -126,6 +126,8 @@ public class Town(
 
     // json string and memoization flag
     private var saveState: TownSaveState
+
+    @Suppress("PropertyName")
     private var _needsUpdate = false
 
     init {
@@ -164,9 +166,7 @@ public class Town(
         this.saveState = TownSaveState(this)
     }
 
-    public override fun hashCode(): Int {
-        return this.uuid.hashCode()
-    }
+    public override fun hashCode(): Int = this.uuid.hashCode()
 
     // update town nametag display strings from name
     // (different color for each diplomacy group)
@@ -232,7 +232,7 @@ public class Town(
      * Immutable save snapshot, must be composed of immutable primitives.
      * Used to generate json string serialization.
      */
-    public class TownSaveState(t: Town) : JsonSaveState {
+    public class TownSaveState(t: Town) : SaveState {
         public val uuid = t.uuid
         public val name = t.name
         public val leader = t.leader?.uuid

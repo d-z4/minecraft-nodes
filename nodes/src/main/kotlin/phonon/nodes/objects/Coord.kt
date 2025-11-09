@@ -6,17 +6,13 @@ package phonon.nodes.objects
 
 const val CHUNK_SIZE: Int = 16
 
-fun toChunk(v: Int): Int {
-    return Math.floorDiv(v, CHUNK_SIZE)
-}
+fun toChunk(v: Int): Int = Math.floorDiv(v, CHUNK_SIZE)
 
 data class Coord(val x: Int, val z: Int) {
 
     // bernstein djb2 hash using magic number 33:
     // hash = 33 * x + z
-    public override fun hashCode(): Int {
-        return ((this.x shl 5) + this.x) + z
-    }
+    public override fun hashCode(): Int = ((this.x shl 5) + this.x) + z
 
     companion object {
         fun fromBlockCoords(x: Int, z: Int): Coord = Coord(toChunk(x), toChunk(z))

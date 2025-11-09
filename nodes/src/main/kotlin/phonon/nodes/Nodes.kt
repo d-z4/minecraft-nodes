@@ -18,20 +18,64 @@ import org.bukkit.block.DoubleChest
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
-import org.bukkit.event.HandlerList
 import org.bukkit.inventory.DoubleChestInventory
 import org.bukkit.inventory.Inventory
 import org.bukkit.plugin.Plugin
 import org.bukkit.scheduler.BukkitRunnable
 import phonon.nodes.chat.ChatMode
-import phonon.nodes.constants.*
-import phonon.nodes.event.*
-import phonon.nodes.listeners.NodesPlayerChestProtectListener
-import phonon.nodes.objects.*
-import phonon.nodes.serdes.*
-import phonon.nodes.tasks.*
-import phonon.nodes.utils.*
+import phonon.nodes.constants.DiplomaticRelationship
+import phonon.nodes.constants.ErrorAlreadyAllies
+import phonon.nodes.constants.ErrorAlreadyEnemies
+import phonon.nodes.constants.ErrorAlreadyTruce
+import phonon.nodes.constants.ErrorNationDoesNotHaveTown
+import phonon.nodes.constants.ErrorNationExists
+import phonon.nodes.constants.ErrorNotAllies
+import phonon.nodes.constants.ErrorPlayerHasNation
+import phonon.nodes.constants.ErrorPlayerHasTown
+import phonon.nodes.constants.ErrorPlayerNotInTown
+import phonon.nodes.constants.ErrorTerritoryHasClaim
+import phonon.nodes.constants.ErrorTerritoryIsTownHome
+import phonon.nodes.constants.ErrorTerritoryNotConnected
+import phonon.nodes.constants.ErrorTerritoryNotInTown
+import phonon.nodes.constants.ErrorTerritoryOwned
+import phonon.nodes.constants.ErrorTooManyClaims
+import phonon.nodes.constants.ErrorTownDoesNotExist
+import phonon.nodes.constants.ErrorTownExists
+import phonon.nodes.constants.ErrorTownHasNation
+import phonon.nodes.constants.ErrorWarAllyOrTruce
+import phonon.nodes.constants.PermissionsGroup
+import phonon.nodes.constants.TownPermissions
+import phonon.nodes.event.AllianceCreatedEvent
+import phonon.nodes.event.NodesTerritoriesLoadedEvent
+import phonon.nodes.event.NodesWorldLoadedEvent
+import phonon.nodes.event.TruceExpiredEvent
+import phonon.nodes.objects.Coord
+import phonon.nodes.objects.DefaultResourceAttributeLoader
+import phonon.nodes.objects.Nametag
+import phonon.nodes.objects.Nation
+import phonon.nodes.objects.NationPair
+import phonon.nodes.objects.OreBlockCache
+import phonon.nodes.objects.OreSampler
+import phonon.nodes.objects.Resident
+import phonon.nodes.objects.ResourceNode
+import phonon.nodes.objects.Territory
+import phonon.nodes.objects.TerritoryChunk
+import phonon.nodes.objects.TerritoryId
+import phonon.nodes.objects.TerritoryPreprocessing
+import phonon.nodes.objects.TerritoryResources
+import phonon.nodes.objects.Town
+import phonon.nodes.objects.TownOutpost
+import phonon.nodes.objects.TownPair
+import phonon.nodes.serdes.Deserializer
+import phonon.nodes.tasks.OverMaxClaimsReminder
+import phonon.nodes.tasks.SaveManager
+import phonon.nodes.tasks.TaskCopyToDynmap
+import phonon.nodes.tasks.TaskSaveBackup
+import phonon.nodes.tasks.TaskSaveDynmapClaimsConfig
+import phonon.nodes.tasks.TaskSaveWorld
 import phonon.nodes.utils.Color
+import phonon.nodes.utils.sanitizeString
+import phonon.nodes.utils.saveStringToFile
 import phonon.nodes.war.FlagWar
 import phonon.nodes.war.Truce
 import java.io.File
@@ -181,13 +225,6 @@ public object Nodes {
         for (r in Nodes.residents.values) {
             // remove minimaps
             r.destroyMinimap()
-
-            // stop chest protect events
-            val chestProtectListener = r.chestProtectListener
-            if (chestProtectListener !== null) {
-                HandlerList.unregisterAll(chestProtectListener)
-                r.chestProtectListener = null
-            }
         }
 
         // force push all town income items from inventory gui
@@ -423,7 +460,7 @@ public object Nodes {
 
             // no errors happened: copy world.json to dynmap folder
             if (Nodes.dynmap == true || Config.dynmapCopyTowns) {
-                TaskCopyToDynmap(Config.pathWorld, Nodes.DYNMAP_DIR, Nodes.DYNMAP_PATH_WORLD).run()
+                TaskCopyToDynmap(Config.pathWorld, DYNMAP_DIR, DYNMAP_PATH_WORLD).run()
             }
 
             return true
@@ -536,8 +573,8 @@ public object Nodes {
                     townsSnapshot,
                     nationsSnapshot,
                     Config.pathTowns,
-                    Nodes.DYNMAP_DIR,
-                    Nodes.DYNMAP_PATH_TOWNS,
+                    DYNMAP_DIR,
+                    DYNMAP_PATH_TOWNS,
                     Config.pathBackup,
                     Config.pathLastBackupTime,
                     copyToDynmap,
@@ -557,7 +594,8 @@ public object Nodes {
         }
         // no new save needed...just do backup if we reached backup interval
         else if (backup) {
-            val taskBackup = TaskSaveBackup(backupTimestamp, Config.pathTowns, Config.pathBackup, Config.pathLastBackupTime)
+            val taskBackup =
+                TaskSaveBackup(backupTimestamp, Config.pathTowns, Config.pathBackup, Config.pathLastBackupTime)
             if (async) {
                 Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, taskBackup)
             } else {
@@ -591,7 +629,7 @@ public object Nodes {
             val taskSaveClaimsConfig = TaskSaveDynmapClaimsConfig(
                 Config.territoryCostBase,
                 Config.territoryCostScale,
-                Nodes.DYNMAP_PATH_NODES_CONFIG,
+                DYNMAP_PATH_NODES_CONFIG,
             )
             val taskSaveTowns = TaskCopyToDynmap(
                 Config.pathTowns,
@@ -745,9 +783,7 @@ public object Nodes {
     // ==============================================
 
     // return number of resource node types
-    public fun getResourceNodeCount(): Int {
-        return Nodes.resourceNodes.size
-    }
+    public fun getResourceNodeCount(): Int = Nodes.resourceNodes.size
 
     // ==============================================
     // Territory Chunk functions
@@ -757,9 +793,7 @@ public object Nodes {
         return Nodes.territoryChunks.get(coord)
     }
 
-    public fun getTerritoryChunkFromCoord(coord: Coord): TerritoryChunk? {
-        return Nodes.territoryChunks.get(coord)
-    }
+    public fun getTerritoryChunkFromCoord(coord: Coord): TerritoryChunk? = Nodes.territoryChunks.get(coord)
 
     // ==============================================
     // Territory functions
@@ -787,13 +821,9 @@ public object Nodes {
     }
 
     // return number of territories in world
-    public fun getTerritoryCount(): Int {
-        return Nodes.territories.size
-    }
+    public fun getTerritoryCount(): Int = Nodes.territories.size
 
-    public fun getTerritoryFromId(id: TerritoryId): Territory? {
-        return Nodes.territories.get(id)
-    }
+    public fun getTerritoryFromId(id: TerritoryId): Territory? = Nodes.territories.get(id)
 
     public fun getTerritoryFromBlock(blockX: Int, blockZ: Int): Territory? {
         val coord = Coord.fromBlockCoords(blockX, blockZ)
@@ -806,9 +836,7 @@ public object Nodes {
         return Nodes.territoryChunks.get(coord)?.territory
     }
 
-    public fun getTerritoryFromCoord(coord: Coord): Territory? {
-        return Nodes.territoryChunks.get(coord)?.territory
-    }
+    public fun getTerritoryFromCoord(coord: Coord): Territory? = Nodes.territoryChunks.get(coord)?.territory
 
     public fun getTerritoryFromChunk(chunk: Chunk): Territory? {
         val coord = Coord(chunk.x, chunk.z)
@@ -823,13 +851,9 @@ public object Nodes {
     /**
      * Returns an iterable of all (terrId, territory) pairs in world.
      */
-    public fun iterTerritories(): Iterable<kotlin.collections.Map.Entry<TerritoryId, Territory>> {
-        return Nodes.territories.asIterable()
-    }
+    public fun iterTerritories(): Iterable<kotlin.collections.Map.Entry<TerritoryId, Territory>> = Nodes.territories.asIterable()
 
-    public fun getChunkFromCoord(coord: Coord, world: World): Chunk? {
-        return Bukkit.getWorld(world.name)?.getChunkAt(coord.x, coord.z)
-    }
+    public fun getChunkFromCoord(coord: Coord, world: World): Chunk? = Bukkit.getWorld(world.name)?.getChunkAt(coord.x, coord.z)
 
     // default spawn location: returns region ~center of
     // core chunk of home territory
@@ -909,13 +933,9 @@ public object Nodes {
         residents.put(uuid, resident)
     }
 
-    public fun getResidentCount(): Int {
-        return Nodes.residents.size
-    }
+    public fun getResidentCount(): Int = Nodes.residents.size
 
-    public fun getResident(player: Player): Resident? {
-        return Nodes.residents.get(player.getUniqueId())
-    }
+    public fun getResident(player: Player): Resident? = Nodes.residents.get(player.getUniqueId())
 
     public fun getResidentFromName(name: String): Resident? {
         // get player from bukkit
@@ -936,9 +956,7 @@ public object Nodes {
         return null
     }
 
-    public fun getResidentFromUUID(uuid: UUID): Resident? {
-        return Nodes.residents.get(uuid)
-    }
+    public fun getResidentFromUUID(uuid: UUID): Resident? = Nodes.residents.get(uuid)
 
     public fun setResidentPrefix(resident: Resident, s: String) {
         resident.prefix = sanitizeString(s)
@@ -1336,13 +1354,9 @@ public object Nodes {
         Nodes.renderMinimaps()
     }
 
-    public fun getTownCount(): Int {
-        return Nodes.towns.size
-    }
+    public fun getTownCount(): Int = Nodes.towns.size
 
-    public fun getTownFromName(name: String): Town? {
-        return towns.get(name)
-    }
+    public fun getTownFromName(name: String): Town? = towns.get(name)
 
     public fun getTownFromPlayer(player: Player): Town? {
         // get resident
@@ -2278,13 +2292,9 @@ public object Nodes {
         Nodes.renderMinimaps()
     }
 
-    public fun getNationCount(): Int {
-        return Nodes.nations.size
-    }
+    public fun getNationCount(): Int = Nodes.nations.size
 
-    public fun getNationFromName(name: String): Nation? {
-        return nations.get(name)
-    }
+    public fun getNationFromName(name: String): Nation? = nations.get(name)
 
     public fun addTownToNation(nation: Nation, town: Town): Result<Town> {
         // check town does not belong to nation
@@ -3085,8 +3095,7 @@ public object Nodes {
             .filter({ (towns, startTime) ->
                 (time - startTime) > Config.trucePeriod
             })
-            .map({
-                    (towns, startTime) ->
+            .map({ (towns, startTime) ->
                 towns
             })
             .toList()
@@ -3173,7 +3182,7 @@ public object Nodes {
      */
     internal fun startProtectingChests(resident: Resident) {
         val player = resident.player()
-        if (player === null || resident.chestProtectListener !== null) {
+        if (player === null) {
             return
         }
 
@@ -3187,14 +3196,7 @@ public object Nodes {
             return
         }
 
-        // create chest protection listener, attach to player
-        val chestProtectListener = NodesPlayerChestProtectListener(player, resident, town)
         resident.isProtectingChests = true
-        resident.chestProtectListener = chestProtectListener
-
-        // register event handler
-        val pluginManager = Nodes.plugin!!.getServer().getPluginManager()
-        pluginManager.registerEvents(chestProtectListener, Nodes.plugin!!)
     }
 
     /**
@@ -3202,17 +3204,12 @@ public object Nodes {
      */
     internal fun stopProtectingChests(resident: Resident) {
         val player = resident.player()
-        val chestProtectListener = resident.chestProtectListener
-        if (player === null || chestProtectListener === null) {
+        if (player === null) {
             return
         }
 
-        // unregister event handler
-        HandlerList.unregisterAll(chestProtectListener)
-
         // remove resident links
         resident.isProtectingChests = false
-        resident.chestProtectListener = null
     }
 
     /**

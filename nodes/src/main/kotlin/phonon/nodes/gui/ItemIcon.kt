@@ -6,7 +6,7 @@ package phonon.nodes.gui
 
 import org.bukkit.inventory.ItemStack
 
-public fun ItemIcon(
+public fun itemIcon(
     icon: ItemStack,
     title: String,
     tooltip: List<String>,

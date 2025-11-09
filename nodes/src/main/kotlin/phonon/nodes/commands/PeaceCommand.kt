@@ -27,7 +27,9 @@ import phonon.nodes.war.Treaty
  * @subcommand /peace [nation]
  * Offer peace to a nation
  */
-public class PeaceCommand : CommandExecutor, TabCompleter {
+public class PeaceCommand :
+    CommandExecutor,
+    TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
         // no args, print help

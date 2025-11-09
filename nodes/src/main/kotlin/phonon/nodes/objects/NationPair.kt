@@ -24,7 +24,5 @@ public data class NationPair(
         return (this.nation1 === other.nation1 || this.nation1 === other.nation2) && (this.nation2 === other.nation1 || this.nation2 === other.nation2)
     }
 
-    public override fun hashCode(): Int {
-        return this.nation1.hashCode() + this.nation2.hashCode()
-    }
+    public override fun hashCode(): Int = this.nation1.hashCode() + this.nation2.hashCode()
 }

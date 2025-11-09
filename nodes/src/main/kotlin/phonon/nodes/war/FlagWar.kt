@@ -28,7 +28,8 @@ import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.Block
-import org.bukkit.boss.*
+import org.bukkit.boss.BarColor
+import org.bukkit.boss.BarStyle
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
@@ -37,8 +38,20 @@ import phonon.nms.blockedit.FastBlockEditSession
 import phonon.nodes.Config
 import phonon.nodes.Message
 import phonon.nodes.Nodes
-import phonon.nodes.constants.*
-import phonon.nodes.event.*
+import phonon.nodes.constants.ErrorAlreadyCaptured
+import phonon.nodes.constants.ErrorAlreadyUnderAttack
+import phonon.nodes.constants.ErrorAttackCustomCancel
+import phonon.nodes.constants.ErrorChunkNotEdge
+import phonon.nodes.constants.ErrorFlagTooHigh
+import phonon.nodes.constants.ErrorNotBorderTerritory
+import phonon.nodes.constants.ErrorNotEnemy
+import phonon.nodes.constants.ErrorSkyBlocked
+import phonon.nodes.constants.ErrorTooManyAttacks
+import phonon.nodes.constants.ErrorTownBlacklisted
+import phonon.nodes.constants.ErrorTownNotWhitelisted
+import phonon.nodes.event.WarAttackCancelEvent
+import phonon.nodes.event.WarAttackFinishEvent
+import phonon.nodes.event.WarAttackStartEvent
 import phonon.nodes.objects.Coord
 import phonon.nodes.objects.Territory
 import phonon.nodes.objects.TerritoryChunk
@@ -785,7 +798,8 @@ public object FlagWar {
                     val block = world.getBlockAt(x, y, z)
                     val mat = block.getType()
                     if (mat == Material.AIR || SKY_BEACON_MATERIALS.contains(mat)) {
-                        if (((y == y0 || y == yEnd) && (x == x0 || x == xEnd || z == z0 || z == zEnd)) || // end caps, edges glowstone
+                        if (((y == y0 || y == yEnd) && (x == x0 || x == xEnd || z == z0 || z == zEnd)) ||
+                            // end caps, edges glowstone
                             ((x == x0 || x == xEnd) && (z == z0 || z == zEnd))
                         ) { // middle section corners glowstone
                             // block.setType(BEACON_EDGE_BLOCK) // slow

@@ -15,10 +15,15 @@ import org.bukkit.inventory.ItemStack
 import phonon.nodes.Config
 import phonon.nodes.Message
 import phonon.nodes.Nodes
-import phonon.nodes.constants.*
+import phonon.nodes.constants.ErrorNationExists
+import phonon.nodes.constants.ErrorPlayerHasNation
+import phonon.nodes.constants.ErrorTownHasNation
 import phonon.nodes.objects.Nation
 import phonon.nodes.utils.sanitizeString
-import phonon.nodes.utils.string.*
+import phonon.nodes.utils.string.filterByStart
+import phonon.nodes.utils.string.filterNation
+import phonon.nodes.utils.string.filterNationTown
+import phonon.nodes.utils.string.filterTown
 import phonon.nodes.utils.stringInputIsValid
 
 // list of all subcommands, used for onTabComplete
@@ -42,7 +47,9 @@ private val subcommands: List<String> = listOf(
     "spawn",
 )
 
-public class NationCommand : CommandExecutor, TabCompleter {
+public class NationCommand :
+    CommandExecutor,
+    TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
         val player = if (sender is Player) sender else null

@@ -24,7 +24,7 @@ import org.bukkit.entity.EntityType
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
-import java.util.*
+import java.util.EnumMap
 
 public class IncomeInventory : InventoryHolder {
 
@@ -36,9 +36,11 @@ public class IncomeInventory : InventoryHolder {
     val storageSpawnEgg: EnumMap<EntityType, Int> = EnumMap<EntityType, Int>(EntityType::class.java)
 
     // inventory gui object, only populate when open
+    @Suppress("PropertyName")
     val _inventory: Inventory = Bukkit.createInventory(this, 54, "Town Income")
 
     // internal, add items to storage
+    @Suppress("FunctionName")
     private fun _add(mat: Material, amount: Int) {
         this.storage.get(mat)?.let { current ->
             storage.put(mat, current + amount)
@@ -48,6 +50,7 @@ public class IncomeInventory : InventoryHolder {
     }
 
     // internal, add items to spawn egg storage
+    @Suppress("FunctionName")
     private fun _addSpawnEgg(type: EntityType, amount: Int) {
         this.storageSpawnEgg.get(type)?.let { current ->
             storageSpawnEgg.put(type, current + amount)
@@ -76,9 +79,7 @@ public class IncomeInventory : InventoryHolder {
     }
 
     // checks if any items in inventory or storage
-    public fun empty(): Boolean {
-        return (storage.size == 0) && (storageSpawnEgg.size == 0)
-    }
+    public fun empty(): Boolean = (storage.size == 0) && (storageSpawnEgg.size == 0)
 
     // implement getInventory for InventoryHolder
     public override fun getInventory(): Inventory {

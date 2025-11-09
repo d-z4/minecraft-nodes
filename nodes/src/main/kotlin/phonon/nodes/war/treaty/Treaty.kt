@@ -313,9 +313,7 @@ public class Treaty(
         public val treaties: HashMap<TownPair, Treaty> = hashMapOf()
 
         // get peace treaty object between two towns
-        fun get(town1: Town, town2: Town): Treaty? {
-            return treaties.get(TownPair(town1, town2))
-        }
+        fun get(town1: Town, town2: Town): Treaty? = treaties.get(TownPair(town1, town2))
 
         // get active peace treaty for player and render gui
         // town1: town for player

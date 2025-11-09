@@ -5,7 +5,8 @@
 package phonon.nodes.war
 
 import org.bukkit.entity.Player
-import phonon.nodes.gui.*
+import phonon.nodes.gui.GuiElement
+import phonon.nodes.gui.GuiWindow
 import phonon.nodes.objects.Town
 
 public class TreatyGui(

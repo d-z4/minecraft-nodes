@@ -15,7 +15,11 @@ import phonon.nodes.Nodes
 import phonon.nodes.objects.Nation
 import phonon.nodes.objects.Town
 import phonon.nodes.utils.string.filterTownOrNation
-import phonon.nodes.war.*
+import phonon.nodes.war.Alliance
+import phonon.nodes.war.AllianceRequest
+import phonon.nodes.war.ErrorAllyRequestAlreadyAllies
+import phonon.nodes.war.ErrorAllyRequestEnemies
+import phonon.nodes.war.ErrorPeaceRequestAlreadyCreated
 
 /**
  * @command /ally
@@ -27,7 +31,9 @@ import phonon.nodes.war.*
  * @subcommand /ally [nation]
  * Offer alliance to a nation
  */
-public class AllyCommand : CommandExecutor, TabCompleter {
+public class AllyCommand :
+    CommandExecutor,
+    TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
         // no args, print help

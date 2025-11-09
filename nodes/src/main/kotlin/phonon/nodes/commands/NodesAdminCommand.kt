@@ -22,11 +22,24 @@ import org.bukkit.inventory.ItemStack
 import phonon.nodes.Config
 import phonon.nodes.Message
 import phonon.nodes.Nodes
-import phonon.nodes.objects.*
+import phonon.nodes.objects.Coord
+import phonon.nodes.objects.Resident
+import phonon.nodes.objects.Territory
+import phonon.nodes.objects.TerritoryId
+import phonon.nodes.objects.Town
 import phonon.nodes.utils.sanitizeString
-import phonon.nodes.utils.string.*
+import phonon.nodes.utils.string.filterByStart
+import phonon.nodes.utils.string.filterNation
+import phonon.nodes.utils.string.filterNationTown
+import phonon.nodes.utils.string.filterPlayer
+import phonon.nodes.utils.string.filterResident
+import phonon.nodes.utils.string.filterTown
+import phonon.nodes.utils.string.filterTownOrNation
+import phonon.nodes.utils.string.filterTownResident
 import phonon.nodes.utils.stringInputIsValid
-import phonon.nodes.war.*
+import phonon.nodes.war.Treaty
+import phonon.nodes.war.TreatyTermItems
+import phonon.nodes.war.TreatyTermOccupation
 
 // list of all subcommands, used for onTabComplete
 private val SUBCOMMANDS: List<String> = listOf(
@@ -120,7 +133,9 @@ private val DEBUG_SUBCOMMANDS: List<String> = listOf(
     "nation",
 )
 
-public class NodesAdminCommand : CommandExecutor, TabCompleter {
+public class NodesAdminCommand :
+    CommandExecutor,
+    TabCompleter {
 
     override fun onCommand(sender: CommandSender, cmd: Command, commandLabel: String, args: Array<String>): Boolean {
         // no args, print plugin info
