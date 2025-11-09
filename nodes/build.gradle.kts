@@ -86,12 +86,6 @@ dependencies {
         }
     }
 
-    // Use the Kotlin test library.
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-
-    // Use the Kotlin JUnit integration.
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-
     java.toolchain.languageVersion.set(JavaLanguageVersion.of(21))
     // spigot/paper api
     paperweight.paperDevBundle("1.21.5-R0.1-SNAPSHOT") // contains 1.18.2 nms classes
@@ -110,7 +104,6 @@ dependencies {
 }
 
 tasks.named<ShadowJar>("shadowJar") {
-    dependsOn(tasks.named("compileTestKotlin"))
     archiveClassifier.set("")
     from(project.configurations.named("shadowImplementation"))
 }
@@ -118,10 +111,6 @@ tasks.named<ShadowJar>("shadowJar") {
 tasks {
     build {
         dependsOn(shadowJar)
-    }
-
-    test {
-        testLogging.showStandardStreams = true
     }
 }
 
