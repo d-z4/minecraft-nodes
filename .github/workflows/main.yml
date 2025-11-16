@@ -21,10 +21,6 @@ jobs:
           cd nodes
           chmod +x gradlew
           ./gradlew clean build
-      - run: |
-          cd ports
-          chmod +x gradlew
-          ./gradlew clean build
 
       - uses: actions-rs/toolchain@v1
         with:
@@ -74,9 +70,8 @@ jobs:
           VERSION: ${{ steps.get_version.outputs.version }}
         run: |
           NODES_JAR=nodes/build/libs/nodes-$VERSION.jar
-          PORTS_JAR=ports/build/libs/nodes-ports-$VERSION.jar
           DYNMAP_ZIP=dynmap/dynmap.zip
-          ALL="$NODES_JAR $PORTS_JAR $DYNMAP_ZIP"
+          ALL="$NODES_JAR $DYNMAP_ZIP"
           if [ -z "$ALL" ]; then
             echo "No build files found"
             exit 1

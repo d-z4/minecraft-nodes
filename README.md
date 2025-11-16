@@ -10,21 +10,16 @@ Map painting but in block game. Contains server plugin and nodes dynmap viewer/e
 # Repo structure
 ```
 minecraft-nodes/
- ├─ dynmap/               - Dynmap editor/viewer
- ├─ nodes/                - Dynmap editor/viewer
- ├─ ports/                - Nodes ports plugin
- └─ scripts/              - Utility scripts
+ ├─ nodes/                - Main nodes plugin
+ └─ dynmap/               - Dynmap editor/viewer
 ```
 
 
 
 # Build
 This repository contains the following separate projects:
-1.  Nodes main server plugin (root directory)
+1.  Nodes main server plugin
 2.  Dynmap viewer/editor
-3.  Plugin documentation
-4.  Ports plugin
-
 
 
 ## 1. Building main server plugin
