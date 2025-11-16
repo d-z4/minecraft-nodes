@@ -9,16 +9,13 @@
 
 package phonon.nodes.objects
 
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
-import org.bukkit.plugin.Plugin
 import phonon.nodes.Config
 import phonon.nodes.Nodes
 import phonon.nodes.nms.sendTeamAddPlayers
 import phonon.nodes.nms.sendTeamCreate
 import phonon.nodes.nms.sendTeamRemove
-import java.util.concurrent.TimeUnit
 
 /**
  * Get armor stand custom name as VIEWED by input player
