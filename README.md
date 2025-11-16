@@ -32,12 +32,7 @@ Go inside `nodes/` and run
 ```
 Built `nodes-VERSION.jar` will appear in `build/libs/`.
 
-To build without kotlin shaded into the jar (e.g. if using separate kotlin
-runtime plugin for example my <https://github.com/d-z4/minecraft-kotlin>),
-run with following:
-```
-./gradlew build -P no-kotlin
-```
+Nodes also requires a seperate kotlin runtime plugin, for example my <https://github.com/d-z4/minecraft-kotlin>),
 
 -----------------------------------------------------------
 
