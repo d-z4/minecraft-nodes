@@ -34,6 +34,7 @@ public object Config {
     public var pathTowns = Paths.get(pathPlugin, "towns.json").normalize()
     public var pathWar = Paths.get(pathPlugin, "war.json").normalize()
     public var pathTruce = Paths.get(pathPlugin, "truce.json").normalize()
+    public var pathPorts = Paths.get(pathPlugin, "ports.json").normalize()
     public var pathLastBackupTime = Paths.get(pathPlugin, "lastBackupTime.txt").normalize()
     public var pathLastIncomeTime = Paths.get(pathPlugin, "lastIncomeTime.txt").normalize()
 
@@ -391,6 +392,13 @@ public object Config {
     // 72 hour = 259200000 ms
     public var trucePeriod: Long = 172800000L
 
+    // ===================================
+    // port configs
+    // ===================================
+    public var seaLevel: Double = 62.0
+    public var portWarpTime: Double = 5.0 * 20.0 // in ticks
+    public var allowPortWarpWithoutBoat: Boolean = false
+
     // ===================================================
     // Load config
     // ===================================================
@@ -533,6 +541,11 @@ public object Config {
 
         // truce
         Config.trucePeriod = config.getLong("trucePeriod", Config.trucePeriod)
+
+        // ports
+        Config.seaLevel = config.getDouble("seaLevel", Config.seaLevel)
+        Config.portWarpTime = config.getDouble("portWarpTime", Config.portWarpTime) * 20.0 // time is in seconds, convert to ticks
+        Config.allowPortWarpWithoutBoat = config.getBoolean("allowPortWarpWithoutBoat", Config.allowPortWarpWithoutBoat)
     }
 }
 

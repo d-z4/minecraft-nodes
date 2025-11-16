@@ -13,6 +13,8 @@
 package phonon.nodes.serdes
 
 import phonon.nodes.objects.Nation.NationSaveState
+import phonon.nodes.objects.Port.PortSaveState
+import phonon.nodes.objects.PortGroup.PortGroupSaveState
 import phonon.nodes.objects.Resident.ResidentSaveState
 import phonon.nodes.objects.Town.TownSaveState
 
@@ -107,6 +109,65 @@ public object Serializer {
         jsonString.append("}}")
 
         // ===============================
+
+        return jsonString.toString()
+    }
+
+    /**
+     * Serialize ports to JSON string
+     */
+    fun portsToJson(
+        portGroups: List<PortGroupSaveState>,
+        ports: List<PortSaveState>,
+    ): String {
+        // will add arbitrary extra margin and up size to 200
+        var bufferSize = 200
+
+        // groups array
+        for (v in portGroups) {
+            bufferSize += (4 + v.name.length + v.toJsonString().length)
+        }
+
+        // ports array - rough estimate
+        for (v in ports) {
+            bufferSize += (4 + v.name.length + v.toJsonString().length)
+        }
+
+        val jsonString = StringBuilder(bufferSize)
+
+        // ===============================
+        // Metadata (for web editor)
+        // ===============================
+        jsonString.append("{\"meta\":{\"type\":\"ports\"},")
+
+        // ===============================
+        // Port Groups
+        // ===============================
+        jsonString.append("\"groups\":[")
+
+        for ((i, group) in portGroups.withIndex()) {
+            jsonString.append("\"${group.name}\"")
+            if (i < portGroups.size - 1) {
+                jsonString.append(",")
+            }
+        }
+
+        jsonString.append("],")
+
+        // ===============================
+        // Ports
+        // ===============================
+        jsonString.append("\"ports\":{")
+
+        for ((i, port) in ports.withIndex()) {
+            jsonString.append("\"${port.name}\":")
+            jsonString.append(port.toJsonString())
+            if (i < ports.size - 1) {
+                jsonString.append(",")
+            }
+        }
+
+        jsonString.append("}}")
 
         return jsonString.toString()
     }

@@ -15,6 +15,7 @@ import phonon.nodes.commands.NodesAdminCommand
 import phonon.nodes.commands.NodesCommand
 import phonon.nodes.commands.PeaceCommand
 import phonon.nodes.commands.PlayerCommand
+import phonon.nodes.commands.PortCommand
 import phonon.nodes.commands.TerritoryCommand
 import phonon.nodes.commands.TownChatCommand
 import phonon.nodes.commands.TownCommand
@@ -134,6 +135,7 @@ public class NodesPlugin : JavaPlugin() {
         this.getCommand("allychat")?.setExecutor(AllyChatCommand())
         this.getCommand("player")?.setExecutor(PlayerCommand())
         this.getCommand("territory")?.setExecutor(TerritoryCommand())
+        this.getCommand("port")?.setExecutor(PortCommand())
 
         // override command aliases tab complete if they exist
         this.getCommand("t")?.setTabCompleter(this.getCommand("town")?.getExecutor() as TabCompleter)

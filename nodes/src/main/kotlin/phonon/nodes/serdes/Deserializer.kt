@@ -13,9 +13,12 @@ import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.entity.EntityType
 import phonon.nodes.Nodes
+import phonon.nodes.Nodes.createPortGroup
 import phonon.nodes.constants.PermissionsGroup
 import phonon.nodes.constants.TownPermissions
 import phonon.nodes.objects.Nation
+import phonon.nodes.objects.Port
+import phonon.nodes.objects.PortGroup
 import phonon.nodes.objects.Town
 import phonon.nodes.utils.Color
 import java.io.FileReader
@@ -428,5 +431,53 @@ public object Deserializer {
             nationAllies,
             nationEnemies,
         )
+    }
+
+    // parse ports.json
+    public fun portsFromJson(path: Path) {
+        val json = JsonParser.parseReader(FileReader(path.toString()))
+        val jsonObj = json.getAsJsonObject()
+
+        val groups = jsonObj.getAsJsonArray("groups")
+        if (groups !== null) {
+            for (group in groups) {
+                createPortGroup(group.asString)
+            }
+        }
+
+        val jsonPorts = jsonObj.get("ports")?.getAsJsonObject()
+        if (jsonPorts !== null) {
+            jsonPorts.keySet().forEach { name ->
+                val port = jsonPorts[name].getAsJsonObject()
+
+                // parse location (x,z)
+                val x = port.get("x").asInt
+                val z = port.get("z").asInt
+
+                // get group(s)
+                val groupsArray = port.get("groups").getAsJsonArray()
+
+                // get port groups
+                val groups: HashSet<PortGroup> = hashSetOf()
+                for (groupElement in groupsArray) {
+                    val groupName = groupElement.asString
+                    val group = Nodes.getPortGroupFromName(groupName)
+                    if (group !== null) {
+                        groups.add(group)
+                    }
+                }
+
+                // parse port isPublic
+                val isPublic: Boolean = port.get("isPublic")?.getAsBoolean() ?: false
+
+                val portObject: Port? = Nodes.loadPort(
+                    name,
+                    x,
+                    z,
+                    groups,
+                    isPublic,
+                )
+            }
+        }
     }
 }

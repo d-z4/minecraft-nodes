@@ -303,3 +303,15 @@ occupiedHomeTeleportMultiplier: 12.0
 # 48 hour = 172800000 ms
 # 72 hour = 259200000 ms
 trucePeriod: 259200000
+
+# ===========================================
+# Ports Settings
+# ===========================================
+# sea level for port warps
+seaLevel: 62.0
+
+# time to warp to a port in seconds
+portWarpTime: 5.0
+
+# allow port warp without a boat
+allowPortWarpWithoutBoat: false

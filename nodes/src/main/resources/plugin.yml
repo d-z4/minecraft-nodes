@@ -79,6 +79,11 @@ commands:
     aliases: []
     permission: nodes.command.territory
     usage: /territory or /territory [id]
+  port:
+    description: Port warps
+    aliases: []
+    permission: nodes.command.port
+    usage: /port help
 permissions:
   nodes.command.town.fly:
     default: op

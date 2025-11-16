@@ -149,3 +149,25 @@ public fun filterNationTown(nation: Nation, start: String): List<String> {
 
     return filtered
 }
+
+public fun filterPort(start: String): List<String> {
+    val startLowerCase = start.lowercase()
+    val filtered = Nodes.ports.values
+        .asSequence()
+        .map { v -> v.name }
+        .filter { s -> s.lowercase().startsWith(startLowerCase) }
+        .toList()
+
+    return filtered
+}
+
+public fun filterPortGroup(start: String): List<String> {
+    val startLowerCase = start.lowercase()
+    val filtered = Nodes.portGroups.values
+        .asSequence()
+        .map { v -> v.name }
+        .filter { s -> s.lowercase().startsWith(startLowerCase) }
+        .toList()
+
+    return filtered
+}

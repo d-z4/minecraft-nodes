@@ -24,6 +24,7 @@ private val CONQUERED0 = "\u255E" // captured chunk flag symbol
 private val CONQUERED1 = "\u255F" // other chunk flag symbol
 private val PLAYER_TOKEN = "\u253C" // player token
 private val PLAYER_IN_OCCUPIED_TOKEN = "\u256C" // player token in occupied chunk
+private val PORT_TOKEN = "${ChatColor.BOLD}\u2693" // port anchor symbol, bold so it has the same width as other chars
 
 // minimap display tokens
 private val EMPTY = "${ChatColor.BLACK}$SHADE0"
@@ -179,6 +180,7 @@ public object WorldMap {
 
         for (x in xMin..xMax) {
             val coord = Coord(x, z)
+            val port = Nodes.chunkToPort.get(listOf(x, z))
             val territoryChunk = Nodes.getTerritoryChunkFromCoord(coord)
 
             // get token for current coordinate
@@ -313,6 +315,10 @@ public object WorldMap {
                     // take coord token color and append player token
                     val color = coordToken.substring(0 until (coordToken.length - 1))
                     "${getAlternativeColor(color)}$playerToken"
+                } else if (port?.chunkX == x && port?.chunkZ == z) {
+                    // take coord token color and append player token
+                    val color = coordToken.substring(0 until (coordToken.length - 1))
+                    "${getAlternativeColor(color)}$PORT_TOKEN"
                 } else {
                     coordToken
                 }

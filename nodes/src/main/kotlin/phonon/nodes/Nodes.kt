@@ -22,6 +22,7 @@ import org.bukkit.inventory.DoubleChestInventory
 import org.bukkit.inventory.Inventory
 import org.bukkit.plugin.Plugin
 import org.bukkit.scheduler.BukkitRunnable
+import org.bukkit.scheduler.BukkitTask
 import phonon.nodes.chat.ChatMode
 import phonon.nodes.constants.DiplomaticRelationship
 import phonon.nodes.constants.ErrorAlreadyAllies
@@ -33,6 +34,8 @@ import phonon.nodes.constants.ErrorNotAllies
 import phonon.nodes.constants.ErrorPlayerHasNation
 import phonon.nodes.constants.ErrorPlayerHasTown
 import phonon.nodes.constants.ErrorPlayerNotInTown
+import phonon.nodes.constants.ErrorPortExists
+import phonon.nodes.constants.ErrorPortInGroup
 import phonon.nodes.constants.ErrorTerritoryHasClaim
 import phonon.nodes.constants.ErrorTerritoryIsTownHome
 import phonon.nodes.constants.ErrorTerritoryNotConnected
@@ -56,6 +59,8 @@ import phonon.nodes.objects.Nation
 import phonon.nodes.objects.NationPair
 import phonon.nodes.objects.OreBlockCache
 import phonon.nodes.objects.OreSampler
+import phonon.nodes.objects.Port
+import phonon.nodes.objects.PortGroup
 import phonon.nodes.objects.Resident
 import phonon.nodes.objects.ResourceNode
 import phonon.nodes.objects.Territory
@@ -72,6 +77,7 @@ import phonon.nodes.tasks.SaveManager
 import phonon.nodes.tasks.TaskCopyToDynmap
 import phonon.nodes.tasks.TaskSaveBackup
 import phonon.nodes.tasks.TaskSaveDynmapClaimsConfig
+import phonon.nodes.tasks.TaskSavePorts
 import phonon.nodes.tasks.TaskSaveWorld
 import phonon.nodes.utils.Color
 import phonon.nodes.utils.sanitizeString
@@ -117,6 +123,16 @@ public object Nodes {
     // map player UUID -> Resident player wrapper
     internal val residents: LinkedHashMap<UUID, Resident> = LinkedHashMap()
 
+    // ports system
+    internal val ports: LinkedHashMap<String, Port> = LinkedHashMap()
+    internal val portGroups: LinkedHashMap<String, PortGroup> = LinkedHashMap()
+
+    // map of player -> task for warping
+    public var playerWarpTasks: HashMap<UUID, BukkitTask> = hashMapOf()
+
+    // map chunk coords -> port, assumes one chunk only has 1 port
+    public var chunkToPort: HashMap<List<Int>, Port> = hashMapOf()
+
     // last time backup occurred: NOTE this is accessed async
     internal var lastBackupTime: Long = 0 // milliseconds
 
@@ -138,6 +154,7 @@ public object Nodes {
     internal val DYNMAP_PATH_NODES_CONFIG: Path = Paths.get("plugins/dynmap/web/nodes/config.json")
     internal val DYNMAP_PATH_WORLD: Path = Paths.get("plugins/dynmap/web/nodes/world.json")
     internal val DYNMAP_PATH_TOWNS: Path = Paths.get("plugins/dynmap/web/nodes/towns.json")
+    internal val DYNMAP_PATH_PORTS: Path = Paths.get("plugins/dynmap/web/nodes/ports.json")
 
     // minecraft plugin variable
     internal var plugin: Plugin? = null
@@ -481,6 +498,7 @@ public object Nodes {
         Nodes.towns.clear()
         Nodes.nations.clear()
         Nodes.residents.clear()
+        Nodes.ports.clear()
 
         // load world from JSON storage
         if (Files.exists(Config.pathWorld)) {
@@ -518,6 +536,28 @@ public object Nodes {
                 Nodes.war.load()
             } else {
                 System.err.println("No towns found: ${Config.pathTowns}")
+                return true
+            }
+
+            // load ports from json
+            if (Files.exists(Config.pathPorts)) {
+                Deserializer.portsFromJson(Config.pathPorts)
+
+                // pre-generate initial json strings for all port objects
+                // (speeds up first save)
+                for (port in Nodes.ports.values) {
+                    port.getSaveState()
+                }
+                for (portGroup in Nodes.portGroups.values) {
+                    portGroup.getSaveState()
+                }
+
+                // load ports.json to dynmap folder
+                if (Nodes.dynmap) {
+                    Files.copy(Config.pathPorts, Nodes.DYNMAP_PATH_PORTS, StandardCopyOption.REPLACE_EXISTING)
+                }
+            } else {
+                System.err.println("No ports found: ${Config.pathPorts}")
                 return true
             }
 
@@ -591,6 +631,29 @@ public object Nodes {
             }
 
             Nodes.logger?.info("[Nodes] Saving world: ${timeUpdate}ns")
+
+            // save ports
+            // create a snapshot of port objects state
+            val portGroupsSnapshot = Nodes.portGroups.values.map { it.getSaveState() }
+            val portsSnapshot = Nodes.ports.values.map { it.getSaveState() }
+
+            // whether should copy ports.json to dynmap folder
+            val copyToDynmap = Nodes.dynmap || Config.dynmapCopyTowns
+
+            val taskSavePorts = TaskSavePorts(
+                portsSnapshot,
+                portGroupsSnapshot,
+                Config.pathPorts,
+                DYNMAP_DIR,
+                DYNMAP_PATH_PORTS,
+                copyToDynmap,
+            )
+
+            if (async) {
+                Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, taskSavePorts)
+            } else {
+                taskSavePorts.run()
+            }
         }
         // no new save needed...just do backup if we reached backup interval
         else if (backup) {
@@ -636,13 +699,20 @@ public object Nodes {
                 Nodes.DYNMAP_DIR,
                 Nodes.DYNMAP_PATH_TOWNS,
             )
+            val taskSavePorts = TaskCopyToDynmap(
+                Config.pathPorts,
+                Nodes.DYNMAP_DIR,
+                Nodes.DYNMAP_PATH_TOWNS,
+            )
 
             if (async) {
                 Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, taskSaveClaimsConfig)
                 Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, taskSaveTowns)
+                Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, taskSavePorts)
             } else {
                 taskSaveClaimsConfig.run()
                 taskSaveTowns.run()
+                taskSavePorts.run()
             }
         }
     }
@@ -3318,6 +3388,147 @@ public object Nodes {
 
         task.runTaskTimer(Nodes.plugin!!, 0, 20)
     }
+
+    // ==============================================
+    // Port functions
+    // ==============================================
+    // load port from data
+    // used for deserializing from ports.json
+    public fun loadPort(
+        name: String,
+        locX: Int,
+        locZ: Int,
+        groups: HashSet<PortGroup>,
+        isPublic: Boolean,
+    ): Port? {
+        val port = Port(name, locX, locZ, groups, isPublic)
+
+        // save new port
+        ports.put(name, port)
+
+        // for each port, map the chunk its in to it
+        val chunk = listOf(Math.floorDiv(locX, 16), Math.floorDiv(locZ, 16))
+        chunkToPort.put(chunk, port)
+
+        // mark dirty
+        port.needsUpdate()
+
+        return port
+    }
+
+    public fun destroyPort(port: Port) {
+        // remove from ports map
+        Nodes.ports.remove(port.name)
+
+        // remove chunk mappings
+        val chunk = listOf(Math.floorDiv(port.locX, 16), Math.floorDiv(port.locZ, 16))
+        chunkToPort.remove(chunk)
+
+        Nodes.needsSave = true
+    }
+
+    public fun getPortFromName(name: String): Port? = ports.get(name)
+
+    public fun getPortGroupFromName(name: String): PortGroup? = portGroups.get(name)
+
+    public fun createPortGroup(name: String): Result<PortGroup> {
+        if (portGroups.containsKey(name)) {
+            return Result.failure(ErrorPortExists)
+        }
+
+        val portGroup = PortGroup(name)
+        portGroups.put(name, portGroup)
+
+        return Result.success(portGroup)
+    }
+
+    public fun destroyPortGroup(portGroup: PortGroup) {
+        // remove from portGroups map
+        Nodes.portGroups.remove(portGroup.name)
+
+        Nodes.needsSave = true
+    }
+
+    public fun createPort(
+        name: String,
+        locX: Int,
+        locZ: Int,
+        groups: HashSet<PortGroup>,
+        isPublic: Boolean,
+    ): Result<Port> {
+        // check if port already exists
+        if (ports.containsKey(name)) {
+            return Result.failure(ErrorPortExists)
+        }
+
+        val port = Port(name, locX, locZ, groups, isPublic)
+
+        // save new port
+        ports.put(name, port)
+
+        // for each port, map the chunk its in to it
+        val chunk = listOf(Math.floorDiv(locX, 16), Math.floorDiv(locZ, 16))
+        chunkToPort.put(chunk, port)
+
+        // mark dirty
+        port.needsUpdate()
+        needsSave = true
+
+        return Result.success(port)
+    }
+
+    public fun addPortToGroup(port: Port, group: PortGroup): Result<Port> {
+        // check port is not already in this group
+        if (port.groups.contains(group)) {
+            return Result.failure(ErrorPortInGroup)
+        }
+
+        port.groups.add(group)
+        port.needsUpdate()
+        Nodes.needsSave = true
+
+        return Result.success(port)
+    }
+
+    public fun removePortFromGroup(port: Port, group: PortGroup) {
+        // check port is in group
+        if (!port.groups.contains(group)) {
+            return
+        }
+
+        port.groups.remove(group)
+        port.needsUpdate()
+        Nodes.needsSave = true
+    }
+
+    /**
+     * Get port owner based on who owns chunk
+     * If no owner or if port is public, return null
+     * If chunk is occupied, return occupier
+     * Else, return territory town (may be null)
+     */
+    public fun getPortOwner(port: Port): Town? {
+        if (port.isPublic) {
+            return null
+        }
+
+        val chunk = getTerritoryChunkFromCoord(Coord(port.chunkX, port.chunkZ))
+        if (chunk === null) {
+            return null
+        }
+
+        val occupier = chunk.occupier
+        if (occupier !== null) {
+            return occupier
+        }
+
+        return chunk.territory.town
+    }
+
+    /**
+     * Check if two ports share a group
+     */
+    fun sharePortGroups(port1: Port, port2: Port): Boolean = port1.groups.any { it in port2.groups }
 
     // ==============================================
     // Hooks to external functions

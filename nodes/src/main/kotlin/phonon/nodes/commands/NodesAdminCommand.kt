@@ -22,6 +22,8 @@ import org.bukkit.inventory.ItemStack
 import phonon.nodes.Config
 import phonon.nodes.Message
 import phonon.nodes.Nodes
+import phonon.nodes.Nodes.addPortToGroup
+import phonon.nodes.Nodes.removePortFromGroup
 import phonon.nodes.objects.Coord
 import phonon.nodes.objects.Resident
 import phonon.nodes.objects.Territory
@@ -32,6 +34,8 @@ import phonon.nodes.utils.string.filterByStart
 import phonon.nodes.utils.string.filterNation
 import phonon.nodes.utils.string.filterNationTown
 import phonon.nodes.utils.string.filterPlayer
+import phonon.nodes.utils.string.filterPort
+import phonon.nodes.utils.string.filterPortGroup
 import phonon.nodes.utils.string.filterResident
 import phonon.nodes.utils.string.filterTown
 import phonon.nodes.utils.string.filterTownOrNation
@@ -40,12 +44,16 @@ import phonon.nodes.utils.stringInputIsValid
 import phonon.nodes.war.Treaty
 import phonon.nodes.war.TreatyTermItems
 import phonon.nodes.war.TreatyTermOccupation
+import kotlin.getOrElse
+import kotlin.math.roundToInt
 
 // list of all subcommands, used for onTabComplete
 private val SUBCOMMANDS: List<String> = listOf(
     "help",
     "reload",
     "war",
+    "port",
+    "portgroup",
     "resident",
     "town",
     "nation",
@@ -77,6 +85,20 @@ private val WAR_SUBCOMMANDS: List<String> = listOf(
     "disable",
     "whitelist",
     "blacklist",
+)
+
+// port subcommands
+private val PORT_SUBCOMMANDS: List<String> = listOf(
+    "create",
+    "delete",
+    "addgroup",
+    "removegroup",
+)
+
+// portgroup subcommands
+private val PORTGROUP_SUBCOMMANDS: List<String> = listOf(
+    "create",
+    "delete",
 )
 
 // resident/player subcommands
@@ -152,6 +174,8 @@ public class NodesAdminCommand :
             "war" -> war(sender, args)
             "resident" -> manageResident(sender, args)
             "town" -> manageTown(sender, args)
+            "port" -> managePort(sender, args)
+            "portgroup" -> managePortGroup(sender, args)
             "nation" -> manageNation(sender, args)
             "enemy" -> setEnemy(sender, args)
             "peace" -> setPeace(sender, args)
@@ -192,6 +216,59 @@ public class NodesAdminCommand :
                 "war" -> {
                     if (args.size == 2) {
                         return filterByStart(WAR_SUBCOMMANDS, args[1])
+                    }
+                }
+
+                // /nodesadmin port [subcommand]
+                "port" -> {
+                    if (args.size == 2) {
+                        return filterByStart(PORT_SUBCOMMANDS, args[1])
+                    }
+                    // handle subcommand
+                    else if (args.size == 3) {
+                        when (args[1].lowercase()) {
+                            // /nodesadmin port [subcommand] [port] ...
+                            "delete",
+                            "addgroup",
+                            "removegroup",
+                            -> {
+                                return filterPort(args[2])
+                            }
+                        }
+                    }
+                    // return x,z for /nodesadmin port create [town]
+                    else if (args[1].lowercase() == "create") {
+                        when (args.size) {
+                            4 -> {
+                                return listOf(Bukkit.getPlayer(sender.name)?.x?.roundToInt().toString())
+                            }
+                            5 -> {
+                                return listOf(Bukkit.getPlayer(sender.name)?.z?.roundToInt().toString())
+                            }
+                        }
+                    }
+                    // return groups for /nodes port addgroup/removegroup
+                    else if (args.size == 4) {
+                        when (args[1].lowercase()) {
+                            "addgroup",
+                            "removegroup",
+                            -> {
+                                return filterPortGroup(args[3])
+                            }
+                        }
+                    }
+                }
+
+                // /nodesadmin portgroup [subcommand
+                "portgroup" -> {
+                    if (args.size == 2) {
+                        return filterByStart(PORTGROUP_SUBCOMMANDS, args[1])
+                    }
+                    // handle subcommands
+                    when (args[1].lowercase()) {
+                        "delete" -> {
+                            return filterPortGroup(args[2])
+                        }
                     }
                 }
 
@@ -404,6 +481,8 @@ public class NodesAdminCommand :
         Message.print(sender, "/nodesadmin war${ChatColor.WHITE}: Enable/disable war")
         Message.print(sender, "/nodesadmin town${ChatColor.WHITE}: Manage towns (see \"/nodesadmin town help\")")
         Message.print(sender, "/nodesadmin nation${ChatColor.WHITE}: Manage nations (see \"/nodesadmin nation help\")")
+        Message.print(sender, "/nodesadmin portgroup${ChatColor.WHITE}: Manage port groups (see \"/nodesadmin portgroup help\")")
+        Message.print(sender, "/nodesadmin port${ChatColor.WHITE}: Manage ports (see \"/nodesadmin port help\")")
         Message.print(sender, "/nodesadmin enemy${ChatColor.WHITE}: Make two towns/nations enemies")
         Message.print(sender, "/nodesadmin peace${ChatColor.WHITE}: Sets peace between two towns/nations")
         Message.print(sender, "/nodesadmin ally${ChatColor.WHITE}: Sets alliance between two towns/nations")
@@ -574,6 +653,247 @@ public class NodesAdminCommand :
                 }
             }
         }
+    }
+
+    // =============================================================
+    // port management commands
+    // - create/delete ports
+    // - edit port properties
+    // =============================================================
+
+    // route command to further subcommands
+    private fun managePort(sender: CommandSender, args: Array<String>) {
+        if (args.size < 2) {
+            printPortHelp(sender)
+        } else {
+            when (args[1].lowercase()) {
+                "create" -> createPort(sender, args)
+                "delete" -> deletePort(sender, args)
+                "addgroup" -> addPortGroup(sender, args)
+                "removegroup" -> removePortGroup(sender, args)
+                else -> printPortHelp(sender)
+            }
+        }
+    }
+
+    private fun printPortHelp(sender: CommandSender) {
+        Message.print(sender, "${ChatColor.AQUA}/nodesadmin port create [name] [x] [z] [groups] [public]${ChatColor.WHITE}: Create a new port")
+        Message.print(sender, "${ChatColor.AQUA}/nodesadmin port delete [name]${ChatColor.WHITE}: Delete a port")
+        Message.print(sender, "${ChatColor.AQUA}/nodesadmin port addgroup [port] [group]${ChatColor.WHITE}: Add a port to a group")
+        Message.print(sender, "${ChatColor.AQUA}/nodesadmin port removegroup [port] [group]${ChatColor.WHITE}: Remove a port from a group")
+    }
+
+    /**
+     * @command /nodesadmin port create [name] [x] [z]
+     * Creates a port from name and a set of coordinates.
+     */
+    private fun createPort(sender: CommandSender, args: Array<String>) {
+        if (args.size < 4) {
+            Message.error(sender, "Usage: /nodesadmin port create [name] [x] [z]")
+            Message.error(sender, "Example: /nodesadmin port create panama 100 200")
+            return
+        }
+
+        val portName = args[2].lowercase()
+
+        // parse coordinates
+        val x = args[3].toIntOrNull()
+        val z = args[4].toIntOrNull()
+        if (x === null || z === null) {
+            Message.error(sender, "Invalid coordinates: x and z must be integers")
+            return
+        }
+
+        // create port with default values
+        Nodes.createPort(
+            portName,
+            x,
+            z,
+            hashSetOf(),
+            false,
+        ).getOrElse({ err ->
+            Message.error(sender, "Failed to create port: ${err.message}")
+            return
+        })
+
+        Message.print(sender, "${ChatColor.GREEN}Created port \"${portName}\" at ($x, $z)")
+    }
+
+    /**
+     * @command /nodesadmin port delete [name]
+     * Deletes a port.
+     */
+    private fun deletePort(sender: CommandSender, args: Array<String>) {
+        if (args.size < 3) {
+            Message.error(sender, "Usage: /nodesadmin port delete [name]")
+            Message.error(sender, "Example: /nodesadmin port delete panama")
+            return
+        }
+
+        val portName = args[2].lowercase()
+        val port = Nodes.getPortFromName(portName)
+
+        if (port === null) {
+            Message.error(sender, "Port \"${portName}\" does not exist")
+            return
+        }
+
+        // delete the port
+        Nodes.destroyPort(port)
+
+        Message.print(sender, "Port \"${portName}\" has been deleted")
+    }
+
+    /**
+     * @command /nodesadmin port addgroup [port] [group]
+     * Adds a port to a group.
+     */
+    private fun addPortGroup(sender: CommandSender, args: Array<String>) {
+        if (args.size < 4) {
+            Message.error(sender, "Usage: /nodesadmin port addgroup [port] [group]")
+            Message.error(sender, "Example: /nodesadmin port addgroup panama atlantic")
+            return
+        }
+
+        val portName = args[2].lowercase()
+        val port = Nodes.getPortFromName(portName)
+
+        val groupName = args[3].lowercase()
+        val group = Nodes.getPortGroupFromName(groupName)
+
+        // check port exists
+        if (port === null) {
+            Message.error(sender, "Port \"${portName}\" does not exist")
+            return
+        }
+
+        // check group exists
+        if (group === null) {
+            Message.error(sender, "Group \"${groupName}\" does not exist")
+            return
+        }
+
+        // check port isnt already in group
+        if (port.groups.contains(group)) {
+            Message.error(sender, "Port is already part of ths group")
+            return
+        }
+
+        addPortToGroup(port, group)
+
+        Message.print(sender, "Port \"${portName}\" has been added to $groupName group")
+    }
+
+    /**
+     * @command /nodesadmin port removegroup [port] [group]
+     * Removes a port from a group
+     */
+    private fun removePortGroup(sender: CommandSender, args: Array<String>) {
+        if (args.size < 4) {
+            Message.error(sender, "Usage: /nodesadmin port removegroup [port] [group]")
+            Message.error(sender, "Example: /nodesadmin port removegroup panama atlantic")
+            return
+        }
+
+        val portName = args[2].lowercase()
+        val port = Nodes.getPortFromName(portName)
+
+        val groupName = args[3].lowercase()
+        val group = Nodes.getPortGroupFromName(groupName)
+
+        // check port exists
+        if (port === null) {
+            Message.error(sender, "Port \"${portName}\" does not exist")
+            return
+        }
+
+        // check group exists
+        if (group === null) {
+            Message.error(sender, "Group \"${groupName}\" does not exist")
+            return
+        }
+
+        // check port is in group
+        if (!port.groups.contains(group)) {
+            Message.error(sender, "Port \"$portName\" is not part of \"$groupName\" group")
+            return
+        }
+
+        removePortFromGroup(port, group)
+
+        Message.print(sender, "Port \"${portName}\" has been removed from $groupName group")
+    }
+
+    // =============================================================
+    // port group management commands
+    // - create/delete port groups
+    // =============================================================
+
+    // route command to further subcommands
+    private fun managePortGroup(sender: CommandSender, args: Array<String>) {
+        if (args.size < 2) {
+            printPortGroupHelp(sender)
+        } else {
+            when (args[1].lowercase()) {
+                "create" -> createPortGroup(sender, args)
+                "delete" -> deletePortGroup(sender, args)
+                else -> printPortGroupHelp(sender)
+            }
+        }
+    }
+
+    private fun printPortGroupHelp(sender: CommandSender) {
+        Message.print(sender, "${ChatColor.AQUA}/nodesadmin portgroup create [name]${ChatColor.WHITE}: Create a new port group")
+        Message.print(sender, "${ChatColor.AQUA}/nodesadmin portgroup delete [name]${ChatColor.WHITE}: Delete a port group")
+    }
+
+    /**
+     * @command /nodesadmin portgroup create [name]
+     * Creates a port group.
+     */
+    private fun createPortGroup(sender: CommandSender, args: Array<String>) {
+        if (args.size < 3) {
+            Message.error(sender, "Usage: /nodesadmin portgroup create [name]")
+            Message.error(sender, "Example: /nodesadmin portgroup create atlantic")
+            return
+        }
+
+        val portGroupName = args[2].lowercase()
+
+        // create port group
+        Nodes.createPortGroup(
+            portGroupName,
+        ).getOrElse({ err ->
+            Message.error(sender, "Failed to create group: ${err.message}")
+            return
+        })
+
+        Message.print(sender, "${ChatColor.GREEN}Created group \"${portGroupName}\"")
+    }
+
+    /**
+     * @command /nodesadmin portgroup delete [name]
+     * Deletes a port group.
+     */
+    private fun deletePortGroup(sender: CommandSender, args: Array<String>) {
+        if (args.size < 3) {
+            Message.error(sender, "Usage: /nodesadmin portgroup delete [name]")
+            Message.error(sender, "Example: /nodesadmin portgroup delete atlantic")
+            return
+        }
+
+        val portGroupName = args[2].lowercase()
+        val portGroup = Nodes.getPortGroupFromName(portGroupName)
+
+        if (portGroup === null) {
+            Message.error(sender, "Port group \"${portGroupName}\" does not exist")
+            return
+        }
+
+        // delete the port group
+        Nodes.destroyPortGroup(portGroup)
+
+        Message.print(sender, "${ChatColor.GREEN}Deleted group \"${portGroupName}\"")
     }
 
     // =============================================================

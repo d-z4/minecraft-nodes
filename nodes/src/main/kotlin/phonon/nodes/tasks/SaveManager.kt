@@ -16,6 +16,8 @@ import org.bukkit.scheduler.BukkitTask
 import phonon.nodes.Config
 import phonon.nodes.Nodes
 import phonon.nodes.objects.Nation.NationSaveState
+import phonon.nodes.objects.Port.PortSaveState
+import phonon.nodes.objects.PortGroup.PortGroupSaveState
 import phonon.nodes.objects.Resident.ResidentSaveState
 import phonon.nodes.objects.Town.TownSaveState
 import phonon.nodes.serdes.Serializer
@@ -94,6 +96,30 @@ internal class TaskSaveBackup(
 
         // save last backup timestamp to file
         saveStringToFile(timestamp.toString(), Config.pathLastBackupTime)
+    }
+}
+
+public class TaskSavePorts(
+    val portsSnapshot: List<PortSaveState>,
+    val portGroupsSnapshot: List<PortGroupSaveState>,
+    val pathPortSave: Path,
+    val pathDynmapDir: Path,
+    val pathDynmapPorts: Path,
+    val copyToDynmap: Boolean,
+) : Runnable {
+    override fun run() {
+        // serialize port state
+        val jsonStr = Serializer.portsToJson(
+            portGroupsSnapshot,
+            portsSnapshot,
+        )
+
+        saveStringToFile(jsonStr, pathPortSave)
+
+        if (copyToDynmap) {
+            Files.createDirectories(pathDynmapDir) // create dynmap folder if it does not exist
+            Files.copy(pathPortSave, pathDynmapPorts, StandardCopyOption.REPLACE_EXISTING)
+        }
     }
 }
 
