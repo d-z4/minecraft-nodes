@@ -48,19 +48,6 @@ Requirements:
 - node.js
 - Rust
 
------------------------------------------------------------
-
-## 3. Building ports plugin
-Requirements:
-- Java JDK 21 (current plugin target java version)
-
-### 1. Build ports plugin `nodes-ports.jar`:
-Go inside `ports/` and run
-```
-./gradlew build
-```
-Built `.jar` will appear in `build/libs/nodes-ports-*.jar`.
-
 
 
 # Issues/Todo
