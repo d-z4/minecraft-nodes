@@ -38,6 +38,7 @@ import phonon.nodes.utils.string.filterResident
 import phonon.nodes.utils.string.filterTown
 import phonon.nodes.utils.string.filterTownResident
 import phonon.nodes.utils.stringInputIsValid
+import java.util.concurrent.TimeUnit
 
 // list of all subcommands, used for onTabComplete
 private val SUBCOMMANDS: List<String> = listOf(
@@ -695,24 +696,22 @@ public class TownCommand :
 
         town.applications.put(
             resident,
-            Bukkit.getScheduler().runTaskLaterAsynchronously(
+            Bukkit.getAsyncScheduler().runDelayed(
                 Nodes.plugin!!,
-                object : Runnable {
-                    override fun run() {
-                        Bukkit.getScheduler().runTask(
-                            Nodes.plugin!!,
-                            object : Runnable {
-                                override fun run() {
-                                    if (resident.town == null) {
-                                        Message.print(player, "No one in ${town.name} responded to your application!")
-                                        town.applications.remove(resident)
-                                    }
-                                }
-                            },
-                        )
-                    }
+                { _ ->
+                    player.scheduler.run(
+                        Nodes.plugin!!,
+                        { _ ->
+                            if (resident.town == null) {
+                                Message.print(player, "No one in ${town.name} responded to your application!")
+                                town.applications.remove(resident)
+                            }
+                        },
+                        null,
+                    )
                 },
-                1200,
+                60000,
+                TimeUnit.MILLISECONDS,
             ),
         )
     }
@@ -772,26 +771,24 @@ public class TownCommand :
             Message.print(invitee, "You have been invited to become a member of ${town.name}.\nType \"/t accept\" to join the town or \"/t reject\" to refuse the offer.")
             inviteeResident.invitingTown = town
             inviteeResident.invitingPlayer = player
-            inviteeResident.inviteThread = Bukkit.getScheduler().runTaskLaterAsynchronously(
+            inviteeResident.inviteThread = Bukkit.getAsyncScheduler().runDelayed(
                 Nodes.plugin!!,
-                object : Runnable {
-                    override fun run() {
-                        Bukkit.getScheduler().runTask(
-                            Nodes.plugin!!,
-                            object : Runnable {
-                                override fun run() {
-                                    if (inviteeResident.invitingPlayer == player) {
-                                        Message.print(player, "${invitee.name} didn't respond to your town invitation!")
-                                        inviteeResident.invitingTown = null
-                                        inviteeResident.invitingPlayer = null
-                                        inviteeResident.inviteThread = null
-                                    }
-                                }
-                            },
-                        )
-                    }
+                { _ ->
+                    player.scheduler.run(
+                        Nodes.plugin!!,
+                        { _ ->
+                            if (inviteeResident.invitingPlayer == player) {
+                                Message.print(player, "${invitee.name} didn't respond to your town invitation!")
+                                inviteeResident.invitingTown = null
+                                inviteeResident.invitingPlayer = null
+                                inviteeResident.inviteThread = null
+                            }
+                        },
+                        null,
+                    )
                 },
-                1200,
+                60000,
+                TimeUnit.MILLISECONDS,
             )
         } else {
             Message.error(player, "You are not allowed to invite new members")
@@ -1107,23 +1104,21 @@ public class TownCommand :
             teleportTimerTicks *= Config.occupiedHomeTeleportMultiplier
         }
 
-        resident.teleportThread = Bukkit.getScheduler().runTaskLaterAsynchronously(
+        resident.teleportThread = Bukkit.getAsyncScheduler().runDelayed(
             Nodes.plugin!!,
-            object : Runnable {
-                override fun run() {
-                    Bukkit.getScheduler().runTask(
-                        Nodes.plugin!!,
-                        object : Runnable {
-                            override fun run() {
-                                player.teleport(destination)
-                                resident.teleportThread = null
-                                resident.isTeleportingToOutpost = false
-                            }
-                        },
-                    )
-                }
+            { task ->
+                player.scheduler.run(
+                    Nodes.plugin!!,
+                    { _ ->
+                        player.teleportAsync(destination)
+                        resident.teleportThread = null
+                        resident.isTeleportingToOutpost = false
+                    },
+                    null,
+                )
             },
-            teleportTimerTicks.toLong(),
+            (teleportTimerTicks * 50).toLong(),
+            TimeUnit.MILLISECONDS,
         )
 
         if (teleportTimerTicks > 0) {

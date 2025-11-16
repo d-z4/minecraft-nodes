@@ -5,6 +5,7 @@
 package phonon.nodes
 
 import com.google.gson.JsonObject
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Chunk
@@ -21,8 +22,6 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.DoubleChestInventory
 import org.bukkit.inventory.Inventory
 import org.bukkit.plugin.Plugin
-import org.bukkit.scheduler.BukkitRunnable
-import org.bukkit.scheduler.BukkitTask
 import phonon.nodes.chat.ChatMode
 import phonon.nodes.constants.DiplomaticRelationship
 import phonon.nodes.constants.ErrorAlreadyAllies
@@ -94,6 +93,7 @@ import java.util.EnumMap
 import java.util.EnumSet
 import java.util.UUID
 import java.util.concurrent.ThreadLocalRandom
+import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
 import kotlin.system.measureNanoTime
 
@@ -128,7 +128,7 @@ public object Nodes {
     internal val portGroups: LinkedHashMap<String, PortGroup> = LinkedHashMap()
 
     // map of player -> task for warping
-    public var playerWarpTasks: HashMap<UUID, BukkitTask> = hashMapOf()
+    public var playerWarpTasks: HashMap<UUID, ScheduledTask> = hashMapOf()
 
     // map chunk coords -> port, assumes one chunk only has 1 port
     public var chunkToPort: HashMap<List<Int>, Port> = hashMapOf()
@@ -204,7 +204,6 @@ public object Nodes {
         SaveManager.stop()
         PeriodicTickManager.stop()
         OverMaxClaimsReminder.stop()
-        Nametag.stop()
 
         val plugin = Nodes.plugin
         if (plugin === null) {
@@ -214,7 +213,6 @@ public object Nodes {
         SaveManager.start(plugin, Config.savePeriod)
         PeriodicTickManager.start(plugin, Config.mainPeriodicTick)
         OverMaxClaimsReminder.start(plugin, Config.overMaxClaimsReminderPeriod)
-        Nametag.start(plugin, Config.nametagUpdatePeriod)
     }
 
     // mark all current players in game as online
@@ -227,12 +225,10 @@ public object Nodes {
             // mark player online
             val resident = Nodes.getResident(player)!!
             Nodes.setResidentOnline(resident, player)
-
-            // create nametag (only when town exists)
-            if (resident.town !== null && Config.useNametags) {
-                Nametag.create(player)
-            }
         }
+
+        // update nametags
+        Nametag.pipelinedUpdateAllText()
     }
 
     // clean up any world details
@@ -256,11 +252,6 @@ public object Nodes {
         // cleanup war if its enabled
         if (Nodes.war.enabled) {
             Nodes.war.cleanup()
-        }
-
-        // cleanup nametags
-        if (Config.useNametags) {
-            Nametag.clear()
         }
 
         // save backup, income current time
@@ -622,7 +613,7 @@ public object Nodes {
                 )
 
                 if (async) {
-                    Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, taskSave)
+                    Bukkit.getAsyncScheduler().runNow(Nodes.plugin!!, { _ -> taskSave.run() })
                 } else {
                     taskSave.run()
                 }
@@ -650,7 +641,7 @@ public object Nodes {
             )
 
             if (async) {
-                Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, taskSavePorts)
+                Bukkit.getAsyncScheduler().runNow(Nodes.plugin!!, { _ -> taskSavePorts.run() })
             } else {
                 taskSavePorts.run()
             }
@@ -660,7 +651,7 @@ public object Nodes {
             val taskBackup =
                 TaskSaveBackup(backupTimestamp, Config.pathTowns, Config.pathBackup, Config.pathLastBackupTime)
             if (async) {
-                Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, taskBackup)
+                Bukkit.getAsyncScheduler().runNow(Nodes.plugin!!, { _ -> taskBackup.run() })
             } else {
                 taskBackup.run()
             }
@@ -706,9 +697,9 @@ public object Nodes {
             )
 
             if (async) {
-                Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, taskSaveClaimsConfig)
-                Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, taskSaveTowns)
-                Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, taskSavePorts)
+                Bukkit.getAsyncScheduler().runNow(Nodes.plugin!!, { _ -> taskSaveClaimsConfig.run() })
+                Bukkit.getAsyncScheduler().runNow(Nodes.plugin!!, { _ -> taskSaveTowns.run() })
+                Bukkit.getAsyncScheduler().runNow(Nodes.plugin!!, { _ -> taskSavePorts.run() })
             } else {
                 taskSaveClaimsConfig.run()
                 taskSaveTowns.run()
@@ -1178,11 +1169,6 @@ public object Nodes {
             leader.claims = Math.max(0, Math.max(Config.playerClaimsMax, Config.townInitialClaims) - overClaimsPenalty)
             leader.claimsTime = 0L
 
-            // create nametag
-            if (leaderPlayer !== null) {
-                Nametag.create(leaderPlayer)
-            }
-
             leader.needsUpdate()
         }
 
@@ -1193,6 +1179,9 @@ public object Nodes {
 
         // re-render minimaps
         Nodes.renderMinimaps()
+
+        // update nametags
+        Nametag.pipelinedUpdateAllText()
 
         return Result.success(town)
     }
@@ -1395,8 +1384,6 @@ public object Nodes {
             // remove resident nametag, and remove from nation players online list
             val player = r.player()
             if (player !== null) {
-                Nametag.destroy(player)
-
                 if (nation !== null) {
                     nation.playersOnline.remove(player)
                 }
@@ -1422,6 +1409,9 @@ public object Nodes {
 
         // re-render minimaps
         Nodes.renderMinimaps()
+
+        // update nametags
+        Nametag.pipelinedUpdateAllText()
     }
 
     public fun getTownCount(): Int = Nodes.towns.size
@@ -1903,10 +1893,8 @@ public object Nodes {
         resident.needsUpdate()
         Nodes.needsSave = true
 
-        // create nametag for player
-        if (player !== null) {
-            Nametag.create(player)
-        }
+        // update nametags
+        Nametag.pipelinedUpdateAllText()
     }
 
     public fun removeResidentFromTown(town: Town, resident: Resident) {
@@ -1942,10 +1930,8 @@ public object Nodes {
         resident.needsUpdate()
         Nodes.needsSave = true
 
-        // delete player nametag
-        if (player !== null) {
-            Nametag.destroy(player)
-        }
+        // update nametags
+        Nametag.pipelinedUpdateAllText()
     }
 
     // make player in town an officer
@@ -2269,6 +2255,9 @@ public object Nodes {
         // re-render minimaps
         Nodes.renderMinimaps()
 
+        // update nametags
+        Nametag.pipelinedUpdateAllText()
+
         return Result.success(nation)
     }
 
@@ -2360,6 +2349,9 @@ public object Nodes {
 
         // re-render minimaps
         Nodes.renderMinimaps()
+
+        // update nametags
+        Nametag.pipelinedUpdateAllText()
     }
 
     public fun getNationCount(): Int = Nodes.nations.size
@@ -2417,6 +2409,9 @@ public object Nodes {
 
         // re-render minimaps
         Nodes.renderMinimaps()
+
+        // update nametags
+        Nametag.pipelinedUpdateAllText()
 
         return Result.success(town)
     }
@@ -2477,6 +2472,9 @@ public object Nodes {
 
         // re-render minimaps
         Nodes.renderMinimaps()
+
+        // update nametags
+        Nametag.pipelinedUpdateAllText()
 
         return Result.success(town)
     }
@@ -2789,6 +2787,9 @@ public object Nodes {
         // re-render minimaps
         Nodes.renderMinimaps()
 
+        // update nametags
+        Nametag.pipelinedUpdateAllText()
+
         return Result.success(true)
     }
 
@@ -2850,6 +2851,9 @@ public object Nodes {
 
         // re-render minimaps
         Nodes.renderMinimaps()
+
+        // update nametags
+        Nametag.pipelinedUpdateAllText()
 
         return Result.success(true)
     }
@@ -2917,6 +2921,9 @@ public object Nodes {
         // re-render minimaps
         Nodes.renderMinimaps()
 
+        // update nametags
+        Nametag.pipelinedUpdateAllText()
+
         return Result.success(true)
     }
 
@@ -2968,6 +2975,9 @@ public object Nodes {
 
         // re-render minimaps
         Nodes.renderMinimaps()
+
+        // update nametags
+        Nametag.pipelinedUpdateAllText()
 
         return Result.success(true)
     }
@@ -3029,6 +3039,9 @@ public object Nodes {
         Truce.remove(town, other)
 
         Bukkit.getPluginManager().callEvent(TruceExpiredEvent(town, other))
+
+        // update nametags
+        Nametag.pipelinedUpdateAllText()
 
         return Result.success(true)
     }
@@ -3177,7 +3190,7 @@ public object Nodes {
 
         // save truce.json file
         if (Truce.needsUpdate == true) {
-            Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, Truce.saveTask())
+            Bukkit.getAsyncScheduler().runNow(Nodes.plugin!!, { _ -> Truce.saveTask().run() })
             Truce.needsUpdate = false
         }
     }
@@ -3189,7 +3202,7 @@ public object Nodes {
      */
     public fun saveTruce(async: Boolean = false) {
         if (async) {
-            Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, Truce.saveTask())
+            Bukkit.getAsyncScheduler().runNow(Nodes.plugin!!, { _ -> Truce.saveTask().run() })
         } else {
             Truce.saveTask().run()
         }
@@ -3345,48 +3358,61 @@ public object Nodes {
         val protectedBlocks = town.protectedBlocks
 
         // create repeating event to spawn particles each second
-        val task = object : BukkitRunnable() {
-            private val particle = Particle.HAPPY_VILLAGER
-            private val particleCount = 3
-            private val randomOffsetXZ = 0.05
-            private val randomOffsetY = 0.1
+        val particle = Particle.HAPPY_VILLAGER
+        val particleCount = 3
+        val randomOffsetXZ = 0.05
+        val randomOffsetY = 0.1
 
-            public val MAX_RUNS = 10
-            public var runCount = 0
+        val maxRuns = 10
+        var runCount = 0
 
-            public override fun run() {
-                for (block in protectedBlocks) {
-                    // corners
-                    val location1 = Location(block.world, block.x.toDouble() + 0.1, block.y.toDouble() + 0.5, block.z.toDouble() + 0.1)
-                    val location2 = Location(block.world, block.x.toDouble() + 0.1, block.y.toDouble() + 0.5, block.z.toDouble() + 0.9)
-                    val location3 = Location(block.world, block.x.toDouble() + 0.9, block.y.toDouble() + 0.5, block.z.toDouble() + 0.1)
-                    val location4 = Location(block.world, block.x.toDouble() + 0.9, block.y.toDouble() + 0.5, block.z.toDouble() + 0.9)
+        var task: io.papermc.paper.threadedregions.scheduler.ScheduledTask? = null
 
-                    // centers
-                    val location5 = Location(block.world, block.x.toDouble() + 0.5, block.y.toDouble() + 0.5, block.z.toDouble())
-                    val location6 = Location(block.world, block.x.toDouble(), block.y.toDouble() + 0.5, block.z.toDouble() + 0.5)
-                    val location7 = Location(block.world, block.x.toDouble() + 0.5, block.y.toDouble() + 0.5, block.z.toDouble() + 1.0)
-                    val location8 = Location(block.world, block.x.toDouble() + 1.0, block.y.toDouble() + 0.5, block.z.toDouble() + 0.5)
+        val runnable = object : Runnable {
+            override fun run() {
+                player.scheduler.run(
+                    Nodes.plugin!!,
+                    { _ ->
+                        for (block in protectedBlocks) {
+                            // corners
+                            val location1 = Location(block.world, block.x.toDouble() + 0.1, block.y.toDouble() + 0.5, block.z.toDouble() + 0.1)
+                            val location2 = Location(block.world, block.x.toDouble() + 0.1, block.y.toDouble() + 0.5, block.z.toDouble() + 0.9)
+                            val location3 = Location(block.world, block.x.toDouble() + 0.9, block.y.toDouble() + 0.5, block.z.toDouble() + 0.1)
+                            val location4 = Location(block.world, block.x.toDouble() + 0.9, block.y.toDouble() + 0.5, block.z.toDouble() + 0.9)
 
-                    player.spawnParticle(particle, location1, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
-                    player.spawnParticle(particle, location2, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
-                    player.spawnParticle(particle, location3, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
-                    player.spawnParticle(particle, location4, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
-                    player.spawnParticle(particle, location5, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
-                    player.spawnParticle(particle, location6, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
-                    player.spawnParticle(particle, location7, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
-                    player.spawnParticle(particle, location8, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
-                }
+                            // centers
+                            val location5 = Location(block.world, block.x.toDouble() + 0.5, block.y.toDouble() + 0.5, block.z.toDouble())
+                            val location6 = Location(block.world, block.x.toDouble(), block.y.toDouble() + 0.5, block.z.toDouble() + 0.5)
+                            val location7 = Location(block.world, block.x.toDouble() + 0.5, block.y.toDouble() + 0.5, block.z.toDouble() + 1.0)
+                            val location8 = Location(block.world, block.x.toDouble() + 1.0, block.y.toDouble() + 0.5, block.z.toDouble() + 0.5)
 
-                runCount += 1
-                if (runCount > MAX_RUNS) {
-                    Bukkit.getScheduler().cancelTask(this.getTaskId())
-                    return
-                }
+                            player.spawnParticle(particle, location1, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
+                            player.spawnParticle(particle, location2, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
+                            player.spawnParticle(particle, location3, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
+                            player.spawnParticle(particle, location4, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
+                            player.spawnParticle(particle, location5, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
+                            player.spawnParticle(particle, location6, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
+                            player.spawnParticle(particle, location7, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
+                            player.spawnParticle(particle, location8, particleCount, randomOffsetXZ, randomOffsetY, randomOffsetXZ)
+                        }
+
+                        runCount += 1
+                        if (runCount > maxRuns) {
+                            task?.cancel()
+                        }
+                    },
+                    null,
+                )
             }
         }
 
-        task.runTaskTimer(Nodes.plugin!!, 0, 20)
+        task = Bukkit.getAsyncScheduler().runAtFixedRate(
+            Nodes.plugin!!,
+            { _ -> runnable.run() },
+            1000,
+            1000,
+            TimeUnit.MILLISECONDS,
+        )
     }
 
     // ==============================================

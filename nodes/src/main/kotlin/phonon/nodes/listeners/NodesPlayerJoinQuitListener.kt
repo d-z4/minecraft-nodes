@@ -14,6 +14,7 @@ import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import phonon.nodes.Nodes
 import phonon.nodes.chat.Chat
+import phonon.nodes.objects.Nametag
 import phonon.nodes.objects.Resident
 
 public class NodesPlayerJoinQuitListener : Listener {
@@ -32,6 +33,9 @@ public class NodesPlayerJoinQuitListener : Listener {
         if (Nodes.war.enabled == true) {
             Nodes.war.sendWarProgressBarToPlayer(player)
         }
+
+        // update nametags
+        Nametag.pipelinedUpdateAllText()
     }
 
     @EventHandler

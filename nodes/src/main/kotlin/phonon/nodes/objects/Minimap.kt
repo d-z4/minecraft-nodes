@@ -22,10 +22,11 @@ import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
-import org.bukkit.scoreboard.Objective
-import org.bukkit.scoreboard.Scoreboard
-import phonon.nodes.PlayerScoreboardManager
 import phonon.nodes.WorldMap
+import phonon.nodes.nms.sendObjectiveCreate
+import phonon.nodes.nms.sendObjectiveDisplay
+import phonon.nodes.nms.sendObjectiveRemove
+import phonon.nodes.nms.sendScore
 
 // max min allowed sizes
 private val MAP_RADIUS_MIN = 5
@@ -64,30 +65,16 @@ public class Minimap(
     val player: Player,
     var size: Int, // display square half extend, renders [-size, size]
 ) {
-    // rendering targets for Scoreboard API
-    val scoreboard: Scoreboard
-    val objective: Objective
+    // objective name for this minimap
+    private val objectiveName = "nodes_minimap"
 
     init {
         // ensure size within limits [3..5]
         this.size = Math.min(5, Math.max(3, this.size))
 
         // create scoreboard
-        val scoreboard = PlayerScoreboardManager.getScoreboard(player.getUniqueId())
-
-        // team required for objective
-        val team = scoreboard.getTeam("player") ?: scoreboard.registerNewTeam("player")
-        if (!team.hasEntry(player.getName())) {
-            team.addEntry(player.getName())
-        }
-
-        val objective = scoreboard.getObjective("player") ?: scoreboard.registerNewObjective("player", "minimap", "Minimap")
-        objective.setDisplaySlot(DisplaySlot.SIDEBAR)
-        // objective.setDisplayName("Minimap")
-
-        this.scoreboard = scoreboard
-        this.objective = objective
-        player.setScoreboard(this.scoreboard)
+        player.sendObjectiveCreate(objectiveName, "Minimap")
+        player.sendObjectiveDisplay(objectiveName, DisplaySlot.SIDEBAR)
 
         // initial render, get player current location
         val world = Bukkit.getWorlds()[0]
@@ -101,27 +88,30 @@ public class Minimap(
 
     // render minimap centered at coord (current player location)
     public fun render(coord: Coord) {
-        // clear previous render
-        for (entry in this.scoreboard.getEntries()) {
-            this.scoreboard.resetScores(entry)
-        }
+        // remove and recreate the objective
+        player.sendObjectiveRemove(objectiveName)
+        player.sendObjectiveCreate(objectiveName, "Minimap")
+        player.sendObjectiveDisplay(objectiveName, DisplaySlot.SIDEBAR)
 
-        // create new render
-        val score = this.objective.getScore(HEADER[size - 3])
-        score.setScore(size + 1)
+        // add header
+        val headerEntry = HEADER[size - 3]
+        player.sendScore(objectiveName, headerEntry, size + 1)
 
+        // add map lines
         val size = this.size
         for ((i, y) in (size downTo -size).withIndex()) {
             val lineIdString = LINE_ID[i]
             val renderedLine = WorldMap.renderLine(resident, coord, coord.z - y, coord.x - size, coord.x + size)
-            val score = this.objective.getScore("${lineIdString}$renderedLine")
-            score.setScore(y)
+            val entryName = "${lineIdString}$renderedLine"
+            player.sendScore(objectiveName, entryName, y)
         }
     }
 
     public fun destroy() {
-        // set player to new scoreboard
-        this.scoreboard.clearSlot(DisplaySlot.SIDEBAR)
-        player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard())
+        // clear the display slot (hide from sidebar)
+        player.sendObjectiveDisplay("", DisplaySlot.SIDEBAR)
+
+        // remove the objective (this automatically clears all scores)
+        player.sendObjectiveRemove(objectiveName)
     }
 }

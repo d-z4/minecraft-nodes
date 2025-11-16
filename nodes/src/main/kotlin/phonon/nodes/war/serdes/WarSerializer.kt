@@ -84,12 +84,10 @@ public object WarSerializer {
 
         if (async == true) {
             // write file in worker thread
-            Bukkit.getScheduler().runTaskAsynchronously(
+            Bukkit.getAsyncScheduler().runNow(
                 Nodes.plugin!!,
-                object : Runnable {
-                    public override fun run() {
-                        WarSerializer.writeToJson(Config.pathWar)
-                    }
+                { _ ->
+                    WarSerializer.writeToJson(Config.pathWar)
                 },
             )
         } else {

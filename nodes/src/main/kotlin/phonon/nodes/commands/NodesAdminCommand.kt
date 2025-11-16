@@ -1719,7 +1719,7 @@ public class NodesAdminCommand :
             return
         }
 
-        player.teleport(town.spawnpoint)
+        player.teleportAsync(town.spawnpoint)
     }
 
     /**

@@ -5,38 +5,29 @@
 
 package phonon.nodes.tasks
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import org.bukkit.Bukkit
 import org.bukkit.plugin.Plugin
-import org.bukkit.scheduler.BukkitTask
 import phonon.nodes.Nodes
 
 public object OverMaxClaimsReminder {
 
-    private var task: BukkitTask? = null
+    private var task: ScheduledTask? = null
 
-    // run scheduler for saving backups
+    // run scheduler for reminders
     public fun start(plugin: Plugin, period: Long) {
         if (this.task !== null) {
             return
         }
 
-        // scheduler for writing backups
+        // scheduler for reminders
         val task = object : Runnable {
-
             public override fun run() {
-                // schedule main thread to run income tick
-                Bukkit.getScheduler().runTask(
-                    plugin,
-                    object : Runnable {
-                        override fun run() {
-                            Nodes.overMaxClaimsReminder()
-                        }
-                    },
-                )
+                Nodes.overMaxClaimsReminder()
             }
         }
 
-        this.task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, task, period, period)
+        this.task = Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, { _ -> task.run() }, period, period)
     }
 
     public fun stop() {

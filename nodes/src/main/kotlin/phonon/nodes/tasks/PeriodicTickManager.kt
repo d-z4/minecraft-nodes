@@ -5,14 +5,14 @@
 
 package phonon.nodes
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import org.bukkit.Bukkit
 import org.bukkit.plugin.Plugin
-import org.bukkit.scheduler.BukkitTask
 import phonon.nodes.utils.FileWriteTask
 
 public object PeriodicTickManager {
 
-    private var task: BukkitTask? = null
+    private var task: ScheduledTask? = null
 
     // previous tick time
     private var previousTime: Long = 0L
@@ -30,9 +30,6 @@ public object PeriodicTickManager {
         val task = object : Runnable {
             public override fun run() {
                 // update time tick
-                // capture previousTime locally so that functions that require dt = currTime - prevTime
-                // have safe previous time value, in the rare/~impossible case that the main thread
-                // lags so much that this runs and sets previousTime again before scheduled tasks run
                 val currTime = System.currentTimeMillis()
                 val capturedPreviousTime = previousTime
                 previousTime = currTime
@@ -43,82 +40,28 @@ public object PeriodicTickManager {
                 if (currTime > Nodes.lastIncomeTime + Config.incomePeriod) {
                     Nodes.lastIncomeTime = currTime
 
-                    // schedule main thread to run task
-                    Bukkit.getScheduler().runTask(
-                        plugin,
-                        object : Runnable {
-                            override fun run() {
-                                if (Config.incomeEnabled) {
-                                    Nodes.runIncome()
-                                }
-                            }
-                        },
-                    )
+                    if (Config.incomeEnabled) {
+                        Nodes.runIncome()
+                    }
 
                     // save current time
-                    Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, FileWriteTask(currTime.toString(), Config.pathLastIncomeTime, null))
+                    Bukkit.getAsyncScheduler().runNow(Nodes.plugin!!, { _ -> FileWriteTask(currTime.toString(), Config.pathLastIncomeTime, null).run() })
                 }
 
                 // =================================
                 // town, resident, truce cooldowns
-                // pipeline by running on offset
                 // =================================
-                Bukkit.getScheduler().runTask(
-                    plugin,
-                    object : Runnable {
-                        override fun run() {
-                            val currTime = System.currentTimeMillis()
-                            val dt = currTime - capturedPreviousTime
-                            Nodes.townMoveHomeCooldownTick(dt)
-                        }
-                    },
-                )
-                Bukkit.getScheduler().runTaskLater(
-                    plugin,
-                    object : Runnable {
-                        override fun run() {
-                            val currTime = System.currentTimeMillis()
-                            val dt = currTime - capturedPreviousTime
-                            Nodes.claimsPowerRamp(dt)
-                        }
-                    },
-                    1L,
-                )
-                Bukkit.getScheduler().runTaskLater(
-                    plugin,
-                    object : Runnable {
-                        override fun run() {
-                            val currTime = System.currentTimeMillis()
-                            val dt = currTime - capturedPreviousTime
-                            Nodes.claimsPenaltyDecay(dt)
-                        }
-                    },
-                    2L,
-                )
-                Bukkit.getScheduler().runTaskLater(
-                    plugin,
-                    object : Runnable {
-                        override fun run() {
-                            val currTime = System.currentTimeMillis()
-                            val dt = currTime - capturedPreviousTime
-                            Nodes.residentTownCreateCooldownTick(dt)
-                        }
-                    },
-                    3L,
-                )
-                Bukkit.getScheduler().runTaskLater(
-                    plugin,
-                    object : Runnable {
-                        override fun run() {
-                            Nodes.truceTick()
-                        }
-                    },
-                    4L,
-                )
+                val currTime2 = System.currentTimeMillis()
+                val dt = currTime2 - capturedPreviousTime
+                Nodes.townMoveHomeCooldownTick(dt)
+                Nodes.claimsPowerRamp(dt)
+                Nodes.claimsPenaltyDecay(dt)
+                Nodes.residentTownCreateCooldownTick(dt)
+                Nodes.truceTick()
             }
         }
 
-        this.task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, task, period, period)
+        this.task = Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, { _ -> task.run() }, period, period)
     }
 
     public fun stop() {
