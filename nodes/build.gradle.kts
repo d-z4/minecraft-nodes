@@ -5,7 +5,7 @@ val outputJarName = "nodes"
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.3.0-Beta1"
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
-    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
+    id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
 }
 
 repositories {
