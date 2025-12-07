@@ -4,6 +4,8 @@ version: 0.0.14
 api-version: 1.16
 folia-supported: true
 softdepend: [kotlin, Essentials]
+libraries:
+  - org.jetbrains.kotlin:kotlin-stdlib:2.2.21
 commands:
   nodesadmin:
     description: Admin commands for Nodes
