@@ -56,10 +56,16 @@ public object Config {
     public var overMaxClaimsReminderPeriod: Long = 24000L
 
     // nametag update period
+    public var nametagUpdatePeriod: Long = 80L
     public var nametagPipelineTicks: Int = 16
 
     // force copy to dynmap folder
     public var dynmapCopyTowns: Boolean = false
+
+    // ===================================
+    // nametag configs
+    // ===================================
+    public var useNametags: Boolean = true
 
     // ===================================
     // resource configs
@@ -403,8 +409,12 @@ public object Config {
         Config.backupPeriod = config.getLong("backupPeriod", Config.backupPeriod)
         Config.mainPeriodicTick = config.getLong("mainPeriodicTick", Config.mainPeriodicTick)
         Config.overMaxClaimsReminderPeriod = config.getLong("overMaxClaimsReminderPeriod", Config.overMaxClaimsReminderPeriod)
+        Config.nametagUpdatePeriod = config.getLong("nametagUpdatePeriod", Config.nametagUpdatePeriod)
         Config.nametagPipelineTicks = config.getInt("nametagPipelineTicks", Config.nametagPipelineTicks)
         Config.dynmapCopyTowns = config.getBoolean("dynmapCopyTowns", Config.dynmapCopyTowns)
+
+        // use internal nametag system
+        Config.useNametags = config.getBoolean("useNametags", Config.useNametags)
 
         // afk kick time
         Config.afkKickTime = config.getLong("afkKickTime", Config.afkKickTime)

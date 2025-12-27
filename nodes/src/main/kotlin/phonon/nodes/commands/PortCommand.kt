@@ -278,7 +278,7 @@ internal fun doPortWarp(
     // run asynchronous warp timer
     Nodes.playerWarpTasks.put(
         player.getUniqueId(),
-        task.start(),
+        task.runTaskTimerAsynchronously(Nodes.plugin!!, 2, 2),
     )
 }
 
@@ -296,7 +296,7 @@ internal fun warpToPort(
     val z = destination.locZ.toDouble()
 
     for (player in playersToWarp) {
-        player.teleportAsync(Location(defaultWorld, x, y, z))
+        player.teleport(Location(defaultWorld, x, y, z))
     }
 
     for (entity in entitiesToWarp) {
@@ -314,34 +314,37 @@ internal fun teleportEntity(entity: Entity, destination: Location) {
     for (p in passengers) {
         p.eject()
         entity.removePassenger(p)
-        p.teleportAsync(destination)
+        p.teleport(destination)
     }
 
     // schedule entity teleport (after players already teleported)
-    entity.scheduler.run(
+    Bukkit.getScheduler().runTaskLater(
         Nodes.plugin!!,
-        { _ ->
-            entity.teleportAsync(destination)
+        object : Runnable {
+            override fun run() {
+                entity.teleport(destination)
 
-            // force the chunk to load at destination to makes sure the entity syncs to the client
-            val chunk = entity.location.chunk
-            if (!chunk.isLoaded) {
-                chunk.load()
+                // force the chunk to load at destination to makes sure the entity syncs to the client
+                val chunk = entity.location.chunk
+                if (!chunk.isLoaded) {
+                    chunk.load()
+                }
             }
-
-            // schedule re-attaching player to boat
-            entity.scheduler.runDelayed(
-                Nodes.plugin!!,
-                { _ ->
-                    for (p in passengers) {
-                        entity.addPassenger(p)
-                    }
-                },
-                null,
-                1L,
-            )
         },
-        null,
+        1L,
+    )
+
+    // schedule re-attaching player to boat
+    Bukkit.getScheduler().runTaskLater(
+        Nodes.plugin!!,
+        object : Runnable {
+            override fun run() {
+                for (p in passengers) {
+                    entity.addPassenger(p)
+                }
+            }
+        },
+        2L,
     )
 }
 

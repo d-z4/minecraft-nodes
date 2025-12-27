@@ -26,10 +26,17 @@ mainPeriodicTick: 1200
 overMaxClaimsReminderPeriod: 24000
 
 # nametag update period in ticks
+nametagUpdatePeriod: 80
 nametagPipelineTicks: 16 # how many ticks to divide nametag updates
 
 # force copy to dynmap
 dynmapCopyTowns: false
+
+# ===================================
+# nametag configs
+# ===================================
+# use internal armorstand teleport nametag system
+useNametags: true
 
 # ===================================
 # afk kick time

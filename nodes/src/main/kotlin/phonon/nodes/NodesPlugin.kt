@@ -32,6 +32,7 @@ import phonon.nodes.listeners.NodesDiplomacyTruceExpiredListener
 import phonon.nodes.listeners.NodesEntityBreedListener
 import phonon.nodes.listeners.NodesGuiListener
 import phonon.nodes.listeners.NodesIncomeInventoryListener
+import phonon.nodes.listeners.NodesNametagListener
 import phonon.nodes.listeners.NodesPlayerAFKKickListener
 import phonon.nodes.listeners.NodesPlayerDamageListener
 import phonon.nodes.listeners.NodesPlayerJoinQuitListener
@@ -114,6 +115,7 @@ public class NodesPlugin : JavaPlugin() {
         pluginManager.registerEvents(NodesPlayerJoinQuitListener(), this)
         pluginManager.registerEvents(NodesPlayerMoveListener(), this)
         pluginManager.registerEvents(NodesSheepShearListener(), this)
+        pluginManager.registerEvents(NodesNametagListener(), this)
         pluginManager.registerEvents(NodesWarFlagArmorStandListener(), this)
         pluginManager.registerEvents(NodesPlayerDamageListener(), this)
 
