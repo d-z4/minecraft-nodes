@@ -9,6 +9,8 @@
 
 package phonon.nodes.commands
 
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
@@ -58,6 +60,7 @@ private val SUBCOMMANDS: List<String> = listOf(
     "town",
     "nation",
     "enemy",
+    "ban",
     "peace",
     "ally",
     "allyremove",
@@ -65,6 +68,7 @@ private val SUBCOMMANDS: List<String> = listOf(
     "truceremove",
     "treaty",
     "save",
+    "rallycap",
     "load",
     "runincome",
     "playersonline",
@@ -180,7 +184,9 @@ public class NodesAdminCommand :
             "enemy" -> setEnemy(sender, args)
             "peace" -> setPeace(sender, args)
             "ally" -> setAlly(sender, args)
+            "ban" -> banTownOrNation(sender, args)
             "allyremove" -> removeAlly(sender, args)
+            "rallycap" -> rallyCapToggle(sender, args)
             "truce" -> setTruce(sender, args)
             "truceremove" -> removeTruce(sender, args)
             "treaty" -> manageTreaty(sender, args)
@@ -236,6 +242,7 @@ public class NodesAdminCommand :
                             }
                         }
                     }
+
                     // return x,z for /nodesadmin port create [town]
                     else if (args[1].lowercase() == "create") {
                         when (args.size) {
@@ -256,6 +263,12 @@ public class NodesAdminCommand :
                                 return filterPortGroup(args[3])
                             }
                         }
+                    }
+                }
+
+                "rallycap" -> {
+                    if (args.size == 2) {
+                        return filterByStart(listOf("enable", "disable", "size"), args[1])
                     }
                 }
 
@@ -373,6 +386,17 @@ public class NodesAdminCommand :
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+
+                "ban" -> {
+                    if (args.size == 2) {
+                        return filterByStart(listOf("town", "nation"), args[1])
+                    } else if (args.size == 3) {
+                        when (args[1].lowercase()) {
+                            "town" -> return filterTown(args[2])
+                            "nation" -> return filterNation(args[2])
                         }
                     }
                 }
@@ -572,6 +596,181 @@ public class NodesAdminCommand :
             }
         } else {
             Message.print(sender, "Reload possibilities: \"/nodesadmin reload [config|managers|resources|territory]\"")
+        }
+    }
+
+    private fun rallyCapToggle(sender: CommandSender, args: Array<String>) {
+        if (args.size < 2) {
+            Message.print(sender, "${ChatColor.BOLD}Rally Cap Status:")
+            Message.print(sender, "- Enabled: ${ChatColor.WHITE}${Config.rallyCapEnabled}")
+            Message.print(sender, "- Max Players: ${ChatColor.WHITE}${Config.rallyCapSize}")
+            Message.print(sender, "- Apply to: ${ChatColor.WHITE}${if (Config.rallyCapApplyToNations) "Nations" else "Towns"}")
+            Message.print(sender, "")
+            Message.print(sender, "Usage: /nodesadmin rallycap <enable|disable|size [number]>")
+            return
+        }
+
+        when (args[1].lowercase()) {
+            "enable" -> {
+                Config.rallyCapEnabled = true
+                Message.print(sender, "${ChatColor.GREEN}Rally cap enabled (max ${Config.rallyCapSize} players per ${if (Config.rallyCapApplyToNations) "nation" else "town"})")
+                Message.broadcast("${ChatColor.BOLD}Rally cap has been enabled - maximum ${Config.rallyCapSize} players per ${if (Config.rallyCapApplyToNations) "nation" else "town"}")
+            }
+
+            "disable" -> {
+                Config.rallyCapEnabled = false
+                Message.print(sender, "${ChatColor.DARK_RED}Rally cap disabled")
+                Message.broadcast("${ChatColor.BOLD}Rally cap has been disabled")
+            }
+
+            "size" -> {
+                if (args.size < 3) {
+                    Message.error(sender, "Usage: /nodesadmin rallycap size [number]")
+                    Message.print(sender, "Current size: ${Config.rallyCapSize}")
+                    return
+                }
+
+                val size = args[2].toIntOrNull()
+                if (size == null || size <= 0) {
+                    Message.error(sender, "Size must be a positive number")
+                    return
+                }
+
+                Config.rallyCapSize = size
+                Message.print(sender, "${ChatColor.GREEN}Rally cap size set to $size players")
+
+                if (Config.rallyCapEnabled) {
+                    Message.broadcast("${ChatColor.BOLD}Rally cap size changed to $size players per ${if (Config.rallyCapApplyToNations) "nation" else "town"}")
+
+                    // Optionally: kick players over the new limit
+                    Message.print(sender, "${ChatColor.YELLOW}Note: Currently online players over the new limit will not be kicked until they relog")
+                }
+            }
+
+            else -> {
+                Message.error(sender, "Usage: /nodesadmin rallycap <enable|disable|size [number]>")
+            }
+        }
+    }
+
+    private fun banTownOrNation(sender: CommandSender, args: Array<String>) {
+        if (args.size < 3) {
+            Message.error(sender, "Usage: /nodesadmin ban <town|nation> <name>")
+            return
+        }
+
+        val type = args[1].lowercase()
+        val name = args[2]
+
+        when (type) {
+            "town" -> {
+                val town = Nodes.getTownFromName(name)
+                if (town == null) {
+                    Message.error(sender, "Town \"$name\" does not exist")
+                    return
+                }
+
+                // Ban leader
+                town.leader?.let { leader ->
+                    val player = leader.player()
+                    player?.let { p ->
+                        val offline = Bukkit.getOfflinePlayer(p.uniqueId)
+                        offline.banPlayer("Banned by administrator", null, null, false)
+
+                        p.kick(Component.text("Banned by administrator").color(NamedTextColor.RED))
+                        Message.print(sender, "Banned and kicked leader: ${leader.name}")
+                    }
+                }
+
+                // Ban all officers
+                val officers = ArrayList(town.officers) // copy to avoid CME
+                for (officer in officers) {
+                    val player = officer.player()
+                    player?.let { p ->
+                        val offline = Bukkit.getOfflinePlayer(p.uniqueId)
+                        offline.banPlayer("Banned by administrator", null, null, false)
+
+                        p.kick(Component.text("Banned by administrator").color(NamedTextColor.RED))
+                        Message.print(sender, "Banned and kicked officer: ${officer.name}")
+                    }
+                }
+
+                // Kick all other residents (no ban)
+                val residents = ArrayList(town.residents)
+                for (resident in residents) {
+                    if (resident != town.leader && !town.officers.contains(resident)) {
+                        val player = resident.player()
+                        player?.let { p ->
+                            p.kick(Component.text("Your town has been disbanded by an administrator")
+                                .color(NamedTextColor.RED))
+                            Message.print(sender, "Kicked resident: ${resident.name}")
+                        }
+                    }
+                }
+
+                // Delete town
+                Nodes.destroyTown(town)
+                Message.print(sender, "${ChatColor.DARK_RED}Banned town \"$name\" - all officers banned, all members kicked")
+                Message.broadcast("${ChatColor.DARK_RED}${ChatColor.BOLD}Town \"$name\" has been banned and disbanded")
+            }
+
+            "nation" -> {
+                val nation = Nodes.getNationFromName(name)
+                if (nation == null) {
+                    Message.error(sender, "Nation \"$name\" does not exist")
+                    return
+                }
+
+                val townsToProcess = ArrayList(nation.towns)
+
+                for (town in townsToProcess) {
+                    // Ban leader
+                    town.leader?.let { leader ->
+                        val player = leader.player()
+                        player?.let { p ->
+                            val offline = Bukkit.getOfflinePlayer(p.uniqueId)
+                            offline.banPlayer("Banned by administrator", null, null)
+                            p.kick(Component.text("Banned by administrator").color(NamedTextColor.RED))
+                            Message.print(sender, "Banned and kicked ${town.name} leader: ${leader.name}")
+                        }
+                    }
+
+                    // Ban officers
+                    val officers = ArrayList(town.officers)
+                    for (officer in officers) {
+                        val player = officer.player()
+                        player?.let { p ->
+                            val offline = Bukkit.getOfflinePlayer(p.uniqueId)
+                            offline.banPlayer("Banned by administrator", null, null)
+                            p.kick(Component.text("Banned by administrator").color(NamedTextColor.RED))
+                            Message.print(sender, "Banned and kicked ${town.name} officer: ${officer.name}")
+                        }
+                    }
+
+                    // Kick other residents
+                    val residents = ArrayList(town.residents)
+                    for (resident in residents) {
+                        if (resident != town.leader && !town.officers.contains(resident)) {
+                            val player = resident.player()
+                            player?.let { p ->
+                                p.kick(Component.text("Your nation has been disbanded by an administrator")
+                                    .color(NamedTextColor.RED))
+                                Message.print(sender, "Kicked ${town.name} resident: ${resident.name}")
+                            }
+                        }
+                    }
+                }
+
+                // Delete nation (should cascade to towns if your impl does)
+                Nodes.destroyNation(nation)
+
+                Message.print(sender, "${ChatColor.DARK_RED}Banned nation \"$name\" - all officers from all towns banned, all members kicked")
+                Message.broadcast("${ChatColor.DARK_RED}${ChatColor.BOLD}Nation \"$name\" has been banned and disbanded")
+            }
+
+            else -> {
+                Message.error(sender, "Usage: /nodesadmin ban <town|nation> <name>")
+            }
         }
     }
 

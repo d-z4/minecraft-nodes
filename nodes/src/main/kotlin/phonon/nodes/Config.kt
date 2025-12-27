@@ -49,6 +49,12 @@ public object Config {
     // 2 hour = 7200000 ms
     public var backupPeriod: Long = 3600000L // 1 hour
 
+    // rally cap settings
+    public var rallyCapEnabled: Boolean = true
+    public var rallyCapSize: Int = 10
+    public var rallyCapApplyToNations: Boolean = true  // Apply to nations or just towns
+
+
     // main tick period check for backup, income, town + resident cooldown counters
     public var mainPeriodicTick: Long = 1200L
 
@@ -453,6 +459,9 @@ public object Config {
         Config.playerClaimsInitial = config.getInt("playerClaimsInitial", Config.playerClaimsInitial)
         Config.playerClaimsMax = config.getInt("playerClaimsMax", Config.playerClaimsMax)
         Config.playerClaimsIncrease = config.getInt("playerClaimsIncrease", Config.playerClaimsIncrease)
+
+        Config.rallyCapEnabled = config.getBoolean("rallyCapEnabled", Config.rallyCapEnabled)
+        Config.rallyCapSize = config.getInt("rallyCapSize", Config.rallyCapSize)
 
         Config.townPenaltyDecay = config.getInt("townPenaltyDecay", Config.townPenaltyDecay)
         Config.townClaimsPenaltyDecayPeriod = config.getLong("townClaimsPenaltyDecayPeriod", Config.townClaimsPenaltyDecayPeriod)

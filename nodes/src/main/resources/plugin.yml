@@ -3,7 +3,7 @@ name: nodes
 version: 0.0.14
 api-version: 1.16
 folia-supported: true
-softdepend: [kotlin, Essentials]
+softdepend: [kotlin, Essentials, PlaceholderAPI]
 commands:
   nodesadmin:
     description: Admin commands for Nodes
@@ -15,6 +15,11 @@ commands:
     aliases: [t]
     permission: nodes.command.town
     usage: /town help or /t help
+  nodesweep:
+   description: Territory resource editor (Admin only)
+   aliases: [nsweep, ns]
+   permission: nodes.admin
+   permission-message: "You don't have permission to use this command"
   nation:
     description: Manage player nations (Nodes)
     aliases: [n]

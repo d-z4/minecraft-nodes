@@ -4,6 +4,8 @@
 
 package phonon.nodes
 
+import NodesExpansion
+import org.bukkit.Bukkit
 import org.bukkit.command.TabCompleter
 import org.bukkit.plugin.java.JavaPlugin
 import phonon.nodes.commands.AllyChatCommand
@@ -13,6 +15,7 @@ import phonon.nodes.commands.NationChatCommand
 import phonon.nodes.commands.NationCommand
 import phonon.nodes.commands.NodesAdminCommand
 import phonon.nodes.commands.NodesCommand
+import phonon.nodes.commands.NodesSweepCommand
 import phonon.nodes.commands.PeaceCommand
 import phonon.nodes.commands.PlayerCommand
 import phonon.nodes.commands.PortCommand
@@ -49,6 +52,10 @@ public class NodesPlugin : JavaPlugin() {
 
         val logger = this.getLogger()
         val pluginManager = this.getServer().getPluginManager()
+
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            NodesExpansion().register()
+        }
 
         // initialize nodes
         Nodes.initialize(this)
@@ -121,6 +128,7 @@ public class NodesPlugin : JavaPlugin() {
         this.getCommand("town")?.setExecutor(TownCommand())
         this.getCommand("nation")?.setExecutor(NationCommand())
         this.getCommand("nodes")?.setExecutor(NodesCommand())
+        this.getCommand("nodesweep")?.setExecutor(NodesSweepCommand())
         this.getCommand("nodesadmin")?.setExecutor(NodesAdminCommand())
         this.getCommand("ally")?.setExecutor(AllyCommand())
         this.getCommand("unally")?.setExecutor(UnallyCommand())

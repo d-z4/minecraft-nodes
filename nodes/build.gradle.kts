@@ -12,10 +12,12 @@ repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.dmulloy2.net/nexus/repository/public/")
+    maven("https://repo.extendedclip.com/releases/")
 }
 
 dependencies {
     compileOnly("org.jetbrains.kotlin:kotlin-stdlib")
+    compileOnly("me.clip:placeholderapi:2.11.7")
 
     compileOnly("com.google.code.gson:gson:2.13.2")
 

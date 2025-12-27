@@ -86,6 +86,11 @@ nationTownTeleportCost:
 # allow members of the same nation to attack eachother
 allowNationFriendlyFire: false
 
+# Rally cap - limits number of online players per town/nation
+rallyCapEnabled: true
+rallyCapSize: 10
+rallyCapApplyToNations: true  # If true, applies to nations; if false, applies to individual towns
+
 # ===================================
 # alliance settings
 # ===================================

@@ -31,6 +31,7 @@ import phonon.nodes.constants.PermissionsGroup
 import phonon.nodes.constants.TownPermissions
 import phonon.nodes.objects.Coord
 import phonon.nodes.objects.Resident
+import phonon.nodes.objects.TerritoryId
 import phonon.nodes.objects.Town
 import phonon.nodes.utils.sanitizeString
 import phonon.nodes.utils.string.filterByStart
@@ -179,6 +180,7 @@ public class TownCommand :
             "promote" -> setOfficer(player, args, true)
             "demote" -> setOfficer(player, args, false)
             "leader" -> setLeader(player, args)
+            "transfer" -> transferTerritory(player, args)
             "apply" -> appToTown(player, args)
             "join" -> appToTown(player, args)
             "invite" -> invite(player, args)
@@ -202,7 +204,8 @@ public class TownCommand :
             "map" -> printMap(player, args)
             "minimap" -> minimap(player, args)
             "perms",
-            "permissions",
+            "transfer",
+            "permissions"
             -> setPermissions(player, args)
             "protect" -> protectChests(player, args)
             "trust" -> trustPlayer(player, args, true)
@@ -311,6 +314,20 @@ public class TownCommand :
                 "protect" -> {
                     if (args.size == 2) {
                         return listOf("show")
+                    }
+                }
+
+                "transfer" -> {
+                    if (args.size == 2) {
+                        // Player's current location territory id
+                        return listOf(Nodes.getTerritoryFromPlayer(player)?.id?.toString() ?: "")
+                    } else if (args.size == 3) {
+                        // Filter allied towns
+                        val resident = Nodes.getResident(player)
+                        val town = resident?.town
+                        if (town != null) {
+                            return town.allies.map { it.name }.filter { it.startsWith(args[2], ignoreCase = true) }
+                        }
                     }
                 }
 
@@ -436,6 +453,118 @@ public class TownCommand :
                 ErrorTownExists -> Message.error(player, "Town \"${name}\" already exists")
                 ErrorPlayerHasTown -> Message.error(player, "You already belong to a town")
                 ErrorTerritoryOwned -> Message.error(player, "Territory is already claimed by a town")
+            }
+        }
+    }
+
+    private fun transferTerritory(player: Player?, args: Array<String>) {
+        if (player == null) {
+            return
+        }
+
+        if (args.size < 3) {
+            Message.error(player, "Usage: /town transfer [territoryId] [targetTown]")
+            return
+        }
+
+        val resident = Nodes.getResident(player)
+        val sourceTown = resident?.town
+        if (sourceTown == null) {
+            Message.error(player, "You are not a member of a town")
+            return
+        }
+
+        // Check if player is leader or officer
+        if (resident !== sourceTown.leader && !sourceTown.officers.contains(resident)) {
+            Message.error(player, "Only leaders and officers can transfer territories")
+            return
+        }
+
+        // Get territory
+        val territoryId = try {
+            TerritoryId(args[1].toInt())
+        } catch (e: NumberFormatException) {
+            Message.error(player, "Invalid territory ID")
+            return
+        }
+
+        val territory = Nodes.getTerritoryFromId(territoryId)
+        if (territory == null) {
+            Message.error(player, "Territory with ID ${args[1]} does not exist")
+            return
+        }
+
+        // Check if source town owns the territory
+        if (territory.town !== sourceTown) {
+            Message.error(player, "Your town does not own this territory")
+            return
+        }
+
+        // Check if it's the home territory
+        if (sourceTown.home == territoryId) {
+            Message.error(player, "Cannot transfer your town's home territory")
+            return
+        }
+
+        // Get target town
+        val targetTownName = args[2]
+        val targetTown = Nodes.getTownFromName(targetTownName)
+        if (targetTown == null) {
+            Message.error(player, "Town \"$targetTownName\" does not exist")
+            return
+        }
+
+        // Check if towns are allies
+        if (!sourceTown.allies.contains(targetTown)) {
+            Message.error(player, "You can only transfer territories to allied towns")
+            return
+        }
+
+        // Check if territory is connected to target town
+        var isConnectedToTarget = false
+        for (neighborId in territory.neighbors) {
+            if (Nodes.getTerritoryFromId(neighborId)?.town === targetTown) {
+                isConnectedToTarget = true
+                break
+            }
+        }
+
+        if (!isConnectedToTarget) {
+            Message.error(player, "Territory must be connected to the target town's territories")
+            return
+        }
+
+        // Transfer the territory
+        // Remove from source town
+        sourceTown.territories.remove(territoryId)
+        if (sourceTown.annexed.contains(territoryId)) {
+            sourceTown.annexed.remove(territoryId)
+        } else {
+            sourceTown.claimsUsed -= territory.cost
+        }
+        sourceTown.claimsMax = Nodes.calculateMaxClaims(sourceTown)
+
+        // Add to target town
+        targetTown.territories.add(territoryId)
+        targetTown.claimsUsed += territory.cost
+        targetTown.claimsMax = Nodes.calculateMaxClaims(targetTown)
+        territory.town = targetTown
+
+        // Mark dirty
+        sourceTown.needsUpdate()
+        targetTown.needsUpdate()
+        Nodes.needsSave = true
+
+        // Re-render minimaps
+        Nodes.renderMinimaps()
+
+        Message.print(player, "Transferred territory (id=${territoryId}) to ${targetTown.name}")
+
+        // Notify target town
+        for (r in targetTown.residents) {
+            val p = r.player()
+            if (p !== null) {
+                Message.print(p, "${sourceTown.name} has transferred territory (id=${territoryId}) to your town")
             }
         }
     }
