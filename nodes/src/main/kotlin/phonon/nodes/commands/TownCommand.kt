@@ -385,6 +385,11 @@ public class TownCommand :
             return
         }
 
+        if (!player.hasPermission("nodes.command.town.create")) {
+            Message.error(player, "You do not have permission to create a new town")
+            return
+        }
+
         if (args.size == 1) {
             Message.print(player, "Usage: ${ChatColor.WHITE}/town create [name]")
             return

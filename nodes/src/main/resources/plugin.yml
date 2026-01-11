@@ -90,3 +90,7 @@ commands:
 permissions:
   nodes.command.town.fly:
     default: op
+  nodes.command.town.create:
+    default: op
+  nodes.command.nation.create:
+    default: op

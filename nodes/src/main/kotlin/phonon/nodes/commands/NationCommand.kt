@@ -168,6 +168,11 @@ public class NationCommand :
             return
         }
 
+        if (!player.hasPermission("nodes.command.nation.create")) {
+            Message.error(player, "You do not have permission to create a new nation")
+            return
+        }
+
         // do not allow during war
         if (Nodes.war.enabled == true) {
             Message.error(player, "Cannot create nations during war")
