@@ -693,7 +693,7 @@ public object Nodes {
             val taskSavePorts = TaskCopyToDynmap(
                 Config.pathPorts,
                 Nodes.DYNMAP_DIR,
-                Nodes.DYNMAP_PATH_TOWNS,
+                Nodes.DYNMAP_PATH_PORTS,
             )
 
             if (async) {
