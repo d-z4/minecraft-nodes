@@ -25,7 +25,6 @@ import phonon.nodes.utils.string.filterNation
 import phonon.nodes.utils.string.filterNationTown
 import phonon.nodes.utils.string.filterTown
 import phonon.nodes.utils.stringInputIsValid
-import java.util.concurrent.TimeUnit
 
 // list of all subcommands, used for onTabComplete
 private val subcommands: List<String> = listOf(
@@ -410,25 +409,27 @@ public class NationCommand :
         inviteeResident.invitingNation = nation
         inviteeResident.invitingTown = inviteeTown
         inviteeResident.invitingPlayer = player
-        inviteeResident.inviteThread = Bukkit.getAsyncScheduler().runDelayed(
+        inviteeResident.inviteThread = Bukkit.getScheduler().runTaskLaterAsynchronously(
             Nodes.plugin!!,
-            { _ ->
-                player.scheduler.run(
-                    Nodes.plugin!!,
-                    { _ ->
-                        if (inviteeResident.invitingPlayer == player) {
-                            Message.print(player, "${invitee.name} didn't respond to your nation invitation!")
-                            inviteeResident.invitingNation = null
-                            inviteeResident.invitingTown = null
-                            inviteeResident.invitingPlayer = null
-                            inviteeResident.inviteThread = null
-                        }
-                    },
-                    null,
-                )
+            object : Runnable {
+                override fun run() {
+                    Bukkit.getScheduler().runTask(
+                        Nodes.plugin!!,
+                        object : Runnable {
+                            override fun run() {
+                                if (inviteeResident.invitingPlayer == player) {
+                                    Message.print(player, "${invitee.name} didn't respond to your nation invitation!")
+                                    inviteeResident.invitingNation = null
+                                    inviteeResident.invitingTown = null
+                                    inviteeResident.invitingPlayer = null
+                                    inviteeResident.inviteThread = null
+                                }
+                            }
+                        },
+                    )
+                }
             },
-            60000,
-            TimeUnit.MILLISECONDS,
+            1200,
         )
     }
 
@@ -767,21 +768,23 @@ public class NationCommand :
 
         resident.isTeleportingToNationTown = true
 
-        resident.teleportThread = Bukkit.getAsyncScheduler().runDelayed(
+        resident.teleportThread = Bukkit.getScheduler().runTaskLaterAsynchronously(
             Nodes.plugin!!,
-            { task ->
-                player.scheduler.run(
-                    Nodes.plugin!!,
-                    { _ ->
-                        player.teleportAsync(destination)
-                        resident.teleportThread = null
-                        resident.isTeleportingToNationTown = false
-                    },
-                    null,
-                )
+            object : Runnable {
+                override fun run() {
+                    Bukkit.getScheduler().runTask(
+                        Nodes.plugin!!,
+                        object : Runnable {
+                            override fun run() {
+                                player.teleport(destination)
+                                resident.teleportThread = null
+                                resident.isTeleportingToNationTown = false
+                            }
+                        },
+                    )
+                }
             },
-            teleportTimerTicks * 50,
-            TimeUnit.MILLISECONDS,
+            teleportTimerTicks,
         )
 
         if (teleportTimerTicks > 0) {

@@ -6,7 +6,6 @@
 
 package phonon.nodes.war
 
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.NamespacedKey
@@ -15,6 +14,7 @@ import org.bukkit.block.Block
 import org.bukkit.boss.BossBar
 import org.bukkit.entity.ArmorStand
 import org.bukkit.persistence.PersistentDataType
+import org.bukkit.scheduler.BukkitTask
 import phonon.nodes.Config
 import phonon.nodes.Nodes
 import phonon.nodes.nms.createArmorStandNamePacket
@@ -45,7 +45,7 @@ public class Attack(
     val noBuildYMin: Int
     val noBuildYMax: Int = 255 // temporarily set to height
 
-    var thread: ScheduledTask
+    var thread: BukkitTask = Bukkit.getScheduler().runTaskTimerAsynchronously(Nodes.plugin!!, this, FlagWar.ATTACK_TICK, FlagWar.ATTACK_TICK)
 
     // armor stands used to show town name and progress on flag
     val armorstand = AttackArmorStand(this, flagBase.world, flagBase.location.clone().add(0.5, 1.75, 0.5))
@@ -88,17 +88,6 @@ public class Attack(
         // base capacity + room for progress ticks length
         val jsonStringBufferSize = this.jsonStringBase.capacity() + 20
         this.jsonString = StringBuilder(jsonStringBufferSize)
-
-        // start the attack tick timer, runs on region that the flag is located
-        this.thread = Bukkit.getRegionScheduler().runAtFixedRate(
-            Nodes.plugin!!,
-            this.flagBase.world,
-            this.flagBase.x shr 4,
-            this.flagBase.z shr 4,
-            { _ -> this.run() },
-            FlagWar.ATTACK_TICK,
-            FlagWar.ATTACK_TICK,
-        )
     }
 
     public override fun run() {
@@ -107,7 +96,16 @@ public class Attack(
 
     public fun cancel() {
         this.thread.cancel()
-        FlagWar.cancelAttack(this)
+
+        val attack = this
+        Bukkit.getScheduler().runTask(
+            Nodes.plugin!!,
+            object : Runnable {
+                override fun run() {
+                    FlagWar.cancelAttack(attack)
+                }
+            },
+        )
     }
 
     // returns json format string as a StringBuilder

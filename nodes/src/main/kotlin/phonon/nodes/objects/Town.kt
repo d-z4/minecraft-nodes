@@ -5,7 +5,6 @@
 
 package phonon.nodes.objects
 
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import org.bukkit.ChatColor
 import org.bukkit.Location
 import org.bukkit.Material
@@ -13,6 +12,7 @@ import org.bukkit.block.Block
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
+import org.bukkit.scheduler.BukkitTask
 import phonon.nodes.Message
 import phonon.nodes.constants.PermissionsGroup
 import phonon.nodes.constants.TownPermissions
@@ -118,8 +118,8 @@ public class Town(
     // flag that anyone can join town
     var isOpen: Boolean = false
 
-    // players applying to town and their scheduledtasks
-    val applications: HashMap<Resident, ScheduledTask> = hashMapOf()
+    // players applying to town and their bukkittasks
+    val applications: HashMap<Resident, BukkitTask> = hashMapOf()
 
     // cooldown timer for moving town home territory
     var moveHomeCooldown: Long = 0L

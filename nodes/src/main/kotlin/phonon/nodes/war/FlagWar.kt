@@ -23,7 +23,6 @@
 
 package phonon.nodes.war
 
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
@@ -34,6 +33,7 @@ import org.bukkit.boss.BarStyle
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
+import org.bukkit.scheduler.BukkitTask
 import phonon.nms.blockedit.FastBlockEditSession
 import phonon.nodes.Config
 import phonon.nodes.Message
@@ -60,7 +60,6 @@ import java.nio.file.Files
 import java.util.EnumSet
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 
 private val SKY_BEACON_FRAME_BLOCK = Material.SEA_LANTERN
 private val SKY_BEACON_BLOCK = Material.BLACK_WOOL
@@ -120,7 +119,7 @@ public object FlagWar {
     internal var needsSave: Boolean = false
 
     // periodic task to check for save
-    internal var saveTask: ScheduledTask? = null
+    internal var saveTask: BukkitTask? = null
 
     public fun initialize(flagMaterials: EnumSet<Material>) {
         FlagWar.flagMaterials.addAll(flagMaterials)
@@ -314,7 +313,7 @@ public object FlagWar {
 
         // create task
         FlagWar.saveTask?.cancel()
-        FlagWar.saveTask = Bukkit.getAsyncScheduler().runAtFixedRate(Nodes.plugin!!, { _ -> FlagWar.SaveLoop }, FlagWar.saveTaskPeriod * 50, FlagWar.saveTaskPeriod * 50, TimeUnit.MILLISECONDS)
+        FlagWar.saveTask = Bukkit.getScheduler().runTaskTimerAsynchronously(Nodes.plugin!!, FlagWar.SaveLoop, FlagWar.saveTaskPeriod, FlagWar.saveTaskPeriod)
     }
 
     /**
@@ -1024,14 +1023,21 @@ public object FlagWar {
     }
 
     // update tick for attack instance
-    // NOTE: this runs on the region's thread where the flag is located
+    // NOTE: this runs in separate thread
     internal fun attackTick(attack: Attack) {
         val progress = attack.progress + FlagWar.ATTACK_TICK
 
         if (progress >= attack.attackTime) {
-            // cancel thread, then finalize attack
+            // cancel thread, then schedule finalization function on main thread
             attack.thread.cancel()
-            FlagWar.finishAttack(attack)
+            Bukkit.getScheduler().runTask(
+                Nodes.plugin!!,
+                object : Runnable {
+                    override fun run() {
+                        FlagWar.finishAttack(attack)
+                    }
+                },
+            )
         } else { // update
             attack.progress = progress
 
@@ -1040,7 +1046,7 @@ public object FlagWar {
             attack.progressBar.setProgress(progressNormalized)
 
             // re-send armorstand packets to players in range if armorstand
-            // is alive. if somehow dead, re-create armorstand
+            // is alive. if somehow dead, schedule re-create armorstand on main thread
             if (attack.armorstand.isValid()) {
                 try {
                     attack.armorstand.sendPackets()
@@ -1049,7 +1055,14 @@ public object FlagWar {
                     Nodes.logger?.warning("Error sending war flag armorstand packet: ${e.message}")
                 }
             } else {
-                attack.armorstand.respawn()
+                Bukkit.getScheduler().runTask(
+                    Nodes.plugin!!,
+                    object : Runnable {
+                        override fun run() {
+                            attack.armorstand.respawn()
+                        }
+                    },
+                )
             }
         }
     }
