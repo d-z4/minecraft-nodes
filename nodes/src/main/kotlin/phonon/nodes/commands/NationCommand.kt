@@ -15,11 +15,7 @@ import org.bukkit.inventory.ItemStack
 import phonon.nodes.Config
 import phonon.nodes.Message
 import phonon.nodes.Nodes
-import phonon.nodes.constants.ErrorNationExists
-import phonon.nodes.constants.ErrorPlayerHasNation
-import phonon.nodes.constants.ErrorTownHasNation
 import phonon.nodes.objects.Nation
-import phonon.nodes.utils.sanitizeString
 import phonon.nodes.utils.string.filterByStart
 import phonon.nodes.utils.string.filterNation
 import phonon.nodes.utils.string.filterNationTown
@@ -30,7 +26,6 @@ import java.util.concurrent.TimeUnit
 // list of all subcommands, used for onTabComplete
 private val subcommands: List<String> = listOf(
     "help",
-    "create",
     "new",
     "delete",
     "disband",
@@ -71,8 +66,6 @@ public class NationCommand :
         // parse subcommand
         when (args[0].lowercase()) {
             "help" -> printHelp(sender)
-            "create" -> createNation(player, args)
-            "new" -> createNation(player, args)
             "delete" -> deleteNation(player)
             "disband" -> deleteNation(player)
             "leave" -> leaveNation(player)
@@ -146,68 +139,12 @@ public class NationCommand :
 
     private fun printHelp(sender: CommandSender) {
         Message.print(sender, "${ChatColor.BOLD}[Nodes] Nation commands:")
-        Message.print(sender, "/nation create${ChatColor.WHITE}: Create nation with name at location")
         Message.print(sender, "/nation delete${ChatColor.WHITE}: Delete your nation")
         Message.print(sender, "/nation leave${ChatColor.WHITE}: Leave your nation")
         Message.print(sender, "/nation invite${ChatColor.WHITE}: Invite a nation to your nation")
         Message.print(sender, "/nation list${ChatColor.WHITE}: List all nations")
         Message.print(sender, "/nation color${ChatColor.WHITE}: Set nation color on map")
         return
-    }
-
-    /**
-     * @command /nation create [name]
-     * Create a new nation with your town as capital.
-     */
-    private fun createNation(player: Player?, args: Array<String>) {
-        if (player == null) {
-            return
-        }
-
-        if (args.size < 2) {
-            Message.print(player, "Usage: ${ChatColor.WHITE}/nation create [name]")
-            return
-        }
-
-        // do not allow during war
-        if (Nodes.war.enabled == true) {
-            Message.error(player, "Cannot create nations during war")
-            return
-        }
-
-        val resident = Nodes.getResident(player)
-        if (resident == null) {
-            return
-        }
-
-        val town = resident.town
-        if (town == null) {
-            Message.error(player, "You need a town to form a nation")
-            return
-        }
-
-        // only allow leaders to create nation
-        if (resident !== town.leader) {
-            Message.error(player, "Only the town leader can form a nation")
-            return
-        }
-
-        val name = args[1]
-        if (!stringInputIsValid(name)) {
-            Message.error(player, "Invalid nation name")
-            return
-        }
-
-        val result = Nodes.createNation(sanitizeString(name), town, resident)
-        if (result.isSuccess) {
-            Message.broadcast("${ChatColor.BOLD}Nation $name has been formed by ${town.name}")
-        } else {
-            when (result.exceptionOrNull()) {
-                ErrorNationExists -> Message.error(player, "Nation \"${name}\" already exists")
-                ErrorTownHasNation -> Message.error(player, "You already belong to a nation")
-                ErrorPlayerHasNation -> Message.error(player, "You already belong to a nation")
-            }
-        }
     }
 
     /**

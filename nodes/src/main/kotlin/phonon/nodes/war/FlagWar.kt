@@ -26,6 +26,7 @@ package phonon.nodes.war
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
+import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.Block
@@ -34,7 +35,6 @@ import org.bukkit.boss.BarStyle
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
-import phonon.nms.blockedit.FastBlockEditSession
 import phonon.nodes.Config
 import phonon.nodes.Message
 import phonon.nodes.Nodes
@@ -52,6 +52,8 @@ import phonon.nodes.constants.ErrorTownNotWhitelisted
 import phonon.nodes.event.WarAttackCancelEvent
 import phonon.nodes.event.WarAttackFinishEvent
 import phonon.nodes.event.WarAttackStartEvent
+import phonon.nodes.nms.removeFakeBeam
+import phonon.nodes.nms.sendThickSkyBeam
 import phonon.nodes.objects.Coord
 import phonon.nodes.objects.Territory
 import phonon.nodes.objects.TerritoryChunk
@@ -61,6 +63,7 @@ import java.util.EnumSet
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import kotlin.math.pow
 
 private val SKY_BEACON_FRAME_BLOCK = Material.SEA_LANTERN
 private val SKY_BEACON_BLOCK = Material.BLACK_WOOL
@@ -93,7 +96,7 @@ public object FlagWar {
     // ============================================
 
     // minecraft plugin variable
-    internal var plugin: JavaPlugin? = null
+    internal lateinit var plugin: JavaPlugin
 
     // flag items that can be used to claim during war
     internal val flagMaterials: EnumSet<Material> = EnumSet.noneOf(Material::class.java)
@@ -467,7 +470,6 @@ public object FlagWar {
     }
 
     // actually creates attack instance
-    // shared between beginAttack() and loadAttack()
     internal fun createAttack(
         attacker: UUID,
         attackingTown: Town,
@@ -477,7 +479,7 @@ public object FlagWar {
         skyBeaconColorBlocksInput: MutableList<Block>? = null,
         skyBeaconWireframeBlocksInput: MutableList<Block>? = null,
     ): Attack {
-        val world = flagBase.getWorld()
+        val world = flagBase.world
         val flagBaseX = flagBase.x
         val flagBaseY = flagBase.y
         val flagBaseZ = flagBase.z
@@ -485,7 +487,11 @@ public object FlagWar {
 
         val flagBlock = world.getBlockAt(flagBaseX, flagBaseY + 1, flagBaseZ)
         val flagTorch = world.getBlockAt(flagBaseX, flagBaseY + 2, flagBaseZ)
-        val progressBar = Bukkit.getServer().createBossBar("Attacking ${territory.town!!.name} at ($flagBaseX, $flagBaseY, $flagBaseZ)", BarColor.YELLOW, BarStyle.SOLID)
+        val progressBar = Bukkit.getServer().createBossBar(
+            "Attacking ${territory.town!!.name} at ($flagBaseX, $flagBaseY, $flagBaseZ)",
+            BarColor.YELLOW,
+            BarStyle.SOLID,
+        )
 
         // calculate max attack time based on chunk and other modifiers
         var attackTime = Config.chunkAttackTime.toDouble()
@@ -505,30 +511,21 @@ public object FlagWar {
             }
         }
 
-        // get sky beacon blocks
-        val skyBeaconColorBlocks: MutableList<Block> = if (skyBeaconColorBlocksInput === null) {
-            mutableListOf()
-        } else {
-            skyBeaconColorBlocksInput
-        }
-        val skyBeaconWireframeBlocks: MutableList<Block> = if (skyBeaconWireframeBlocksInput === null) {
-            mutableListOf()
-        } else {
-            skyBeaconWireframeBlocksInput
-        }
+        // get sky beacon blocks (still keep for compatibility)
+        val skyBeaconColorBlocks: MutableList<Block> = skyBeaconColorBlocksInput ?: mutableListOf()
+        val skyBeaconWireframeBlocks: MutableList<Block> = skyBeaconWireframeBlocksInput ?: mutableListOf()
 
-        if (skyBeaconColorBlocksInput === null || skyBeaconWireframeBlocksInput === null) {
-            FlagWar.createAttackBeacon(
-                skyBeaconColorBlocks,
-                skyBeaconWireframeBlocks,
-                world,
-                chunk.coord,
-                flagBaseY,
-                true, // create frame
-                true, // create color
-                true, // lighting update
-            )
-        }
+        // Create the thick beam and get per-player entity IDs
+        val beamIdsByPlayer = createAttackBeacon(
+            skyBeaconColorBlocks,
+            skyBeaconWireframeBlocks,
+            world,
+            chunk.coord,
+            flagBaseY,
+            true, // create frame (ignored)
+            true, // create color (ignored)
+            true, // lighting (ignored)
+        )
 
         // no flag base block, set to default
         if (!Config.flagMaterials.contains(flagBase.type)) {
@@ -536,7 +533,7 @@ public object FlagWar {
         }
 
         // initialize flag blocks
-        flagBlock.setType(Material.DEEPSLATE)
+        flagBlock.setType(Material.CRYING_OBSIDIAN)
         flagTorch.setType(Material.TORCH)
 
         // create new attack instance
@@ -552,6 +549,7 @@ public object FlagWar {
             progressBar,
             attackTime.toLong(),
             progress,
+            beamIdsByPlayer.toMutableMap(), // ← pass it here
         )
 
         // mark territory chunk under attack
@@ -770,59 +768,61 @@ public object FlagWar {
      * - with block.setType(): takes ~2 ms to update
      * - with edit session: takes ~200-300 us to update
      */
+    /**
+     * Creates the visual + sound beacon for an attack flag.
+     * Returns the repeating alarm task so it can be cancelled later.
+     */
+    /**
+     * Creates a thick sky beacon using fake invisible end crystals (NMS).
+     * No block changes are made anymore.
+     *
+     * Returns a Map<Player, List<Int>> → entity IDs per player, so you can remove the beam later.
+     */
     internal fun createAttackBeacon(
-        skyBeaconColorBlocks: MutableList<Block>,
-        skyBeaconWireframeBlocks: MutableList<Block>,
+        skyBeaconColorBlocks: MutableList<Block>, // ← can be empty now, kept for compat
+        skyBeaconWireframeBlocks: MutableList<Block>, // ← can be empty now
         world: World,
         coord: Coord,
         flagBaseY: Int,
-        createFrame: Boolean,
-        createColor: Boolean,
-        updateLighting: Boolean,
-    ) {
-        // create edit session
-        val edit = FastBlockEditSession(world)
+        createFrame: Boolean = false,
+        createColor: Boolean = true,
+        updateLighting: Boolean = false,
+    ): Map<UUID, List<Int>> {
+        // Clear old lists since we're not using blocks anymore
+        skyBeaconColorBlocks.clear()
+        skyBeaconWireframeBlocks.clear()
 
-        // get starting corner
+        // Calculate center position (same as before)
         val size = FlagWar.skyBeaconSize
-        val startPositionInChunk: Int = (16 - size) / 2
-        val x0: Int = coord.x * 16 + startPositionInChunk
-        val z0: Int = coord.z * 16 + startPositionInChunk
-        val y0: Int = Math.max(flagBaseY + Config.flagBeaconSkyLevel, Config.flagBeaconMinSkyLevel)
-        val xEnd: Int = x0 + size - 1
-        val zEnd: Int = z0 + size - 1
-        val yEnd: Int = Math.min(255, y0 + size) // truncate at map limit
+        val startPositionInChunk = (16 - size) / 2
+        val centerX = coord.x * 16 + startPositionInChunk + size / 2.0 + 0.5
+        val centerZ = coord.z * 16 + startPositionInChunk + size / 2.0 + 0.5
+        val baseY = Math.max(flagBaseY + Config.flagBeaconSkyLevel, Config.flagBeaconMinSkyLevel).toDouble()
 
-        for (y in y0..yEnd) {
-            for (x in x0..xEnd) {
-                for (z in z0..zEnd) {
-                    val block = world.getBlockAt(x, y, z)
-                    val mat = block.getType()
-                    if (mat == Material.AIR || SKY_BEACON_MATERIALS.contains(mat)) {
-                        if (((y == y0 || y == yEnd) && (x == x0 || x == xEnd || z == z0 || z == zEnd)) ||
-                            // end caps, edges glowstone
-                            ((x == x0 || x == xEnd) && (z == z0 || z == zEnd))
-                        ) { // middle section corners glowstone
-                            // block.setType(BEACON_EDGE_BLOCK) // slow
-                            skyBeaconWireframeBlocks.add(block)
-                            if (createFrame) {
-                                edit.setBlock(x, y, z, SKY_BEACON_FRAME_BLOCK)
-                            }
-                        } else { // color block
-                            // setFlagAttackColorBlock(block, progress) // slow
-                            skyBeaconColorBlocks.add(block)
-                            if (createColor) {
-                                edit.setBlock(x, y, z, SKY_BEACON_BLOCK)
-                            }
-                        }
-                    }
-                }
-            }
+        val beamIdsByPlayer = mutableMapOf<UUID, List<Int>>()
+
+        val centerLoc = Location(world, centerX, baseY, centerZ)
+        val viewDistSq = ((Bukkit.getViewDistance() + 2) * 16).toDouble().pow(2)
+
+        for (player in Bukkit.getOnlinePlayers()) {
+            if (!player.isOnline) continue
+            if (player.world != world) continue
+            if (player.location.distanceSquared(centerLoc) > viewDistSq) continue
+
+            // Capture the returned list of entity IDs!
+            val entityIds = player.sendThickSkyBeam(
+                x = centerX,
+                y = baseY,
+                z = centerZ,
+                beamHeight = 400.0,
+                ringRadius = 1.8, // Beam thickness
+                numRays = 12, // Number of crystals for smoothness
+            )
+
+            beamIdsByPlayer[player.uniqueId] = entityIds
         }
 
-        if (createFrame || createColor) {
-            edit.execute(updateLighting)
-        }
+        return beamIdsByPlayer
     }
 
     // cleanup attack instance, then dispatch signal
@@ -842,13 +842,13 @@ public object FlagWar {
         attack.flagBlock.setType(Material.AIR)
         attack.flagBase.setType(Material.AIR)
 
-        // remove sky beacon
-        for (block in attack.skyBeaconWireframeBlocks) {
-            block.setType(Material.AIR)
+        for ((playerUUID, entityIds) in attack.beamIdsByPlayer) {
+            val player = Bukkit.getPlayer(playerUUID) ?: continue
+            if (player.isOnline && player.world == attack.flagBase.world) {
+                player.removeFakeBeam(entityIds)
+            }
         }
-        for (block in attack.skyBeaconColorBlocks) {
-            block.setType(Material.AIR)
-        }
+        attack.beamIdsByPlayer.clear()
 
         // remove town and cap progress armor stands
         attack.armorstand.remove()
@@ -896,12 +896,13 @@ public object FlagWar {
         attack.flagBase.setType(Material.AIR)
 
         // remove sky beacon
-        for (block in attack.skyBeaconWireframeBlocks) {
-            block.setType(Material.AIR)
+        for ((playerUUID, entityIds) in attack.beamIdsByPlayer) {
+            val player = Bukkit.getPlayer(playerUUID) ?: continue
+            if (player.isOnline && player.world == attack.flagBase.world) {
+                player.removeFakeBeam(entityIds)
+            }
         }
-        for (block in attack.skyBeaconColorBlocks) {
-            block.setType(Material.AIR)
-        }
+        attack.beamIdsByPlayer.clear()
 
         // remove town and cap progress armor stands
         attack.armorstand.remove()
@@ -1066,6 +1067,39 @@ public object FlagWar {
             for (attack in currentAttacks) {
                 attack.progressBar.addPlayer(player)
             }
+        }
+    }
+
+    public fun sendAllBeamsToPlayer(player: Player) {
+        if (!player.isOnline) return
+
+        val playerWorld = player.world
+
+        // Iterate through all active attacks
+        for (attack in chunkToAttacker.values) {
+            // Skip if beam is in a different world
+            if (attack.flagBase.world != playerWorld) continue
+
+            // Get the chunk coordinates
+            val coord = attack.coord
+            val size = FlagWar.skyBeaconSize
+            val startPositionInChunk = (16 - size) / 2
+            val centerX = coord.x * 16 + startPositionInChunk + size / 2.0 + 0.5
+            val centerZ = coord.z * 16 + startPositionInChunk + size / 2.0 + 0.5
+            val baseY = Math.max(attack.flagBase.y + Config.flagBeaconSkyLevel, Config.flagBeaconMinSkyLevel).toDouble()
+
+            // Send the beam to this player
+            val entityIds = player.sendThickSkyBeam(
+                x = centerX,
+                y = baseY,
+                z = centerZ,
+                beamHeight = 400.0,
+                ringRadius = 1.8,
+                numRays = 12,
+            )
+
+            // Store the entity IDs for this player so they can be removed later
+            attack.beamIdsByPlayer[player.uniqueId] = entityIds
         }
     }
 }

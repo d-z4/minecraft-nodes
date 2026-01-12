@@ -18,33 +18,28 @@ import phonon.nodes.Config
 import phonon.nodes.Message
 import phonon.nodes.Nodes
 import phonon.nodes.WorldMap
-import phonon.nodes.constants.ErrorPlayerHasTown
-import phonon.nodes.constants.ErrorTerritoryHasClaim
 import phonon.nodes.constants.ErrorTerritoryIsTownHome
-import phonon.nodes.constants.ErrorTerritoryNotConnected
 import phonon.nodes.constants.ErrorTerritoryNotInTown
-import phonon.nodes.constants.ErrorTerritoryOwned
-import phonon.nodes.constants.ErrorTooManyClaims
-import phonon.nodes.constants.ErrorTownExists
 import phonon.nodes.constants.NODES_SOUND_CHEST_PROTECT
 import phonon.nodes.constants.PermissionsGroup
 import phonon.nodes.constants.TownPermissions
+import phonon.nodes.nametags.NametagUtils
 import phonon.nodes.objects.Coord
 import phonon.nodes.objects.Resident
 import phonon.nodes.objects.TerritoryId
 import phonon.nodes.objects.Town
-import phonon.nodes.utils.sanitizeString
+import phonon.nodes.utils.Color
 import phonon.nodes.utils.string.filterByStart
 import phonon.nodes.utils.string.filterResident
 import phonon.nodes.utils.string.filterTown
 import phonon.nodes.utils.string.filterTownResident
 import phonon.nodes.utils.stringInputIsValid
+import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeUnit
 
 // list of all subcommands, used for onTabComplete
 private val SUBCOMMANDS: List<String> = listOf(
     "help",
-    "create",
     "new",
     "delete",
     "disband",
@@ -172,8 +167,7 @@ public class TownCommand :
         // parse subcommand
         when (args[0].lowercase()) {
             "help" -> printHelp(sender)
-            "create" -> createTown(player, args)
-            "new" -> createTown(player, args)
+
             "delete" -> deleteTown(player)
             "disband" -> deleteTown(player)
             "officer" -> setOfficer(player, args, null)
@@ -195,7 +189,6 @@ public class TownCommand :
             "info" -> getInfo(player, args)
             "online" -> getOnline(player, args)
             "color" -> setColor(player, args)
-            "claim" -> claimTerritory(player)
             "unclaim" -> unclaimTerritory(player)
             "income" -> getIncome(player)
             "prefix" -> prefix(player, args)
@@ -205,7 +198,7 @@ public class TownCommand :
             "minimap" -> minimap(player, args)
             "perms",
             "transfer",
-            "permissions"
+            "permissions",
             -> setPermissions(player, args)
             "protect" -> protectChests(player, args)
             "trust" -> trustPlayer(player, args, true)
@@ -369,7 +362,6 @@ public class TownCommand :
         Message.print(sender, "/town info${ChatColor.WHITE}: View town details")
         Message.print(sender, "/town online${ChatColor.WHITE}: View town's online players")
         Message.print(sender, "/town color${ChatColor.WHITE}: Set town color on map")
-        Message.print(sender, "/town claim${ChatColor.WHITE}: Claim territory at current location")
         Message.print(sender, "/town unclaim${ChatColor.WHITE}: Unclaim territory at current location")
         Message.print(sender, "/town prefix${ChatColor.WHITE}: Set player name prefix")
         Message.print(sender, "/town suffix${ChatColor.WHITE}: Set player name suffix")
@@ -391,71 +383,6 @@ public class TownCommand :
      * @command /town create [name]
      * Create a new town with the specified name at location.
      */
-    private fun createTown(player: Player?, args: Array<String>) {
-        if (player == null) {
-            return
-        }
-
-        if (args.size == 1) {
-            Message.print(player, "Usage: ${ChatColor.WHITE}/town create [name]")
-            return
-        }
-
-        // do not allow during war
-        if (!Config.canCreateTownDuringWar && Nodes.war.enabled == true) {
-            Message.error(player, "Cannot create towns during war")
-            return
-        }
-
-        val resident = Nodes.getResident(player)
-        if (resident == null) {
-            return
-        }
-
-        // check if player has cooldown
-        if (resident.townCreateCooldown > 0) {
-            val remainingTime = resident.townCreateCooldown
-            val remainingTimeString = if (remainingTime > 0) {
-                val hour: Long = remainingTime / 3600000L
-                val min: Long = 1L + (remainingTime - hour * 3600000L) / 60000L
-                "${hour}hr ${min}min"
-            } else {
-                "0hr 0min"
-            }
-
-            Message.error(player, "You cannot create another town for: $remainingTimeString ")
-            return
-        }
-
-        val name = args[1]
-        if (!stringInputIsValid(name)) {
-            Message.error(player, "Invalid town name")
-            return
-        }
-
-        val territory = Nodes.getTerritoryFromPlayer(player)
-        if (territory == null) {
-            Message.error(player, "This chunk has no territory")
-            return
-        }
-
-        val result = Nodes.createTown(sanitizeString(name), territory, resident)
-        if (result.isSuccess) {
-            Message.broadcast("${ChatColor.BOLD}${player.name} has created the town \"${name}\"")
-
-            // check how much player is over town claim limit
-            val overClaimsPenalty: Int = Math.max(0, Config.initialOverClaimsAmountScale * (territory.cost - Config.townInitialClaims))
-            if (overClaimsPenalty > 0) {
-                Message.print(player, "${ChatColor.DARK_RED}Your town is over the initial town claim amount ${Config.townInitialClaims}: you are receiving a -$overClaimsPenalty starting power penalty")
-            }
-        } else {
-            when (result.exceptionOrNull()) {
-                ErrorTownExists -> Message.error(player, "Town \"${name}\" already exists")
-                ErrorPlayerHasTown -> Message.error(player, "You already belong to a town")
-                ErrorTerritoryOwned -> Message.error(player, "Territory is already claimed by a town")
-            }
-        }
-    }
 
     private fun transferTerritory(player: Player?, args: Array<String>) {
         if (player == null) {
@@ -558,13 +485,13 @@ public class TownCommand :
         // Re-render minimaps
         Nodes.renderMinimaps()
 
-        Message.print(player, "Transferred territory (id=${territoryId}) to ${targetTown.name}")
+        Message.print(player, "Transferred territory (id=$territoryId) to ${targetTown.name}")
 
         // Notify target town
         for (r in targetTown.residents) {
             val p = r.player()
             if (p !== null) {
-                Message.print(p, "${sourceTown.name} has transferred territory (id=${territoryId}) to your town")
+                Message.print(p, "${sourceTown.name} has transferred territory (id=$territoryId) to your town")
             }
         }
     }
@@ -1403,42 +1330,75 @@ public class TownCommand :
      * Set town territory color for dynmap. Town leader only.
      */
     private fun setColor(player: Player?, args: Array<String>) {
-        if (player == null) {
+        if (player == null) return
+
+        val resident = Nodes.getResident(player) ?: return
+        val town = resident.town ?: run {
+            Message.error(player, "You are not in a town")
             return
         }
 
-        if (args.size < 4) {
-            Message.print(player, "Usage: ${ChatColor.WHITE}/town color [r] [g] [b]")
+        if (resident != town.leader && !town.officers.contains(resident)) {
+            Message.error(player, "Only the town leader or officers can change the town color")
             return
         }
 
-        // check if player is town leader
-        val resident = Nodes.getResident(player)
-        if (resident == null) {
+        if (args.size < 2) {
+            Message.print(player, "Current color: rgb(${town.color.r}, ${town.color.g}, ${town.color.b})")
+            Message.print(player, "Usage: /town color <red> <green> <blue>   or   /town color random")
             return
         }
 
-        val town = resident.town
-        if (town == null) {
+        var newColor: Color? = null
+
+        if (args[1].lowercase() == "random") {
+            val random = ThreadLocalRandom.current()
+            newColor = Color(random.nextInt(256), random.nextInt(256), random.nextInt(256))
+        } else if (args.size >= 4) {
+            try {
+                val r = args[1].toInt().coerceIn(0, 255)
+                val g = args[2].toInt().coerceIn(0, 255)
+                val b = args[3].toInt().coerceIn(0, 255)
+                newColor = Color(r, g, b)
+            } catch (e: Exception) {
+                Message.error(player, "Invalid RGB values (0-255)")
+                return
+            }
+        }
+
+        if (newColor == null) {
+            Message.error(player, "Usage: /town color <r> <g> <b>   or   /town color random")
             return
         }
 
-        val leader = town.leader
-        if (resident !== leader) {
-            Message.error(player, "Only town leaders can do this")
-            return
-        }
+        town.color = newColor
+        town.updateNametags()
+        town.needsUpdate()
 
-        // parse color
-        try {
-            val r = args[1].toInt().coerceIn(0, 255)
-            val g = args[2].toInt().coerceIn(0, 255)
-            val b = args[3].toInt().coerceIn(0, 255)
+        // THIS IS THE IMPORTANT LINE - Updates tab instantly!
+        NametagUtils.onTownColorChange(town)
 
-            Nodes.setTownColor(town, r, g, b)
-            Message.print(player, "Town color set: ${ChatColor.WHITE}$r $g $b")
-        } catch (e: NumberFormatException) {
-            Message.error(player, "Invalid color (must be [r] [g] [b] in range 0-255)")
+        Message.print(player, "Town color updated to rgb(${newColor.r}, ${newColor.g}, ${newColor.b})")
+    }
+
+    // Extension function to convert our Color to Bukkit's ChatColor
+    fun Color.toChatColor(): ChatColor {
+        val r = this.r
+        val g = this.g
+        val b = this.b
+
+        return when {
+            r >= 170 && g < 85 && b < 85 -> ChatColor.RED
+            r < 85 && g >= 170 && b < 85 -> ChatColor.GREEN
+            r < 85 && g < 85 && b >= 170 -> ChatColor.BLUE
+            r >= 170 && g >= 170 && b < 100 -> ChatColor.YELLOW
+            r >= 170 && g < 100 && b >= 170 -> ChatColor.LIGHT_PURPLE
+            r < 100 && g >= 170 && b >= 170 -> ChatColor.AQUA
+            r >= 200 && g >= 200 && b >= 200 -> ChatColor.WHITE
+            r <= 60 && g <= 60 && b <= 60 -> ChatColor.BLACK
+            r >= 128 && g >= 128 && b < 80 -> ChatColor.GOLD
+            r >= 170 && g >= 85 && b >= 85 -> ChatColor.RED // reddish tones
+            else -> ChatColor.GRAY
         }
     }
 
@@ -1446,43 +1406,6 @@ public class TownCommand :
      * @command /town claim
      * Claim a contiguous territory for your town. Town leader and officers only.
      */
-    private fun claimTerritory(player: Player?) {
-        if (player == null) {
-            return
-        }
-
-        // get town from player
-        val resident = Nodes.getResident(player)
-        val town = resident?.town
-        if (town == null) {
-            Message.error(player, "Cannot claim without being in a town")
-            return
-        }
-
-        if (resident !== town.leader && !town.officers.contains(resident)) {
-            Message.error(player, "You are not a town leader or officer")
-            return
-        }
-
-        // get territory from chunk and run claim process
-        val loc = player.getLocation()
-        val territory = Nodes.getTerritoryFromBlock(loc.x.toInt(), loc.z.toInt())
-        if (territory == null) {
-            Message.error(player, "This chunk has no territory")
-            return
-        }
-
-        val result = Nodes.claimTerritory(town, territory)
-        if (result.isSuccess) {
-            Message.print(player, "Territory(id=${territory.id}) claimed")
-        } else {
-            when (result.exceptionOrNull()) {
-                ErrorTooManyClaims -> Message.error(player, "Not enough claim power")
-                ErrorTerritoryNotConnected -> Message.error(player, "Territory must neighbor existing claims")
-                ErrorTerritoryHasClaim -> Message.error(player, "Territory is already claimed by a town")
-            }
-        }
-    }
 
     /**
      * @command /town unclaim

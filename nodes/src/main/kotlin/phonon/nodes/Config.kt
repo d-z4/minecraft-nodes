@@ -52,8 +52,7 @@ public object Config {
     // rally cap settings
     public var rallyCapEnabled: Boolean = true
     public var rallyCapSize: Int = 10
-    public var rallyCapApplyToNations: Boolean = true  // Apply to nations or just towns
-
+    public var rallyCapApplyToNations: Boolean = true // Apply to nations or just towns
 
     // main tick period check for backup, income, town + resident cooldown counters
     public var mainPeriodicTick: Long = 1200L

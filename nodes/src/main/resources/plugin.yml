@@ -10,16 +10,14 @@ commands:
     aliases: [nda]
     permission: nodes.admin
     usage: /nodesadmin help or /na help
+  minebuff:
+    description: Admin commands for Nodes
+    permission: nodes.admin
   town:
     description: Manage player towns (Nodes)
     aliases: [t]
     permission: nodes.command.town
     usage: /town help or /t help
-  nodesweep:
-   description: Territory resource editor (Admin only)
-   aliases: [nsweep, ns]
-   permission: nodes.admin
-   permission-message: "You don't have permission to use this command"
   nation:
     description: Manage player nations (Nodes)
     aliases: [n]
@@ -92,4 +90,10 @@ commands:
     usage: /port help
 permissions:
   nodes.command.town.fly:
+    default: op
+  nodes.command.town.create:
+   default: op
+  nodes.command.nation.create:
+    default: op
+  nodes.command.town.claim:
     default: op

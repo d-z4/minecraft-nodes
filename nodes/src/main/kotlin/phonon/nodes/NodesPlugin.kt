@@ -4,7 +4,6 @@
 
 package phonon.nodes
 
-import NodesExpansion
 import org.bukkit.Bukkit
 import org.bukkit.command.TabCompleter
 import org.bukkit.plugin.java.JavaPlugin
@@ -42,7 +41,11 @@ import phonon.nodes.listeners.NodesPlayerMoveListener
 import phonon.nodes.listeners.NodesSheepShearListener
 import phonon.nodes.listeners.NodesWarFlagArmorStandListener
 import phonon.nodes.listeners.NodesWorldListener
+import phonon.nodes.nametags.NametagListener
+import phonon.nodes.nodesaddons.NodesMineBuff
+import phonon.nodes.placeholders.NodesExpansion
 import phonon.nodes.utils.loadLongFromFile
+import phonon.nodes.war.FlagWar
 
 public class NodesPlugin : JavaPlugin() {
 
@@ -118,6 +121,7 @@ public class NodesPlugin : JavaPlugin() {
         pluginManager.registerEvents(NodesIncomeInventoryListener(), this)
         pluginManager.registerEvents(NodesWorldListener(), this)
         pluginManager.registerEvents(NodesPlayerAFKKickListener(), this)
+        pluginManager.registerEvents(NametagListener(this), this)
         pluginManager.registerEvents(NodesPlayerJoinQuitListener(), this)
         pluginManager.registerEvents(NodesPlayerMoveListener(), this)
         pluginManager.registerEvents(NodesSheepShearListener(), this)
@@ -129,6 +133,7 @@ public class NodesPlugin : JavaPlugin() {
         this.getCommand("nation")?.setExecutor(NationCommand())
         this.getCommand("nodes")?.setExecutor(NodesCommand())
         this.getCommand("nodesweep")?.setExecutor(NodesSweepCommand())
+        this.getCommand("minebuff")?.setExecutor(NodesMineBuff())
         this.getCommand("nodesadmin")?.setExecutor(NodesAdminCommand())
         this.getCommand("ally")?.setExecutor(AllyCommand())
         this.getCommand("unally")?.setExecutor(UnallyCommand())
@@ -165,6 +170,9 @@ public class NodesPlugin : JavaPlugin() {
 
         // set final initialized flag
         Nodes.initialized = true
+
+        FlagWar.plugin = this
+
         Nodes.enabled = true
 
         // print load time

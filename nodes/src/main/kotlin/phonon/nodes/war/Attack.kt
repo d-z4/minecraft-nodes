@@ -25,17 +25,20 @@ import phonon.nodes.objects.townNametagViewedByPlayer // in nametag
 import java.util.UUID
 
 public class Attack(
-    val attacker: UUID, // attacker's UUID
-    val town: Town, // attacker's town
-    val coord: Coord, // chunk coord under attack
-    val flagBase: Block, // fence base of flag
-    val flagBlock: Block, // wool block for flag
-    val flagTorch: Block, // torch block of flag
+    val attacker: UUID,
+    val town: Town,
+    val coord: Coord,
+    val flagBase: Block,
+    val flagBlock: Block,
+    val flagTorch: Block,
     val skyBeaconColorBlocks: List<Block>,
     val skyBeaconWireframeBlocks: List<Block>,
-    val progressBar: BossBar, // progress bar
-    val attackTime: Long, //
-    var progress: Long, // initial progress, current tick count
+    val progressBar: BossBar,
+    val attackTime: Long,
+    var progress: Long,
+
+    // NEW: store the beam entity IDs per player
+    val beamIdsByPlayer: MutableMap<UUID, List<Int>> = mutableMapOf(),
 ) : Runnable {
     // no build region
     val noBuildXMin: Int

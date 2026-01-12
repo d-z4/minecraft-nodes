@@ -11,6 +11,7 @@ package phonon.nodes.commands
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.minecraft.commands.arguments.EntityArgument.player
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
@@ -26,6 +27,9 @@ import phonon.nodes.Message
 import phonon.nodes.Nodes
 import phonon.nodes.Nodes.addPortToGroup
 import phonon.nodes.Nodes.removePortFromGroup
+import phonon.nodes.constants.ErrorTerritoryHasClaim
+import phonon.nodes.constants.ErrorTerritoryNotConnected
+import phonon.nodes.constants.ErrorTooManyClaims
 import phonon.nodes.objects.Coord
 import phonon.nodes.objects.Resident
 import phonon.nodes.objects.Territory
@@ -132,6 +136,7 @@ private val TOWN_SUBCOMMANDS: List<String> = listOf(
     "incomeadd",
     "incomeremove",
     "setspawn",
+    "claim",
     "spawn",
     "sethome",
     "sethomecooldown",
@@ -701,8 +706,10 @@ public class NodesAdminCommand :
                     if (resident != town.leader && !town.officers.contains(resident)) {
                         val player = resident.player()
                         player?.let { p ->
-                            p.kick(Component.text("Your town has been disbanded by an administrator")
-                                .color(NamedTextColor.RED))
+                            p.kick(
+                                Component.text("Your town has been disbanded by an administrator")
+                                    .color(NamedTextColor.RED),
+                            )
                             Message.print(sender, "Kicked resident: ${resident.name}")
                         }
                     }
@@ -753,8 +760,10 @@ public class NodesAdminCommand :
                         if (resident != town.leader && !town.officers.contains(resident)) {
                             val player = resident.player()
                             player?.let { p ->
-                                p.kick(Component.text("Your nation has been disbanded by an administrator")
-                                    .color(NamedTextColor.RED))
+                                p.kick(
+                                    Component.text("Your nation has been disbanded by an administrator")
+                                        .color(NamedTextColor.RED),
+                                )
                                 Message.print(sender, "Kicked ${town.name} resident: ${resident.name}")
                             }
                         }
@@ -1275,6 +1284,44 @@ public class NodesAdminCommand :
             Message.print(sender, "Town \"${name}\" has been deleted")
         } else {
             Message.error(sender, "Town \"${name}\" does not exist")
+        }
+    }
+
+    private fun claimTerritory(player: Player?) {
+        if (player == null) {
+            return
+        }
+
+        // get town from player
+        val resident = Nodes.getResident(player)
+        val town = resident?.town
+        if (town == null) {
+            Message.error(player, "Cannot claim without being in a town")
+            return
+        }
+
+        if (resident !== town.leader && !town.officers.contains(resident)) {
+            Message.error(player, "You are not a town leader or officer")
+            return
+        }
+
+        // get territory from chunk and run claim process
+        val loc = player.getLocation()
+        val territory = Nodes.getTerritoryFromBlock(loc.x.toInt(), loc.z.toInt())
+        if (territory == null) {
+            Message.error(player, "This chunk has no territory")
+            return
+        }
+
+        val result = Nodes.claimTerritory(town, territory)
+        if (result.isSuccess) {
+            Message.print(player, "Territory(id=${territory.id}) claimed")
+        } else {
+            when (result.exceptionOrNull()) {
+                ErrorTooManyClaims -> Message.error(player, "Not enough claim power")
+                ErrorTerritoryNotConnected -> Message.error(player, "Territory must neighbor existing claims")
+                ErrorTerritoryHasClaim -> Message.error(player, "Territory is already claimed by a town")
+            }
         }
     }
 

@@ -271,7 +271,7 @@ public class NodesSweepCommand :
             return
         }
 
-        Message.print(sender, "Swapping resources between territory ${id1} and ${id2}")
+        Message.print(sender, "Swapping resources between territory $id1 and $id2")
         Message.error(sender, "This feature requires modifying world.json - use /nda reload territory after editing")
     }
 }

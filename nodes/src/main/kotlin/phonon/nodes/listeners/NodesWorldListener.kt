@@ -27,6 +27,7 @@ import org.bukkit.event.entity.EntityExplodeEvent
 import org.bukkit.event.entity.EntityInteractEvent
 import org.bukkit.event.player.PlayerBucketEmptyEvent
 import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.inventory.ItemStack
 import phonon.nodes.Config
 import phonon.nodes.Message
@@ -48,6 +49,7 @@ import phonon.nodes.constants.INTERACTIVE_BLOCKS
 import phonon.nodes.constants.PROTECTED_BLOCKS
 import phonon.nodes.constants.PermissionsGroup
 import phonon.nodes.constants.TownPermissions
+import phonon.nodes.nms.removeFakeBeam
 import phonon.nodes.objects.Resident
 import phonon.nodes.objects.Territory
 import phonon.nodes.objects.TerritoryChunk
@@ -171,6 +173,20 @@ public class NodesWorldListener : Listener {
         // handle crop harvest
         else if (Config.cropTypes.contains(blockMaterial)) {
             handleCropHarvest(block)
+        }
+    }
+
+    // In your main plugin listener (PlayerQuitEvent)
+    @EventHandler
+    fun onPlayerQuit(event: PlayerQuitEvent) {
+        val player = event.player
+        val uuid = player.uniqueId
+
+        // Clean up any beams this player might have seen
+        FlagWar.attackers[uuid]?.forEach { attack ->
+            attack.beamIdsByPlayer[uuid]?.let { ids ->
+                player.removeFakeBeam(ids)
+            }
         }
     }
 

@@ -156,8 +156,8 @@ public class Town(
         )
 
         // generate nametags from name
-        this.nametagTown = "${ChatColor.GREEN}[${this.name}] "
-        this.nametagNation = "${ChatColor.DARK_GREEN}[${this.name}] "
+        this.nametagTown = "${ChatColor.AQUA}[${this.name}] "
+        this.nametagNation = "${ChatColor.BLUE}[${this.name}] "
         this.nametagNeutral = "${ChatColor.GOLD}[${this.name}] "
         this.nametagAlly = "${ChatColor.DARK_AQUA}[${this.name}] "
         this.nametagEnemy = "${ChatColor.RED}[${this.name}] "
@@ -166,16 +166,50 @@ public class Town(
         this.saveState = TownSaveState(this)
     }
 
+    fun Color.toChatColor(): ChatColor {
+        val r = this.r
+        val g = this.g
+        val b = this.b
+
+        return when {
+            r >= 170 && g < 85 && b < 85 -> ChatColor.RED
+            r < 85 && g >= 170 && b < 85 -> ChatColor.GREEN
+            r < 85 && g < 85 && b >= 170 -> ChatColor.BLUE
+            r >= 170 && g >= 170 && b < 100 -> ChatColor.YELLOW
+            r >= 170 && g < 100 && b >= 170 -> ChatColor.LIGHT_PURPLE
+            r < 100 && g >= 170 && b >= 170 -> ChatColor.AQUA
+            r >= 200 && g >= 200 && b >= 200 -> ChatColor.WHITE
+            r <= 60 && g <= 60 && b <= 60 -> ChatColor.BLACK
+            r >= 128 && g >= 128 && b < 80 -> ChatColor.GOLD
+            r < 128 && g < 128 && b < 128 -> ChatColor.GRAY
+            r >= 170 && g >= 85 && b >= 85 -> ChatColor.RED // reddish
+            else -> ChatColor.GRAY
+        }
+    }
+
+    // You can also add helpers like:
+    fun Color.darken(factor: Double = 0.7): Color = Color(
+        (this.r * factor).toInt().coerceIn(0, 255),
+        (this.g * factor).toInt().coerceIn(0, 255),
+        (this.b * factor).toInt().coerceIn(0, 255),
+    )
+
+    // Optional helpers if you want better matching
+    private fun Color.isDark() = (r + g + b) < 180
+    private fun Color.isBright() = (r + g + b) > 650
+
     public override fun hashCode(): Int = this.uuid.hashCode()
 
-    // update town nametag display strings from name
-    // (different color for each diplomacy group)
     public fun updateNametags() {
-        this.nametagTown = "${ChatColor.GREEN}[${this.name}] "
-        this.nametagNation = "${ChatColor.DARK_GREEN}[${this.name}] "
-        this.nametagNeutral = "${ChatColor.GOLD}[${this.name}] "
-        this.nametagAlly = "${ChatColor.DARK_AQUA}[${this.name}] "
-        this.nametagEnemy = "${ChatColor.RED}[${this.name}] "
+        val prefix = "[${this.name}] "
+        val c = this.color.toChatColor() // ← uses the helper above
+
+        // Recommended style: keep enemy red, ally cyan, but use town color for neutral/own town
+        this.nametagTown = "${ChatColor.GREEN}$prefix" // own town members usually see green
+        this.nametagNation = "${ChatColor.DARK_GREEN}$prefix"
+        this.nametagNeutral = "${c}$prefix" // ← outsiders see the town's chosen color
+        this.nametagAlly = "${ChatColor.DARK_AQUA}$prefix" // allies usually keep cyan/blue
+        this.nametagEnemy = "${ChatColor.RED}$prefix" // enemies always red (important for war)
     }
 
     // prints out nation object info
