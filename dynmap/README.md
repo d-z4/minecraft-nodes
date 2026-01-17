@@ -8,6 +8,12 @@ The overall architecture:
 -   Internal nodes map world written in rust compiled to wasm
     to accelerate internal nodes map structure calculations.
 
+# Contact:
+- Discord: fondgazelle8357
+I can help with support, updates and installing the addon for dynmap
+I will **NOT** Add features for you just because you ask unless I think it would be useful or valid
+(Unless you pay me but I will still release the code on github!)
+
 # Requirements/Installation
 ## Requirements
 1. node.js
@@ -49,6 +55,7 @@ build release files.
 
 
 # Development
+Note: Make sure to update the /test folder if you change an HTML
 1. Run `npm run dev` in this repo root to start webpack dev environment.
 2. Run `npm run wasm` to compile rust/wasm (will hot reload web page).
 3. Go to `localhost/test/editor.html` for main testing page.
@@ -71,7 +78,6 @@ build/             - webpack build outputs
 src/             
  ├─ assets/        - static files (e.g. icons, ...)
  ├─ dynmap/        - dynmap js overrides
- ├─ dynmap_dummy/  - dynmap local static http testing js overrides
  ├─ editor/        - editor pane ui
  ├─ ui/            - common ui lib
  └─ world/         - world rendering ui

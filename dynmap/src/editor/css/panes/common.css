@@ -17,6 +17,16 @@
     margin-top: 8px;
 }
 
+.nodes-editor-section-header-biggger {
+    height: 34px;
+    min-height: 24px;
+    flex-grow: 1;
+    font-weight: bolder;
+    line-height: 24px;
+    display: block;
+    margin-top: 8px;
+}
+
 .nodes-editor-setting-field {
     display: flex;
     white-space: nowrap;
@@ -41,6 +51,13 @@
 }
 
 .nodes-editor-help {
+    margin-top: 8px;
+    color: #888;
+    font-size: 12px;
+    user-select: none;
+}
+
+.nodes-info-help {
     margin-top: 8px;
     color: #888;
     font-size: 12px;

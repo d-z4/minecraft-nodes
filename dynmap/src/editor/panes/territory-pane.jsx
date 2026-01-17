@@ -4,7 +4,7 @@
 
 "use strict";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 
 import Nodes from "nodes.js";
 import * as UI from "ui/ui.jsx";
@@ -20,7 +20,7 @@ import "editor/css/panes/nodes-pane.css";     // re-use nodes panel css for node
 import "editor/css/panes/territory-pane.css";
 
 // ===============================
-// territory nodes list
+// territory nodes list helper
 // ===============================
 const TerritoryNodesList = (props) => {
     const nodesDivList = [];
@@ -74,23 +74,47 @@ const TerritoryNodesList = (props) => {
     );
 };
 
+// ===============================
+// Main Territory Pane
+// ===============================
 export const TerritoryPane = (props) => {
 
     const [inputNodeName, setInputNodeName] = useState("");
+    const textAreaRef = useRef(null);
     
     const selectedTerritory = props.selectedTerritory;
 
-    // button onclick handler for adding node to selected territory
+    // Logic for Multi-Select ID List
+    const selectedCount = Nodes.selectedTerritories.size;
+
+    const selectedTerritoryListString = useMemo(() => {
+        const ids = Array.from(Nodes.selectedTerritories.keys());
+        return ids.length > 0 ? ids.join(" ") : "";
+    }, [selectedCount, selectedTerritory]);
+
+    // Auto-grow height logic
+    useEffect(() => {
+        if (textAreaRef.current) {
+            textAreaRef.current.style.height = "auto";
+            textAreaRef.current.style.height = textAreaRef.current.scrollHeight + "px";
+        }
+    }, [selectedTerritoryListString]);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(selectedTerritoryListString);
+        // Optional: You could trigger a small "Copied!" toast here
+    };
+
     const handleAddNodeToTerritory = () => {
         if ( selectedTerritory !== undefined ) {
             let status = props.addNodeToTerritory(selectedTerritory.id, inputNodeName);
-            if ( status === true ) { // success
+            if ( status === true ) {
                 setInputNodeName("");
             }
         }
     };
 
-    // territory info
+    // territory info strings
     const selectedTerritoryName = selectedTerritory !== undefined ? selectedTerritory.name : "";
     const selectedTerritoryId = `ID: ${selectedTerritory !== undefined ? selectedTerritory.id : ""}`;
     const selectedTerritoryCore = `Core: ${selectedTerritory !== undefined && selectedTerritory.coreChunk ? `${selectedTerritory.coreChunk.x},${selectedTerritory.coreChunk.y}` : ""}`
@@ -99,14 +123,13 @@ export const TerritoryPane = (props) => {
     const selectedTerritoryNodes = selectedTerritory !== undefined ? selectedTerritory.nodes : undefined;
     const selectedTerritoryNodesCount = selectedTerritoryNodes !== undefined ? selectedTerritoryNodes.length : 0;
 
-    // nodes selection list
     const territoryNodesList = useMemo(() => TerritoryNodesList({
         nodes: props.nodes,
         resourceIcons: props.resourceIcons,
         selectedTerritory: selectedTerritory,
         selectedTerritoryNodes: selectedTerritoryNodes,
         removeNodeFromTerritory: props.removeNodeFromTerritory,
-    }), [selectedTerritory, selectedTerritoryNodesCount]);
+    }), [selectedTerritoryNodesCount, selectedTerritory]);
 
     return (
         <>
@@ -152,7 +175,7 @@ export const TerritoryPane = (props) => {
             {`Brush Radius: ${props.paintRadius.toFixed(2)}`}
         </div>
 
-        <div id="nodes-editor-terr-selected-header">Selected Territory:</div>
+        <div id="nodes-editor-terr-selected-header">Selected Territory Info:</div>
         <div id="nodes-editor-terr-selected-name">
             <div>Name:</div>
             <UI.InputEdit
@@ -165,8 +188,10 @@ export const TerritoryPane = (props) => {
         <div>{selectedTerritoryCore}</div>
         <div>{selectedTerritorySize}</div>
         <div>{selectedTerritoryCost}</div>
-        <div>Nodes:</div>
+        
+        <div style={{marginTop: "10px"}}>Nodes inside territory:</div>
         {territoryNodesList}
+
         <div id="nodes-editor-terr-add-node">
             <UI.Button
                 className="nodes-editor-terr-tool-btn"
@@ -182,10 +207,58 @@ export const TerritoryPane = (props) => {
                 onEnterKey={handleAddNodeToTerritory}
             />
         </div>
+
+        {/* --- MULTI-SELECT ID SECTION --- */}
+        <hr style={{border: "0", borderTop: "1px solid #444", margin: "15px 0"}} />
         
-        <div className="nodes-editor-help">
+        <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+            <div id="nodes-editor-terr-selected-list-header">
+                Multi-Selected IDs ({selectedCount}):
+            </div>
+            {selectedCount > 0 && (
+                <div 
+                    onClick={handleCopy}
+                    style={{fontSize: "10px", color: "#aaa", cursor: "pointer", textDecoration: "underline"}}
+                >
+                    Copy All
+                </div>
+            )}
+        </div>
+        
+        <textarea
+            ref={textAreaRef}
+            className="nodes-editor-terr-add-node-input"
+            style={{
+                width: "100%",
+                minHeight: "40px",
+                backgroundColor: "rgba(0,0,0,0.2)",
+                color: "#fff",
+                border: "1px solid #444",
+                borderRadius: "3px",
+                padding: "8px",
+                fontSize: "13px",
+                lineHeight: "1.4",
+                fontFamily: "inherit",
+                resize: "none",        /* Resize is now automatic */
+                overflow: "hidden",    /* Hides scrollbar as it grows */
+                wordWrap: "break-word",
+                whiteSpace: "pre-wrap",
+                outline: "none"
+            }}
+            value={selectedTerritoryListString}
+            readOnly={true}
+            placeholder="Right-click territories..."
+            onChange={() => {}} 
+        />
+        
+        <div style={{fontSize: "11px", color: "#666", marginTop: "6px", fontStyle: "italic"}}>
+            Right-click multiple territories to collect IDs for bulk config.
+        </div>
+        
+        {/* --- HELP SECTION --- */}
+        <div className="nodes-editor-help" style={{marginTop: "20px"}}>
             <div>Help/Controls:</div>
-            <div>- [Right click]: Select territories (when paint mode is off)</div>
+            <div>- [Right click]: Select multiple territories</div>
             <div>- [Space bar]: Turn on/off paint mode</div>
             <div>- [Right mouse drag]: Paint chunks</div>
             <div>- [Ctrl + right mouse drag]: Erase chunks</div>
@@ -196,4 +269,3 @@ export const TerritoryPane = (props) => {
     );
 
 };
-

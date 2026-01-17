@@ -236,8 +236,9 @@
     "wooden_sword": "images/nodes/resources/wooden_sword.png",
     "writable_book": "images/nodes/resources/writable_book.png",
     "written_book": "images/nodes/resources/written_book.png",
+    "netherite_chestplate": "images/nodes/resources_custom/Netherite_Chestplate.png",
     "yellow_dye": "images/nodes/resources/yellow_dye.png",
-    
+
     "mob_bat": "images/nodes/resources/mob_bat.png",
     "mob_bee": "images/nodes/resources/mob_bee.png",
     "mob_cat": "images/nodes/resources/mob_cat.png",
@@ -249,7 +250,7 @@
     "mob_fox": "images/nodes/resources/mob_fox.png",
     "mob_horse": "images/nodes/resources/mob_horse.png",
     "mob_llama": "images/nodes/resources/mob_llama.png",
-    "mob_mooshroom": "images/nodes/resources/mob_mooshroom.png",
+    "mob_mushroom": "images/nodes/resources/mob_mooshroom.png",
     "mob_mule": "images/nodes/resources/mob_mule.png",
     "mob_ocelot": "images/nodes/resources/mob_ocelot.png",
     "mob_panda": "images/nodes/resources/mob_panda.png",

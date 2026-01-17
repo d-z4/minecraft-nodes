@@ -4,3 +4,5 @@
 - Add town editing panel, to edit towns data in editor
 (add/remove territories, increase territory tier, create pre-made towns, etc...).
 - Doesn't seem to render until user first moves cursor on page/screen?
+- Button to toggle port icons on/off 
+- Shift + Right clicking a selected node will unselect it 

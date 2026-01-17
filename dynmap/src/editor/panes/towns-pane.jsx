@@ -376,7 +376,15 @@ export const TownsPane = ({
 
         {/* Town territory operations */}
         <div className="nodes-editor-towns-header">{`Territory operations ${selectedTownTerritories}`}</div>
-        
+{/* If added this SHOULD make the territory operations header have more lines         
+*            <div className="nodes-editor-towns-header">
+*            </div>{`Territory operations ${selectedTownTerritories}`}
+*            <div>Set the town home node to the currently selected territory on the map</div>
+*            <div>Capture/add/remove the currently selected territory on the map to/from the town</div>
+*            <div>Remove the currently selected territories on the map from all towns</div>
+*            <div>Remove the currently selected territories on the map from all towns' captured territories</div>
+*      </div>      
+*/}
         <div id="nodes-editor-terr-toolbar">
             <div id="nodes-editor-terr-toolbar-g1">
                 <UI.Button

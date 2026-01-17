@@ -74,7 +74,7 @@ DynMap.prototype = {
 	formatUrl: function(name, options) {
 		var url = this.options.url[name];
 		$.each(options, function(n,v) {
-			url = url.replace("{" + n + "}", v);
+			url = url.replace("{" + n + "}", encodeURIComponent(v));
 		});
 		return url;
 	},
@@ -592,9 +592,6 @@ DynMap.prototype = {
 			me.selectWorldAndPan(location.world, location, function() {
 				if(completed) completed();
 			});
-		} else {
-			var latlng = me.maptype.getProjection().fromLocationToLatLng(location);
-			me.panToLatLng(latlng, completed);
 		}
 	},
 	panToLayerPoint: function(point, completed) {
@@ -779,8 +776,7 @@ DynMap.prototype = {
 				if (me.followingPlayer !== player) {
 					me.followPlayer(null);
 				}
-				if(player.location.world)
-					me.panToLocation(player.location);
+				me.panToLocation(player.location);
 			});
 		player.menuname.data('sort', player.sort);
 		// Inject into playerlist alphabetically

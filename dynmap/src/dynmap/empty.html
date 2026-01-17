@@ -61,8 +61,13 @@
                 world: undefined,
                 towns: undefined,
                 ports: undefined,
-                editor: false
+                editor: false,
+                resourceIcons: [
+					"./nodes/resource_icons.json",
+					"./nodes/resource_icons_custom.json",
+                    ]
             };
+            window.NODES_TITLE = "Nodes Empty";
             Nodes.initialize(options, function() {});
         };
         

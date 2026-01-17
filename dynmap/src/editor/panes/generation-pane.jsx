@@ -247,6 +247,15 @@ export const GenerationPane = (props) => {
             </div>
 
             <div className="nodes-editor-help">
+                <div>Subdivide Nodes (Territory) Help:</div>
+                <div>- Average radius, how many chunck around the home chunk</div>
+                <div>- Scale X/Y: 1 = normal, 2 = twice as wide/high</div>
+                <div>- Random seed: any number, different number = different result</div>
+                <div>- Iterations smooth centers/corners: more = smoother territory shapes</div>
+                <div>- Delete smaller than: delete territories smaller than this value (in chunks)</div>
+                <div>- Merge smaller than: merge small territories into nearest larger territory</div>
+                <div>- Copy name to new territories: if enabled, new territories will copy name of original territory</div>
+                <div>=======================================      </div>
                 <div>Random generation help:</div>
                 <div>- Average radius is in chunks</div>
                 <div>- Resource probability format: "resource": probability, e.g.</div>

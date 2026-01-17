@@ -2,6 +2,11 @@
  * Player Town / World global viewer pane
  * 
  * Default pane for user to view towns and different territories
+  * To do list:
+  * - Button to toggle port icons on/off - working on
+ * - Territory cost overlay editor
+ * - Territory territory id overlay editor
+ * - make resource multiplyers show in the Selected territory under Resources - done
  */
 
 "use strict";
@@ -184,11 +189,20 @@ const TerritoryNodesList = (props) => {
 // appears fixed-position on right side of nodes list
 const ResourceTooltip = (props) => {
     const node = props.node;
+    if (!node) return null;
 
     const incomeList = node.hasOwnProperty("income") ? Object.keys(node.income) : [];
     const oreList = node.hasOwnProperty("ore") ? Object.keys(node.ore) : [];
     const cropsList = node.hasOwnProperty("crops") ? Object.keys(node.crops) : [];
     const animalsList = node.hasOwnProperty("animals") ? Object.keys(node.animals) : [];
+
+    const multiplierData = [
+        { label: "Income Total", value: node.income_total_multiplier },
+        { label: "Crops Total", value: node.crops_total_multiplier },
+        { label: "Ore Total", value: node.ore_total_multiplier },
+        { label: "Attack Time", value: node.attacker_time_multiplier }
+    ].filter(m => m.value !== undefined); // Only show if the value exists
+
     const icon = props.resourceIcons.get(node.icon);
 
     return (
@@ -207,72 +221,63 @@ const ResourceTooltip = (props) => {
                     {node.name}
                 </div>
             </div>
+
+            {/* Income Section */}
             <div className="nodes-editor-resource-tooltip-property">
                 Income:
-                {
-                    incomeList.length === 0 ?
-                    <div className="nodes-editor-resource-tooltip-property-none">None</div>
-                    : (null)
-                }
+                {incomeList.length === 0 ? <div className="nodes-editor-resource-tooltip-property-none">None</div> : null}
             </div>
-            {
-                incomeList.map( type => 
-                    <div className="nodes-editor-resource-tooltip-property-item" key={type}>
-                        {`- ${type}: ${node.income[type]}`}
-                    </div>
-                )
-            }
+            {incomeList.map(type => (
+                <div className="nodes-editor-resource-tooltip-property-item" key={type}>
+                    {`- ${type}: ${node.income[type]}`}
+                </div>
+            ))}
 
+            {/* Ore Section */}
             <div className="nodes-editor-resource-tooltip-property">
                 Ore:
-                {
-                    oreList.length === 0 ?
-                    <div className="nodes-editor-resource-tooltip-property-none">None</div>
-                    : (null)
-                }
+                {oreList.length === 0 ? <div className="nodes-editor-resource-tooltip-property-none">None</div> : null}
             </div>
-            {
-                oreList.map( type => 
-                    <div className="nodes-editor-resource-tooltip-property-item" key={type}>
-                        {`- ${type}: ${node.ore[type]}`}
-                    </div>
-                )
-            }
+            {oreList.map(type => (
+                <div className="nodes-editor-resource-tooltip-property-item" key={type}>
+                    {`- ${type}: ${node.ore[type]}`}
+                </div>
+            ))}
 
+            {/* Multipliers Section */}
             <div className="nodes-editor-resource-tooltip-property">
-                Crops:
-                {
-                    cropsList.length === 0 ?
-                    <div className="nodes-editor-resource-tooltip-property-none">None</div>
-                    : (null)
-                }
+                Multipliers:
+                {multiplierData.length === 0 ? <div className="nodes-editor-resource-tooltip-property-none">None</div> : null}
             </div>
-            {
-                cropsList.map( type => 
-                    <div className="nodes-editor-resource-tooltip-property-item" key={type}>
-                        {`- ${type}: ${node.crops[type]}`}
-                    </div>
-                )
-            }
-
+            {multiplierData.map(m => (
+                <div className="nodes-editor-resource-tooltip-property-item" key={m.label}>
+                    {`- ${m.label}: ${m.value}x`}
+                </div>
+            ))}
+            
+            {/* Animals Section */}
             <div className="nodes-editor-resource-tooltip-property">
                 Animals:
-                {
-                    animalsList.length === 0 ?
-                    <div className="nodes-editor-resource-tooltip-property-none">None</div>
-                    : (null)
-                }
+                {animalsList.length === 0 ? <div className="nodes-editor-resource-tooltip-property-none">None</div> : null}
             </div>
-            {
-                animalsList.map( type => 
-                    <div className="nodes-editor-resource-tooltip-property-item" key={type}>
-                        {`- ${type}: ${node.animals[type]}`}
-                    </div>
-                )
-            }
+            {animalsList.map(type => (
+                <div className="nodes-editor-resource-tooltip-property-item" key={type}>
+                    {`- ${type}: ${node.animals[type]}`}
+                </div>
+            ))}
+            {/* Crops Section */}
+            <div className="nodes-editor-resource-tooltip-property">
+                Crops:
+                {cropsList.length === 0 ? <div className="nodes-editor-resource-tooltip-property-none">None</div> : null}
+            </div>
+            {cropsList.map(type => (
+                <div className="nodes-editor-resource-tooltip-property-item" key={type}>
+                    {`- ${type}: ${node.crops[type]}`}
+                </div>
+            ))}
 
         </div>
-    )
+    );
 };
 
 export const WorldPane = (props) => {
@@ -309,9 +314,9 @@ export const WorldPane = (props) => {
 
     // selected territory info
     const selectedTerritory = props.selectedTerritory;
-    const selectedTerritoryName = `Name: ${selectedTerritory !== undefined ? selectedTerritory.name : ""}`;
-    const selectedTerritoryId = `ID: ${selectedTerritory ? selectedTerritory.id : ""}`;
-    const selectedTerritoryCore = `Core: ${selectedTerritory && selectedTerritory.coreChunk ? `${selectedTerritory.coreChunk.x},${selectedTerritory.coreChunk.y}` : ""}`
+    const selectedTerritoryName = `Node name: ${selectedTerritory !== undefined ? selectedTerritory.name : ""}`;
+    const selectedTerritoryId = `Node ID: ${selectedTerritory ? selectedTerritory.id : ""}`;
+    const selectedTerritoryCore = `Core Chunk: ${selectedTerritory && selectedTerritory.coreChunk ? `${selectedTerritory.coreChunk.x},${selectedTerritory.coreChunk.y}` : ""}`
     const selectedTerritorySize = `Chunks: ${selectedTerritory ? selectedTerritory.size : ""}`;
     const selectedTerritoryCost = `Cost: ${selectedTerritory !== undefined ? selectedTerritory.cost : ""}`;
     const selectedTerritoryNodes = selectedTerritory !== undefined ? selectedTerritory.nodes : undefined;
@@ -386,6 +391,14 @@ export const WorldPane = (props) => {
                 pressed={props.renderTerritoryCapitals}
                 tooltip={"Town Capitals"}
             />
+{/**           <UI.Button
+ *               className="nodes-editor-option-btn"
+ *                onClick={() => props.setShowOutposts(!props.showOutposts)}
+ *                icon={IconOptionCapitals}
+ *                pressed={props.showOutposts}
+ *               tooltip={"Show outposts"}
+ *           />
+At some point i want this option to show all the outposts on the map        */}
         </div>
 
         <div className="nodes-editor-list-header">
@@ -436,7 +449,7 @@ export const WorldPane = (props) => {
         </div>
 
         <div id="nodes-editor-nodes-list-container">
-            <div>Nodes:</div>
+            <div>Resources:</div>
             {territoryNodesList}
 
             { resourceTooltip !== undefined ?
@@ -448,7 +461,10 @@ export const WorldPane = (props) => {
         <div className="nodes-editor-help">
             <div>Help:</div>
             <div>- Select territory with right mouse click to view</div>
-            <div>- Hover over resource node in list for details</div>
+            <div>- Hover over resource (node) in list for details</div>
+            <div>Controls</div>
+            <div>- [Shift + Right Click] to select multiple nodes</div>
+
         </div>
         
         </>

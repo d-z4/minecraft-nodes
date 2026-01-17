@@ -61,7 +61,12 @@
 				world: undefined,
 				towns: undefined,
 				editor: true,
+                resourceIcons: [
+					"./nodes/resource_icons.json",
+					"./nodes/resource_icons_custom.json",
+				],
 			};
+			window.NODES_TITLE = "Nodes Editor";
 			Nodes.initialize(options, function() {});
 		};
 		// FOR TESTING MODE

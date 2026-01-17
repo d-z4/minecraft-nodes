@@ -61,8 +61,13 @@
                 world: "./nodes/world.json",
                 towns: "./nodes/towns.json",
                 ports: "./nodes/ports.json",
-                editor: true
+                editor: true,
+                resourceIcons: [
+					"./nodes/resource_icons.json",
+					"./nodes/resource_icons_custom.json",
+                    ]
             };
+            window.NODES_TITLE = "Nodes Editor";
             Nodes.initialize(options, function() {});
         };
         

@@ -186,7 +186,7 @@ export const NodesPane = (props) => {
     }), [props.nodesNameList, props.selectedNodeIndex, selectedNodeIcon]);
 
     // nodes editor header text
-    const nodesEditorHeaderText = renderNodeEditor ? "v Resource Node Properties:" : "^ Resource Node Properties:";
+    const nodesEditorHeaderText = renderNodeEditor ? "v Resource (Node) Properties:" : "^ Resource Node Properties:";
 
     // icon selection, memoize when selected icon not changed
     // -> large number of image draws VERY slow
@@ -262,6 +262,7 @@ export const NodesPane = (props) => {
         <div className="nodes-editor-help">
             <div>Help/Controls:</div>
             <div>- [Ctrl + Right click]: Add/remove node from territory on map</div>
+            <div>- [Shift + Right click]: Select multiple nodes</div>
         </div>
 
         </>

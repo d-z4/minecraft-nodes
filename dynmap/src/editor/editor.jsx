@@ -1,5 +1,14 @@
 /**
  * Nodes side panel world viewer/editor
+ * 
+ * To do list:
+ * - Make the top bar (Normaly says something like "Nodes :DDD !!!") take from the html toptitle param - done!!!!!!!
+ * - Add a selected nodes list to the territory pane
+ * - Button to toggle port icons on/off 
+ * - Territory cost overlay editor
+ * - Territory territory id overlay editor
+ * - make resource multiplyers show in the Selected territory under Resources - done!!!!!!!
+ * - Shift + Right clicking a selected node will unselect it
  */
 
 "use strict";
@@ -152,7 +161,9 @@ export const Editor = (props) => {
             <input ref={fileUploader} id="nodes-file-uploader" type="file" name="file" onChange={(e) => {handleFile(e)}}/>
             
             <div id="nodes-header">
-                <div id="nodes-header-text">nodes!!! :DDD</div>
+                <div id="nodes-header-text">
+                    {window.NODES_TITLE || "Edit in html"} 
+                </div>
                 <div id="nodes-header-btns">
                     { props.uploadEnabled ?
                     <>
@@ -208,6 +219,12 @@ export const Editor = (props) => {
                     selected={currentTab === PANEL_OPTIONS}
                     onClick={() => setCurrentTab(PANEL_OPTIONS)}
                 />
+                {/*<EditorTab
+                    name={"Info"}
+                    icon={IconTabInfo}
+                    selected={currentTab === PANEL_INFO}
+                    onClick={() => setCurrentTab(PANEL_INFO)}
+                />*/}
                 </>
                 : (null)
                 }
@@ -321,6 +338,7 @@ export const Editor = (props) => {
                         setSelectedTownNationColor={props.setSelectedTownNationColor}
                         setColorPicker={setColorPicker}
                     />
+                    
                 </EditorPane>
 
                 <EditorPane
@@ -331,7 +349,16 @@ export const Editor = (props) => {
                         territoryCost={props.territoryCost}
                         setTerritoryCost={props.setTerritoryCost}
                     />
+                    
                 </EditorPane>
+                {/*<EditorPane
+                    id="nodes-editor-pane-info"
+                    active={currentTab === PANEL_INFO}
+                >
+                    <InfoPane/>
+                    
+                </EditorPane>*/}
+                
                 </>
                 : (null)
                 }
