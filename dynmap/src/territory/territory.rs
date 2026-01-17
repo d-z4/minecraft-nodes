@@ -523,7 +523,7 @@ impl Territory {
 }
 
 bitflags! {
-    #[derive(PartialEq)]
+    //#[derive(PartialEq)] this line is causing the build to fail
     struct Edge: u8 {
         const NONE = 0b0000; // none
         const N = 0b0001; // north

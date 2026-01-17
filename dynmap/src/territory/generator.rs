@@ -441,12 +441,12 @@ fn smooth_corners(mut cell_diagram: CellDiagram) -> CellDiagram {
 ///    Set points from centroids
 /// 
 /// Repeat until cells become more uniform
-fn smooth_centers(voronoi: &VoronoiDiagram<VoronoiPoint>, min: &(f64, f64), max: &(f64, f64)) -> Option<VoronoiDiagram<VoronoiPoint>> {
+fn smooth_centers(voronoi: &VoronoiDiagram, min: &(f64, f64), max: &(f64, f64)) -> Option<VoronoiDiagram> {
     let points: Vec<VoronoiPoint> = voronoi.cells().iter()
         .map(|cell| centroid_from_points(&cell.points()))
         .collect();
 
-    VoronoiDiagram::new(&VoronoiPoint {x: min.0, y: min.1}, &VoronoiPoint {x: max.0, y: max.1}, &points)
+    VoronoiDiagram::from_tuple(min, max, &points)
 }
 
 
