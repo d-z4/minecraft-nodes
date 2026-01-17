@@ -93,6 +93,10 @@ public object Config {
         Material.ANDESITE,
         Material.GRANITE,
         Material.DIORITE,
+        Material.DEEPSLATE,
+        Material.TUFF,
+        Material.CALCITE,
+        Material.DRIPSTONE_BLOCK,
     )
 
     // harvestable crop types affected by occupied territory tax
@@ -307,6 +311,11 @@ public object Config {
         Material.MANGROVE_FENCE,
         Material.OAK_FENCE,
         Material.SPRUCE_FENCE,
+        Material.CRIMSON_FENCE,
+        Material.WARPED_FENCE,
+        Material.PALE_OAK_FENCE,
+        Material.CHERRY_FENCE,
+        Material.SNIFFER_EGG, // easter egg hehe
     )
 
     // disable building within this distance of flag (square range)
