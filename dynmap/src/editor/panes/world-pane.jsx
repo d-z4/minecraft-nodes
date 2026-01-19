@@ -1,12 +1,8 @@
 /**
  * Player Town / World global viewer pane
  * 
- * Default pane for user to view towns and different territories
-  * To do list:
-  * - Button to toggle port icons on/off - done!!!!!!!!!
- * - Territory cost overlay editor
- * - Territory territory id overlay editor
- * - make resource multiplyers show in the Selected territory under Resources - done
+ * Default pane for user to view towns and different territories on the map.
+ * 
  */
 
 "use strict";
