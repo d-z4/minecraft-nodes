@@ -3,7 +3,7 @@
  * 
  * Default pane for user to view towns and different territories
   * To do list:
-  * - Button to toggle port icons on/off - working on
+  * - Button to toggle port icons on/off - done!!!!!!!!!
  * - Territory cost overlay editor
  * - Territory territory id overlay editor
  * - make resource multiplyers show in the Selected territory under Resources - done
@@ -30,6 +30,7 @@ import IconOptionCapitals from "assets/icon/icon-map-capital.svg";
 import IconSortByAlphabetical from "assets/icon/icon-sort-by-alphabetical.svg";
 import IconSortByPlayers from "assets/icon/icon-sort-by-players.svg";
 import IconSortByTerritories from "assets/icon/icon-sort-by-territories.svg";
+import PortAnchor from "assets/ports/anchor.svg";
 
 import IconPlayerLeader from "assets/icon/icon-player-leader.svg";
 import IconPlayerOfficer from "assets/icon/icon-player-officer.svg";
@@ -390,6 +391,13 @@ export const WorldPane = (props) => {
                 icon={IconOptionCapitals}
                 pressed={props.renderTerritoryCapitals}
                 tooltip={"Town Capitals"}
+            />
+            <UI.Button
+                className="nodes-editor-option-btn"
+                onClick={() => props.setShowPorts(!props.showPorts)}
+                icon={PortAnchor}
+                pressed={props.showPorts}
+                tooltip={"Show ports"}
             />
 {/**           <UI.Button
  *               className="nodes-editor-option-btn"

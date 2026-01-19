@@ -3,8 +3,8 @@
  * 
  * To do list:
  * - Make the top bar (Normaly says something like "Nodes :DDD !!!") take from the html toptitle param - done!!!!!!!
- * - Add a selected nodes list to the territory pane
- * - Button to toggle port icons on/off 
+ * - Add a selected nodes list to the territory pane - done!!!!!!!
+ * - Button to toggle port icons on/off  - done!!!!!!!
  * - Territory cost overlay editor
  * - Territory territory id overlay editor
  * - make resource multiplyers show in the Selected territory under Resources - done!!!!!!!
