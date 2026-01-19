@@ -14,16 +14,16 @@
 
 
 # Nodes
--   Consider attaching node income into income chests/inventories on
-    territories instead of global town income storage. Force players
-    to build supply networks to gather resources from their territories.
-    Adds rp/territory management, potentially cancer to manage tho.
-    So configurable setting.
+-   Add the ability to add custom drops to ore and if they can only be dropped from a node with a resource eg coal (not adding to dynmap that would be canser for now)
+    EG: 1 coal named "super coal coal" with lore "ik its a good joke super cool coal hehe"
+
 
 
 # Minimap
--   Port indicator on chunk. Would require a minimap api though since ports
-    are intended to be a plugin...?
+-   Differnt port icon for ports under attack
+-   Flag unicode for chunks under attack
+-   change max size to 7 (add option in config.yml to set the max size [3-7])
+-   Add a setting to change the max minimap size based on how many players are online | Lag protection
 -   Chunks with war flags indicator, e.g. flashing or separate minimap symbol
 
 
