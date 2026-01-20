@@ -262,6 +262,7 @@ class NodesPort {
         this.groupsString = group.join(", ");
         this.x = x;
         this.z = z;
+        this.owner = undefined; // port owner , will add soon!
 
         Object.seal(this);
     }
@@ -443,7 +444,7 @@ const Nodes = {
     version: {
         major: 0,
         minor: 1,
-        patch: 0,
+        patch: 1,
     },
     
     // map of player resident objects
@@ -481,6 +482,7 @@ const Nodes = {
     resourceIcons: new Map(),
     defaultResourceIconFiles: [      // default .json files to load resource icon map from,
         "nodes/resource_icons.json", // files should contain keys "icon_name": "urlpath/to/resource_icon.png"
+        "nodes/custom_resource_icons.json", // custom resource icons
     ],                               // this will load each file and merge results in order
 
     // global territory cost parameters
@@ -503,6 +505,16 @@ const Nodes = {
         ore: {},
         crops: {},
         animals: {},
+        income_total_multiplier: 1.0,
+        crops_total_multiplier: 1.0,
+        ore_total_multiplier: 1.0,
+        attacker_time_multiplier: 1.0,
+        animals_total_multiplier: 1.0,
+        neighbor_attacker_time_multiplier: 1.0,
+        neighbor_income_total_multiplier: 1.0,
+        neighbor_crops_total_multiplier: 1.0,
+        neighbor_ore_total_multiplier: 1.0,
+        neighbor_animals_total_multiplier: 1.0,
     }),
         null,
         3,
@@ -590,7 +602,7 @@ const Nodes = {
     renderTerritoryIcons: true,      // render resource icons
     renderTerritoryId: false,        // render territory ids
     renderTerritoryCost: false,      // render cost number
-    renderTerritoryOpaque: false,    // render ~opaque solid town/nation colors
+    renderTerritoryOpaque: true,    // render ~opaque solid town/nation colors
     renderTerritoryNoBorders: false, // don't render territory borders
     renderTerritoryCapitals: false,  // render capital markers
     renderTerritoryColors: false,    // for debugging, render territory assigned colors
@@ -1159,12 +1171,35 @@ const Nodes = {
         // serialize towns
         let towns = {};
         Nodes.towns.forEach((t, name) => {
+            if ( town.home = -1 ) {
+                if ( town.territories.length > 0 ) {
+                    const lowestTerritoryId = Math.min(...town.territories);
+                    town.home = lowestTerritoryId;
+                    console.log(`Set home territory of town ${town.name} to territory ${lowestTerritoryId}`);
+                }
+                else {
+                    console.warn('');
+                    console.warn(`Town ${town.name} has no territories to set as home territory (how the fuck did this happen???)`);
+                    console.warn('');
+                }
             towns[name] = t.export();
+
         });
 
         // serialize nations
         let nations = {};
         Nodes.nations.forEach((n, name) => {
+            if (!nation.capital) {
+                const towns = nation.towns.map(townName => Nodes.town.get(townName));
+                const townWithMostTerritories = towns.reduce((prev, current) => {
+                    return (prev.territories.length > current.territories.length) ? prev : current;
+                });
+
+                if (townWithMostTerritories) {
+                    nation.capital = townWithMostTerritories.name;
+                    console.log(`Set capital of nation ${nation.name} to town ${townWithMostTerritories.name}`);
+                }
+            }
             nations[name] = n.export();
         });
 
