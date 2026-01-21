@@ -1,19 +1,16 @@
 /**
  * SVG render layer on top of dynmap renderer
- * 
- * TODO: find way to set map width/height
+ * * TODO: find way to set map width/height
  * because width/height taken from dynmap, if dynmap has no existing
  * object layers, itll set width=height=0, which makes editor width=height=0
  * -> Must calculate width/height separately and set for the editor
- * 
- */
+ * */
 import { useMemo, useCallback } from "react";
 import Nodes from "../nodes";
 import {Territory} from "world/territory.jsx";
 import "world/css/nodes.css";
 
 export const WorldRenderer = (props) => {
-
     // dynmap projection
     let projection;
     if ( props.dynmap !== undefined ) {
@@ -47,7 +44,7 @@ export const WorldRenderer = (props) => {
             const cy = cursorCenter.y;
             // radius in CHUNKS, transform to point
             const r = getPoint(props.paintRadius * 16, 0).x - getPoint(0, 0).x;
-            const strokeColor = props.isErasing ? "#A00" : "#000";
+            const strokeColor = props.isErasing ? "#A00" : "#006eff";
             cursorCircle = (
                 <g>
                     <circle cx={cx} cy={cy} r={r} stroke={strokeColor} strokeWidth="1" fill="none"/>
@@ -95,7 +92,7 @@ export const WorldRenderer = (props) => {
             
             {props.townCapitalElements}
 
-            {props.portElements}
+            {props.showPorts && props.portElements}
 
             {props.townNameElements}
             
@@ -104,4 +101,3 @@ export const WorldRenderer = (props) => {
         </svg>
     );
 }
-

@@ -1,15 +1,13 @@
 # TODO
 
 ## Super High
-- Update town editor panel, currently when saving towns.json the nations created will auto delete due to no capital being set
-  (increase territory tier(later on),Auto set a home node if not set by user).
-
-
-## High Priority:
 - Custom Warning system for editor
   - a build in warning system would be super useful to tell admins why their x is broken (x being world.json, town.json, town they created, nation ect).
+
+## High Priority:
 - make an editor for ports on webmap (editor will be in global options pane).
-- make an editor for outposts on webmap (editor will be in global options pane).
+- make outposts show on the map with a toggle button like ports. | might not be posible depending on how logic for outposts is stored
+- make an editor for outposts on webmap (editor will be in global options pane). | might not be posible depending on how logic for outposts is stored
 - Built in Tier system (needs plugin feature coded first).
 
 

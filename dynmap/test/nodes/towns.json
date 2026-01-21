@@ -1,1 +1,142 @@
-{}
+{
+  "meta": {
+    "type": "towns"
+  },
+  "residents": {},
+  "towns": {
+    "town0": {
+      "name": "town0",
+      "uuid": "145db01c-eabc-4fc2-b418-b1aa01b6c2cc",
+      "color": [
+        255,
+        255,
+        255
+      ],
+      "open": false,
+      "residents": [],
+      "territories": [
+        0,
+        1
+      ],
+      "annexed": [],
+      "captured": [],
+      "home": 0,
+      "spawn": [
+        0,
+        0,
+        0
+      ],
+      "allies": [],
+      "enemies": [],
+      "truce": []
+    },
+    "town1": {
+      "name": "town1",
+      "uuid": "f6703ac4-7d97-4533-ade5-d2046c5cfa67",
+      "color": [
+        255,
+        255,
+        255
+      ],
+      "open": false,
+      "residents": [],
+      "territories": [
+        3,
+        2
+      ],
+      "annexed": [],
+      "captured": [],
+      "home": 2,
+      "spawn": [
+        0,
+        0,
+        0
+      ],
+      "allies": [],
+      "enemies": [],
+      "truce": []
+    },
+    "town2": {
+      "name": "town2",
+      "uuid": "649d15ea-3929-48e4-ab80-5c80d557df0a",
+      "color": [
+        255,
+        255,
+        255
+      ],
+      "open": false,
+      "residents": [],
+      "territories": [
+        5
+      ],
+      "annexed": [],
+      "captured": [],
+      "home": 5,
+      "spawn": [
+        0,
+        0,
+        0
+      ],
+      "allies": [],
+      "enemies": [],
+      "truce": []
+    },
+    "town3": {
+      "name": "town3",
+      "uuid": "a617518c-ac38-41b6-a515-42edae18d832",
+      "color": [
+        255,
+        255,
+        255
+      ],
+      "open": false,
+      "residents": [],
+      "territories": [
+        4
+      ],
+      "annexed": [],
+      "captured": [],
+      "home": 4,
+      "spawn": [
+        0,
+        0,
+        0
+      ],
+      "allies": [],
+      "enemies": [],
+      "truce": []
+    }
+  },
+  "nations": {
+    "e": {
+      "uuid": "b2c6c64a-1e16-4472-b6f0-1f0f78c4c80d",
+      "capital": "town1",
+      "color": [
+        0,
+        26,
+        255
+      ],
+      "towns": [
+        "town1",
+        "town2"
+      ],
+      "allies": [],
+      "enemies": []
+    },
+    "e2": {
+      "uuid": "ad6b14a8-6779-4b44-ad7b-06598e8900c0",
+      "capital": "town0",
+      "color": [
+        255,
+        0,
+        0
+      ],
+      "towns": [
+        "town0",
+        "town3"
+      ],
+      "allies": [],
+      "enemies": []
+    }
+  }
+}

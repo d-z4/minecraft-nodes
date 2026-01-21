@@ -18,8 +18,10 @@ import {
     RENDER_TOWN_NAMETAG_NONE, RENDER_TOWN_NAMETAG_TOWN, RENDER_TOWN_NAMETAG_NATION,
     TownSortKey,
 } from "./constants.js";
+import PortAnchor from "assets/ports/anchor.png";
 import IconMapCapital from "assets/icon/icon-map-capital.svg";
 import { StripePattern } from "ui/stripe-pattern.jsx";
+import { NotificationManager } from "ui/notifications.jsx";
 import { Editor } from "editor/editor.jsx";
 import { WorldRenderer } from "world/world.jsx";
 import { Territory } from "world/territory.jsx";
@@ -262,9 +264,11 @@ class NodesPort {
         this.groupsString = group.join(", ");
         this.x = x;
         this.z = z;
-        this.owner = undefined; // port owner , will add soon!
-
-        Object.seal(this);
+        this.owner = undefined;
+        
+        // Define these here so they aren't "new" properties later cause react is confused
+        this.showPorts = true; 
+        this.portVisible = true;
     }
 }
 
@@ -441,11 +445,56 @@ const NodesSvgRenderer = L.Layer.extend({
 const Nodes = {
 
     // versioning TODO
-    version: {
-        major: 0,
-        minor: 1,
-        patch: 1,
+    version: {major: 1, minor: 1, patch: 0,
     },
+
+    // ============================================
+    // Notification system - use instead of console.warn/error
+    // ============================================
+    
+    /**
+     * Display an info notification.
+     * @param {string} message - Message to display
+     * @param {number} duration - Auto-dismiss time in ms (default: 4000, 0 = no auto-dismiss)
+     */
+    info: (message, duration = 4000) => {
+        return NotificationManager.info(message, duration);
+    },
+
+    /**
+     * Display a warning notification.
+     * @param {string} message - Message to display  
+     * @param {number} duration - Auto-dismiss time in ms (default: 6000, 0 = no auto-dismiss)
+     */
+    warn: (message, duration = 6000) => {
+        return NotificationManager.warn(message, duration);
+    },
+
+    /**
+     * Display an error notification.
+     * @param {string} message - Message to display
+     * @param {number} duration - Auto-dismiss time in ms (default: 8000, 0 = no auto-dismiss)
+     */
+    error: (message, duration = 8000) => {
+        return NotificationManager.error(message, duration);
+    },
+
+    /**
+     * Dismiss a notification by its ID.
+     * @param {number} id - Notification ID returned by info/warn/error
+     */
+    dismissNotification: (id) => {
+        NotificationManager.dismiss(id);
+    },
+
+    /**
+     * Clear all notifications.
+     */
+    clearNotifications: () => {
+        NotificationManager.clearAll();
+    },
+
+    showPorts: true, // render port icons
     
     // map of player resident objects
     // uuid String => resident
@@ -497,6 +546,16 @@ const Nodes = {
         ore: {},
         crops: {},
         animals: {},
+        income_total_multiplier: 0.0,
+        crops_total_multiplier: 0.0,
+        ore_total_multiplier: 0.0,
+        attacker_time_multiplier: 0.0,
+        animals_total_multiplier: 0.0,
+        neighbor_attacker_time_multiplier: 0.0,
+        neighbor_income_total_multiplier: 0.0,
+        neighbor_crops_total_multiplier: 0.0,
+        neighbor_ore_total_multiplier: 0.0,
+        neighbor_animals_total_multiplier: 0.0,
     },
 
     // default string for an empty node, used by nodes ui panel as placeholder
@@ -663,6 +722,7 @@ const Nodes = {
         Nodes.renderTerritoryNoBorders = options.renderTerritoryNoBorders ?? Nodes.renderTerritoryNoBorders;
         Nodes.renderTerritoryCapitals = options.renderTerritoryCapitals ?? Nodes.renderTerritoryCapitals; 
         Nodes.renderTerritoryColors = options.renderTerritoryColors ?? Nodes.renderTerritoryColors;   
+        Nodes.showPortNames = options.showPortNames ?? Nodes.showPortNames;
 
         let dynmap = options.dynmap;
         Nodes.renderEditor();
@@ -1168,30 +1228,28 @@ const Nodes = {
             residents[name] = r;
         });
 
-        // serialize towns
+// serialize towns
         let towns = {};
-        Nodes.towns.forEach((t, name) => {
-            if ( town.home = -1 ) {
+        Nodes.towns.forEach((town, name) => {
+            if ( town.home === -1 ) {
                 if ( town.territories.length > 0 ) {
                     const lowestTerritoryId = Math.min(...town.territories);
                     town.home = lowestTerritoryId;
                     console.log(`Set home territory of town ${town.name} to territory ${lowestTerritoryId}`);
                 }
                 else {
-                    console.warn('');
-                    console.warn(`Town ${town.name} has no territories to set as home territory (how the fuck did this happen???)`);
-                    console.warn('');
+                    console.warn(`Town ${town.name} has no territories...`);
                 }
-            towns[name] = t.export();
-
+            }
+            towns[name] = town.export();
         });
 
         // serialize nations
         let nations = {};
-        Nodes.nations.forEach((n, name) => {
+        Nodes.nations.forEach((nation, name) => { 
             if (!nation.capital) {
-                const towns = nation.towns.map(townName => Nodes.town.get(townName));
-                const townWithMostTerritories = towns.reduce((prev, current) => {
+                const townObjects = nation.towns.map(townName => Nodes.towns.get(townName));
+                const townWithMostTerritories = townObjects.reduce((prev, current) => {
                     return (prev.territories.length > current.territories.length) ? prev : current;
                 });
 
@@ -1200,7 +1258,7 @@ const Nodes = {
                     console.log(`Set capital of nation ${nation.name} to town ${townWithMostTerritories.name}`);
                 }
             }
-            nations[name] = n.export();
+            nations[name] = nation.export();
         });
 
         let townsJson = {
@@ -1267,6 +1325,12 @@ const Nodes = {
         Nodes._updateAllTerritoryElements();
         Nodes.renderWorld();
         Nodes.renderEditor();
+    },
+
+    setShowPorts: (val) => {
+    Nodes.showPorts = val;
+    Nodes._updateAllPortJsx();
+    Nodes.renderWorld();
     },
 
     setRenderTerritoryId: (val) => {
@@ -1337,6 +1401,7 @@ const Nodes = {
             getNodeIcon: Nodes._getNodeIcon,
             svgPatterns: Nodes.stripePatterns,
             territoryElements: Nodes.territoryElements,
+            showPorts: Nodes.showPorts,
             portElements: Nodes.portsJsx,
             townCapitalElements: Nodes.townCapitalElementsJsx,
             townNameElements: Nodes.townNameElementsJsx,
@@ -3567,30 +3632,35 @@ const Nodes = {
 
         Nodes.townCapitalElementsJsx = elements;
     },
+    _updateAllPortJsx: () => {
+        // We map the ports data into the Port components
+        Nodes.portsJsx = Array.from(Nodes.ports.values()).map(port => {
+            return Nodes._createPortJsx(port);
+        });
+    },
 
-    /**
-     * Create port element jsx
-     */
     _createPortJsx: (port) => {
         return <Port
             key={port.name}
             port={port}
             x={port.x}
             z={port.z}
+            showPorts={Nodes.showPorts}
+            portVisible={true}
+            getPoint={Nodes._getLatLngFromCoord}
+            AnchorIcon={PortAnchor}
             showPortTooltip={Nodes._showPortTooltip}
             removePortTooltip={Nodes._removePortTooltip}
-            getPoint={Nodes._getLatLngFromCoord}
         />;
     },
-
     /**
      * Show port tooltip
      */
-    _showPortTooltip: (port, cx, cy, enable = true) => {
+    _showPortTooltip: (port, clientX, clientY, enable = true) => {
         const props = {
             enable: enable,
-            clientX: cx,
-            clientY: cy,
+            clientX: clientX,
+            clientY: clientY,
             port: port,
         };
         Nodes.portTooltipContainerRoot?.render(<PortTooltip {...props}/>);

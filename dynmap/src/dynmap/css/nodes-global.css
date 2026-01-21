@@ -36,3 +36,27 @@ body {
 #nodes-world {
     z-index: 500;
 }
+
+#port-tooltip-container {
+    position: fixed;
+}
+
+#port-tooltip {
+    position: fixed;
+    z-index: 10001;
+    font-size: 1.5em;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 6px;
+    min-width: 200px;
+}
+
+
+#port-tooltip div {
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+}
+
+#port-tooltip b {
+    font-weight: bold;
+}

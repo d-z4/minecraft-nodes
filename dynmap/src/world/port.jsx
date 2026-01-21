@@ -1,10 +1,11 @@
+import React, { useRef } from 'react';
+
 export const Port = (props) => {
-    let getPoint = props.getPoint;
-
-    // coordinate
-    const center = getPoint(props.x, props.z);
-
-    // get icon size and apply size constraint 
+    const { port, x, z, showPorts, portVisible, getPoint, AnchorIcon, showPortTooltip, removePortTooltip } = props;
+    
+    const center = getPoint(x, z);
+    
+    // Get icon size based on map scale
     const iconSizeFromMapScale = getPoint(16, 0).x - getPoint(0, 0).x;
     let iconSize = 20;
     if (iconSizeFromMapScale === 4) {
@@ -19,55 +20,64 @@ export const Port = (props) => {
         iconSize = 64;
     }
 
-    const svgRef = useRef(null);
+    const imageRef = useRef(null);
 
-    /**
-     * Call tooltip render
-     */
-    const showTooltip = () => {
-        if (svgRef.current !== null) {
-            const rect = svgRef.current.getBoundingClientRect();
-            props.showPortTooltip(props.port, rect.x, rect.y);
-        }
+    // Pass the mouse event to get accurate screen coordinates
+    const handleMouseEnter = (event) => {
+        showPortTooltip(port, event.clientX, event.clientY);
     };
+
+    const handleMouseMove = (event) => {
+        showPortTooltip(port, event.clientX, event.clientY);
+    };
+
+    if (!showPorts || !portVisible) {
+        return null;
+    }
 
     const cx = center.x - iconSize / 2;
     const cy = center.y - iconSize / 2;
 
-    // Check if port is visible
-    if (!props.portVisible) {
-        return null; // Do not render anything if portVisible is false
-    }
-
     return (
-        <><g ref={svgRef} onMouseEnter={showTooltip} onMouseLeave={props.removePortTooltip}></g><image key={props.name} x={cx} y={cy} width={iconSize} height={iconSize} href={AnchorIcon} /></>
+        <g>
+            <image 
+                ref={imageRef}
+                x={cx} 
+                y={cy} 
+                width={iconSize} 
+                height={iconSize} 
+                href={AnchorIcon}
+                onMouseEnter={handleMouseEnter}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={removePortTooltip}
+                style={{ cursor: 'pointer' }}
+            />
+        </g>
     );
-}
+};
 
 export const PortTooltip = (props) => {
-    let getPoint = props.getPoint;
-    let style = {
-        "left": props.clientX + 50,
-        "top": props.clientY - 30,
-    };
+    const { clientX, clientY, port, enable } = props;
 
-    const port = props.port;
-
-    // Check if tooltip should be enabled
-    if (!props.enable || !props.portVisible) {
-        return null; // Do not render tooltip if not enabled or portVisible is false
+    if (!enable || !port) {
+        return null;
     }
 
+    // Position to the top-right of the cursor, similar to the image
     return (
-        <div
-            id="port-tooltip"
-            style={style}
+        <div 
+            id="port-tooltip" 
+            style={{ 
+                position: 'fixed',
+                left: `${clientX + 20}px`,   // 20px to the right of cursor
+                top: `${clientY - 80}px`,    // Position above cursor
+                pointerEvents: 'none'
+            }}
         >
             <div><b>Port:</b> {port.name}</div>
             <div><b>Groups:</b> {port.groupsString}</div>
-            <div><b>x:</b> {port.x}</div>
-            <div><b>z:</b> {port.z}</div>
-            {/* <div><b>Owner:</b> {port.owner} ?</div> */}
+            <div><b>x:</b> {Math.round(port.x)}</div>
+            <div><b>z:</b> {Math.round(port.z)}</div>
         </div>
     );
-}
+};

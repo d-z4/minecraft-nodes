@@ -18,7 +18,7 @@ extern crate wasm_bindgen;
 use wasm_bindgen::prelude::*;
 use rand::prelude::*;
 use rand::rngs::SmallRng;
-use rand::distr::weighted::WeightedIndex;
+use rand::distributions::WeightedIndex;
 
 #[wasm_bindgen]
 #[derive(Debug)]
@@ -37,7 +37,7 @@ impl IndexSampler {
         let rng = if let Some(seed) = random_seed {
             rand::rngs::SmallRng::seed_from_u64(seed as u64)
         } else {
-            rand::rngs::SmallRng::from_os_rng()
+            rand::rngs::SmallRng::from_entropy()
         };
 
         let dist = WeightedIndex::new(&weights).unwrap();

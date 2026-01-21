@@ -1,0 +1,102 @@
+/* Notifications system styles */
+
+.nodes-notifications-container {
+    position: absolute;
+    top: 50px;
+    left: 8px;
+    right: 8px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+
+.nodes-notification {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    animation: notification-slide-in 0.3s ease-out;
+    pointer-events: auto;
+}
+
+@keyframes notification-slide-in {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.nodes-notification-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.nodes-notification-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.nodes-notification-message {
+    word-break: break-word;
+}
+
+.nodes-notification-close {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0.6;
+    padding: 0 0 0 10px;
+    line-height: 1;
+    transition: opacity 0.2s;
+}
+
+.nodes-notification-close:hover {
+    opacity: 1;
+}
+
+/* Info notification - blue */
+.nodes-notification-info {
+    background-color: #1a3a5c;
+    border: 1px solid #3498db;
+    color: #8fd4ff;
+}
+
+.nodes-notification-info .nodes-notification-icon {
+    color: #3498db;
+}
+
+/* Warning notification - yellow/orange */
+.nodes-notification-warn {
+    background-color: #3d3317;
+    border: 1px solid #f39c12;
+    color: #ffcc00;
+}
+
+.nodes-notification-warn .nodes-notification-icon {
+    color: #f39c12;
+}
+
+/* Error notification - red */
+.nodes-notification-error {
+    background-color: #3d1717;
+    border: 1px solid #e74c3c;
+    color: #ff6b6b;
+}
+
+.nodes-notification-error .nodes-notification-icon {
+    color: #e74c3c;
+}

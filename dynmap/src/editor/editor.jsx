@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from "react";
 import "ui/css/nodes-scrollbar.css";
 import "editor/css/editor.css";
 import * as UI from "ui/ui.jsx";
+import { NotificationsContainer, useNotifications } from "ui/notifications.jsx";
 import { GenerationPane } from "editor/panes/generation-pane.jsx";
 import { NodesPane } from "editor/panes/nodes-pane.jsx";
 import { OptionsPane } from "editor/panes/options-pane.jsx";
@@ -92,6 +93,13 @@ export const Editor = (props) => {
     const [colorPickerOnChange, setColorPickerOnChange] = useState(() => (col) => console.log("Color picker onChange:", col));
     const [colorPickerOnExit, setColorPickerOnExit] = useState(() => (col) => console.log("Color picker onExit:", col));
 
+    const [showPorts, setShowPortsState] = useState(true);
+    
+    const setShowPorts = (val) => {
+        setShowPortsState(val);
+        Nodes.setShowPorts(val);
+    };
+
     const setColorPicker = (
         enabled,
         color,
@@ -146,9 +154,16 @@ export const Editor = (props) => {
         e.target.value = null;
     };
 
+    // Notifications system
+    const { notifications, dismiss } = useNotifications();
+
     return (
         <>
         <div id="nodes-editor">
+            <NotificationsContainer 
+                notifications={notifications} 
+                onDismiss={dismiss}
+            />
             <input ref={fileUploader} id="nodes-file-uploader" type="file" name="file" onChange={(e) => {handleFile(e)}}/>
             
             <div id="nodes-header">
@@ -210,12 +225,6 @@ export const Editor = (props) => {
                     selected={currentTab === PANEL_OPTIONS}
                     onClick={() => setCurrentTab(PANEL_OPTIONS)}
                 />
-                {/*<EditorTab
-                    name={"Info"}
-                    icon={IconTabInfo}
-                    selected={currentTab === PANEL_INFO}
-                    onClick={() => setCurrentTab(PANEL_INFO)}
-                />*/}
                 </>
                 : (null)
                 }
@@ -250,6 +259,8 @@ export const Editor = (props) => {
                         selectedTownIndex={props.selectedTownIndex}
                         selectTown={props.selectTown}
                         selectedTerritory={props.selectedTerritory}
+                        showPorts={showPorts} 
+                        setShowPorts={setShowPorts}
                     />
                 </EditorPane>
                 { props.editorEnabled ? 
@@ -342,21 +353,12 @@ export const Editor = (props) => {
                     />
                     
                 </EditorPane>
-                {/*<EditorPane
-                    id="nodes-editor-pane-info"
-                    active={currentTab === PANEL_INFO}
-                >
-                    <InfoPane/>
-                    
-                </EditorPane>*/}
-                
                 </>
                 : (null)
                 }
             </div>
         </div>
         
-        {/* Re-used color picker for all color selection */}
         { colorPickerEnabled ?
         <UI.ColorPicker
             enabled={colorPickerEnabled}
@@ -370,4 +372,3 @@ export const Editor = (props) => {
         </>
     );
 }
-

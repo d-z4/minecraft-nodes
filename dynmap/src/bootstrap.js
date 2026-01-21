@@ -18,7 +18,7 @@ let Nodes = {
                 // run nodes initialization
                 module.default.initialize(options, callback);
             })
-            .catch(err => console.error('[Nodes] Load failed', err));
+            .catch(err => Nodes.error('[Nodes] Load failed: ' + err));
     }
 };
 

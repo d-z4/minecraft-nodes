@@ -1,9 +1,12 @@
 #port-tooltip-container {
     position: fixed;
+    z-index: 10000;
+    pointer-events: none;
 }
 
 #port-tooltip {
     position: fixed;
+    z-index: 10001;
     font-size: 1.5em;
     background-color: rgba(0, 0, 0, 0.7);
     padding: 6px;

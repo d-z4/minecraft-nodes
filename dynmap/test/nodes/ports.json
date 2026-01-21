@@ -1,1 +1,1 @@
-{}
+{"meta":{"type":"ports"},"groups":["1","2","3"],"ports":{"1":{"name":"1","x":929,"z":-834,"groups":["1","2"],"isPublic":false},"2":{"name":"2","x":903,"z":-837,"groups":["2","3"],"isPublic":false},"3":{"name":"3","x":867,"z":-853,"groups":["1","2","3"],"isPublic":false},"4":{"name":"4","x":840,"z":-873,"groups":["1","3"],"isPublic":false}}}

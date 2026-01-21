@@ -26,7 +26,7 @@ import IconOptionCapitals from "assets/icon/icon-map-capital.svg";
 import IconSortByAlphabetical from "assets/icon/icon-sort-by-alphabetical.svg";
 import IconSortByPlayers from "assets/icon/icon-sort-by-players.svg";
 import IconSortByTerritories from "assets/icon/icon-sort-by-territories.svg";
-import PortAnchor from "assets/ports/anchor.svg";
+import PortAnchor from "assets/ports/anchor.png";
 
 import IconPlayerLeader from "assets/icon/icon-player-leader.svg";
 import IconPlayerOfficer from "assets/icon/icon-player-officer.svg";
@@ -278,10 +278,6 @@ const ResourceTooltip = (props) => {
 };
 
 export const WorldPane = (props) => {
-
-    // resource node info tooltip state
-    // -> if this is node object, make visible
-    //    else, undefined -> invisible
     const [resourceTooltip, setResourceTooltip] = useState(undefined);
 
     // town view list
@@ -327,7 +323,8 @@ export const WorldPane = (props) => {
         selectedTerritoryNodes: selectedTerritoryNodes,
         setResourceTooltip: setResourceTooltip,
     }), [selectedTerritory, selectedTerritoryNodesCount]);
-    
+    console.log("Nodes object:", Nodes);
+    console.log("Ports Toggle:", props.showPorts);
     return (
         <>
         <div id="nodes-editor-options-header">Map Options:</div>
@@ -390,7 +387,7 @@ export const WorldPane = (props) => {
             />
             <UI.Button
                 className="nodes-editor-option-btn"
-                onClick={() => props.setShowPorts(!props.showPorts)}
+                onClick={() => props.setShowPorts?.(!props.showPorts)} 
                 icon={PortAnchor}
                 pressed={props.showPorts}
                 tooltip={"Show ports"}
