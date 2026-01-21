@@ -32,8 +32,6 @@ Go inside `nodes/` and run
 ```
 Built `nodes-VERSION.jar` will appear in `build/libs/`.
 
-Nodes also requires a seperate kotlin runtime plugin, for example my <https://github.com/d-z4/minecraft-kotlin>),
-
 -----------------------------------------------------------
 
 ## 2. Building dynmap viewer/editor
