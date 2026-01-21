@@ -83,11 +83,12 @@ public class IncomeInventory : InventoryHolder {
 
     // implement getInventory for InventoryHolder
     public override fun getInventory(): Inventory {
+        // FIX: Create a copy of the keys to avoid ConcurrentModificationException
+        val materialsToAdd = ArrayList(this.storage.keys)
+
         // populate inventory
-        while (this.storage.size > 0) {
-            val item = this.storage.iterator().next()
-            val material = item.key
-            val amount = item.value
+        for (material in materialsToAdd) {
+            val amount = this.storage.get(material) ?: continue
             this.storage.remove(material)
 
             val itemsFailedToAdd = this._inventory.addItem(ItemStack(material, amount))

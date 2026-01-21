@@ -1909,9 +1909,6 @@ public class TownCommand :
     }
 
     /**
-     * @command /town trust [name]
-     * Mark player in town as trusted. Leader and officers only.
-     *
      * @command /town untrust [name]
      * Mark player in town as untrusted. Leader and officers only.
      */
@@ -1952,7 +1949,7 @@ public class TownCommand :
             return
         }
 
-        // set player trust
+        // FIX: Actually use the trust parameter!
         if (trust) {
             Nodes.setResidentTrust(target, true)
             Message.print(player, "${target.name} is now marked as trusted")

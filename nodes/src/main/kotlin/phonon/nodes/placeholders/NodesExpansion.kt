@@ -4,8 +4,10 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.entity.Player
 import phonon.nodes.Nodes
-import phonon.nodes.objects.townNametagViewedByPlayer
+import phonon.nodes.objects.Nation
+import phonon.nodes.objects.Town
 import phonon.nodes.utils.Color
+import kotlin.toString
 
 /**
  * PlaceholderAPI expansion for Nodes plugin
@@ -69,9 +71,22 @@ class NodesExpansion : PlaceholderExpansion() {
                 }
             }
 
-            idLower == "town_diplomatic" -> {
-                val town = resident.town ?: return ""
-                townNametagViewedByPlayer(town, player)
+            idLower == "town_name_formatted" -> {
+                val town = resident.town ?: return "${ChatColor.GRAY}Wilderness"
+                val relationColor = getRelationColor(player, town)
+                "$relationColor${town.name}"
+            }
+
+            // Nation name formatted with relation color
+            idLower == "nation_name_formatted" -> {
+                val nation = resident.town?.nation ?: return "${ChatColor.GRAY}Wilderness"
+                val relationColor = getNationRelationColor(player, nation)
+                "$relationColor${nation.name}"
+            }
+
+            idLower == "town_relation_color" -> {
+                val town = resident.town ?: return "${ChatColor.GRAY}"
+                getRelationColor(player, town).toString()
             }
 
             idLower == "nation" -> {
@@ -80,6 +95,74 @@ class NodesExpansion : PlaceholderExpansion() {
 
             else -> null
         }
+    }
+
+    /**
+     * Get the relation color between the viewing player and a target nation
+     */
+    private fun getNationRelationColor(viewer: Player, targetNation: Nation): org.bukkit.ChatColor {
+        val viewerResident = Nodes.getResident(viewer) ?: return org.bukkit.ChatColor.GRAY
+        val viewerTown = viewerResident.town ?: return org.bukkit.ChatColor.GRAY
+        val viewerNation = viewerTown.nation
+
+        // Same nation = dark green
+        if (viewerNation != null && viewerNation == targetNation) {
+            return org.bukkit.ChatColor.DARK_GREEN
+        }
+
+        // Check if any town in target nation is ally/enemy
+        for (nationTown in targetNation.towns) {
+            if (viewerTown.allies.contains(nationTown)) {
+                return org.bukkit.ChatColor.DARK_AQUA
+            }
+            if (viewerTown.enemies.contains(nationTown)) {
+                return org.bukkit.ChatColor.DARK_RED
+            }
+        }
+
+        // Neutral = gold
+        return org.bukkit.ChatColor.GOLD
+    }
+
+    /**
+     * Get the relation color between the viewing player and a target town
+     *
+     * Colors:
+     * - §a (GREEN) - Member of SAME town
+     * - §2 (DARK_GREEN) - Member of same NATION
+     * - §3 (DARK_AQUA) - ALLY
+     * - §4 (DARK_RED) - ENEMY
+     * - §6 (GOLD) - NEUTRAL
+     * - §7 (GRAY) - No town
+     */
+    private fun getRelationColor(viewer: Player, targetTown: Town): org.bukkit.ChatColor {
+        val viewerResident = Nodes.getResident(viewer) ?: return org.bukkit.ChatColor.GRAY
+        val viewerTown = viewerResident.town ?: return org.bukkit.ChatColor.GRAY
+
+        // Same town = bright green
+        if (viewerTown == targetTown) {
+            return org.bukkit.ChatColor.GREEN
+        }
+
+        // Same nation = dark green
+        val viewerNation = viewerTown.nation
+        val targetNation = targetTown.nation
+        if (viewerNation != null && viewerNation == targetNation) {
+            return org.bukkit.ChatColor.DARK_GREEN
+        }
+
+        // Ally = dark aqua
+        if (viewerTown.allies.contains(targetTown)) {
+            return org.bukkit.ChatColor.DARK_AQUA
+        }
+
+        // Enemy = dark red
+        if (viewerTown.enemies.contains(targetTown)) {
+            return org.bukkit.ChatColor.DARK_RED
+        }
+
+        // Neutral = gold
+        return org.bukkit.ChatColor.GOLD
     }
 
     /**

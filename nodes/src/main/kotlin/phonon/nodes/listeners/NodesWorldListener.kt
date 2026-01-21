@@ -151,6 +151,61 @@ public class NodesWorldListener : Listener {
         Message.error(player, "You cannot destroy here!")
     }
 
+    @EventHandler(priority = EventPriority.LOWEST)
+    public fun onBlockPlaceEarly(event: BlockPlaceEvent) {
+        val block: Block = event.block
+        val player: Player = event.player
+
+        // Skip if already cancelled or if player is op
+        if (event.isCancelled() || player.isOp()) {
+            return
+        }
+
+        // War flag placement gets special handling later, skip here
+        if (Nodes.war.enabled && FlagWar.flagMaterials.contains(block.getType())) {
+            return
+        }
+
+        val territory: Territory? = Nodes.getTerritoryFromChunk(block.chunk)
+        val territoryChunk = Nodes.getTerritoryChunkFromBlock(block.x, block.z)
+        val resident = Nodes.getResident(player)
+        val town: Town? = territory?.town
+
+        // Check wilderness permissions
+        if (town === null) {
+            if (!hasWildernessPermissions(territory)) {
+                event.setCancelled(true)
+                // Don't send message here - the NORMAL handler will do it
+                return
+            }
+            return
+        }
+
+        // Check if player has any permissions to build here
+        if (resident !== null) {
+            // Check basic town permissions
+            if (hasTownPermissions(TownPermissions.BUILD, town, resident)) {
+                return
+            }
+
+            // Check occupier permissions
+            val occupier: Town? = territory.occupier
+            if (occupier !== null && hasOccupierPermissions(TownPermissions.BUILD, town, occupier, resident)) {
+                return
+            }
+
+            // Check war permissions
+            if (hasWarPermissions(resident, territory, territoryChunk!!)) {
+                return
+            }
+        }
+
+        // No permissions - cancel immediately to prevent block glitching
+        event.setCancelled(true)
+        // Don't send error message here - let the NORMAL priority handler do it
+        // This prevents double messages
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public fun onBlockBreakSuccess(event: BlockBreakEvent) {
         if (event.isCancelled()) {
@@ -192,6 +247,10 @@ public class NodesWorldListener : Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public fun onBlockPlace(event: BlockPlaceEvent) {
+        if (event.isCancelled()) {
+            return
+        }
+
         val block: Block = event.block
         val player: Player = event.player
 

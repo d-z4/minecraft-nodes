@@ -29,8 +29,8 @@ import phonon.nodes.nms.sendObjectiveRemove
 import phonon.nodes.nms.sendScore
 
 // max min allowed sizes
-private val MAP_RADIUS_MIN = 5
-private val MAP_RADIUS_MAX = 9
+private val MAP_RADIUS_MIN = 9
+private val MAP_RADIUS_MAX = 13
 
 // used to start each line in scoreboard
 // ensures each line name is unique

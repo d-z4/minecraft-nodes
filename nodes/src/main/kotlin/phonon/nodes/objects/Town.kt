@@ -156,8 +156,8 @@ public class Town(
         )
 
         // generate nametags from name
-        this.nametagTown = "${ChatColor.AQUA}[${this.name}] "
-        this.nametagNation = "${ChatColor.BLUE}[${this.name}] "
+        this.nametagTown = "${ChatColor.GREEN}[${this.name}] "
+        this.nametagNation = "${ChatColor.DARK_GREEN}[${this.name}] "
         this.nametagNeutral = "${ChatColor.GOLD}[${this.name}] "
         this.nametagAlly = "${ChatColor.DARK_AQUA}[${this.name}] "
         this.nametagEnemy = "${ChatColor.RED}[${this.name}] "

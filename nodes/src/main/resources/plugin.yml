@@ -11,8 +11,14 @@ commands:
     permission: nodes.admin
     usage: /nodesadmin help or /na help
   minebuff:
-    description: Admin commands for Nodes
-    permission: nodes.admin
+    description: Activate a mining buff multiplier
+    usage: |
+      /<command> <multiplier> <time-minutes> - Start a buff
+      /<command> time - Check remaining time
+      /<command> remove - Remove active buff
+    aliases: [mb, miningbuff]
+    permission: nodes.minebuff.use
+    permission-message: You don't have permission to use this command
   town:
     description: Manage player towns (Nodes)
     aliases: [t]
@@ -90,6 +96,12 @@ commands:
     usage: /port help
 permissions:
   nodes.command.town.fly:
+    default: op
+  nodes.minebuff:
+    description: Allows players to see mine buff broadcasts
+    default: true
+  nodes.minebuff.use:
+    description: Allows players to activate/remove mine buffs
     default: op
   nodes.command.town.create:
    default: op

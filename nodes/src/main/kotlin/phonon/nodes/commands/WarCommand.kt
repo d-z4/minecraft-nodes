@@ -10,12 +10,15 @@ import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
+import phonon.nodes.Config
 import phonon.nodes.Message
 import phonon.nodes.Nodes
 import phonon.nodes.objects.Nation
 import phonon.nodes.objects.Town
 import phonon.nodes.utils.string.filterTownOrNation
+import phonon.nodes.war.FlagWar
 import phonon.nodes.war.Truce
+import phonon.nodes.war.WarExhaustion
 
 /**
  * @command /war
@@ -71,6 +74,49 @@ public class WarCommand :
 
         return true
     }
+
+    private fun showExhaustion(player: Player?) {
+        if (player == null) {
+            return
+        }
+
+        if (!Config.warExhaustionEnabled) {
+            Message.error(player, "War exhaustion is not enabled")
+            return
+        }
+
+        if (!FlagWar.enabled) {
+            Message.error(player, "War is not active")
+            return
+        }
+
+        val resident = Nodes.getResident(player)
+        if (resident == null) {
+            return
+        }
+
+        val town = resident.town
+        if (town == null) {
+            Message.error(player, "You are not in a town")
+            return
+        }
+
+        Message.print(player, "${ChatColor.BOLD}War Exhaustion Status:")
+        Message.print(player, "- Your Town (${town.name})${ChatColor.WHITE}: ${WarExhaustion.getTownExhaustionStatus(town)}")
+
+        val nation = town.nation
+        if (nation != null && Config.rallyCapApplyToNations) {
+            Message.print(player, "- Your Nation (${nation.name})${ChatColor.WHITE}: ${WarExhaustion.getNationExhaustionStatus(nation)}")
+        }
+
+        Message.print(player, "")
+        Message.print(player, "${ChatColor.GRAY}Exhaustion triggers at ${Config.warExhaustionDeathMultiplier}x online player deaths")
+        Message.print(player, "${ChatColor.GRAY}Effect: Weakness ${Config.warExhaustionWeaknessLevel + 1} for ${Config.warExhaustionWeaknessDuration / 20}s")
+    }
+
+    /**
+     * Also update the help text to include the new command:
+     */
 
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<String>): List<String> {
         if (args.size > 0) {

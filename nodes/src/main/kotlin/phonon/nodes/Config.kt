@@ -11,7 +11,9 @@ import org.bukkit.Material
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.entity.EntityType
+import phonon.nodes.Nodes.logger
 import phonon.nodes.objects.OreDeposit
+import phonon.nodes.objects.TabConfig
 import phonon.nodes.objects.TerritoryResources
 import java.nio.file.Paths
 import java.util.EnumMap
@@ -40,6 +42,14 @@ public object Config {
 
     // disable world when nodes world.json or towns.json fails due to errors
     public var disableWorldWhenLoadFails = true
+
+    public var allowAttackThroughWilderness: Boolean = false
+
+    // war exhaustion system
+    public var warExhaustionEnabled: Boolean = false
+    public var warExhaustionDeathMultiplier: Int = 3 // deaths must be this multiple of online count
+    public var warExhaustionWeaknessLevel: Int = 1 // weakness effect level (0 = weakness I, 1 = weakness II, etc)
+    public var warExhaustionWeaknessDuration: Int = 600 // duration in ticks (600 = 30 seconds)
 
     // period for running world save
     public var savePeriod: Long = 600L
@@ -168,6 +178,27 @@ public object Config {
     public var afkKickTime: Long = 900000L
 
     // ===================================
+    // tab list configs
+    // ===================================
+    public var tabEnabled: Boolean = true
+    public var tabUpdatePeriod: Long = 100L
+
+    // staff detection
+    public var tabStaffMinWeight: Int = 50
+    public var tabStaffPermissionGroups: List<String> = listOf("admin", "moderator", "helper")
+    public var tabUseWeightForStaff: Boolean = true
+
+    // section headers
+    public var tabStaffHeader: String = "§6§l⚔ STAFF TEAM ⚔"
+    public var tabNationHeader: String = "§a§l⚜ YOUR NATION ⚜"
+    public var tabTownHeader: String = "§b§l\uD83C\uDFD9 YOUR TOWN \uD83C\uDFD9"
+    public var tabWorldHeader: String = "§7§l\uD83C\uDF10 REST OF WORLD \uD83C\uDF10"
+    public var tabSectionSeparator: String = "§8§m                    "
+
+    // display settings
+    public var tabShowPlayerCounts: Boolean = true
+
+    // ===================================
     // permissions
     // ===================================
     // interact in area with NO TERRITORIES (build, destroy, etc...)
@@ -238,6 +269,11 @@ public object Config {
     // annexation settings
     // only allow annexing during war time
     public var canOnlyAnnexDuringWar: Boolean = true
+
+    var flagBlockMaterial: Material = Material.CRYING_OBSIDIAN
+
+    // Flag torch material (the light source on top)
+    var flagTorchMaterial: Material = Material.TORCH
 
     // ===================================
     // town settings
@@ -411,8 +447,44 @@ public object Config {
         Config.nametagPipelineTicks = config.getInt("nametagPipelineTicks", Config.nametagPipelineTicks)
         Config.dynmapCopyTowns = config.getBoolean("dynmapCopyTowns", Config.dynmapCopyTowns)
 
-        // afk kick time
         Config.afkKickTime = config.getLong("afkKickTime", Config.afkKickTime)
+
+        Config.tabEnabled = config.getBoolean("tab.enabled", Config.tabEnabled)
+        Config.tabUpdatePeriod = config.getLong("tab.updatePeriod", Config.tabUpdatePeriod)
+
+        Config.tabStaffMinWeight = config.getInt("tab.staff.minWeight", Config.tabStaffMinWeight)
+        Config.tabStaffPermissionGroups = config.getStringList("tab.staff.permissionGroups").ifEmpty {
+            listOf("admin", "moderator", "helper")
+        }
+        Config.tabUseWeightForStaff = config.getBoolean("tab.staff.useWeight", Config.tabUseWeightForStaff)
+
+        Config.tabStaffHeader = config.getString("tab.headers.staff", Config.tabStaffHeader) ?: Config.tabStaffHeader
+        Config.tabNationHeader = config.getString("tab.headers.nation", Config.tabNationHeader) ?: Config.tabNationHeader
+        Config.tabTownHeader = config.getString("tab.headers.town", Config.tabTownHeader) ?: Config.tabTownHeader
+        Config.tabWorldHeader = config.getString("tab.headers.world", Config.tabWorldHeader) ?: Config.tabWorldHeader
+        Config.tabSectionSeparator = config.getString("tab.sectionSeparator", Config.tabSectionSeparator) ?: Config.tabSectionSeparator
+
+        Config.tabShowPlayerCounts = config.getBoolean("tab.showPlayerCounts", Config.tabShowPlayerCounts)
+
+        TabConfig.staffMinWeight = Config.tabStaffMinWeight
+        TabConfig.staffPermissionGroups = Config.tabStaffPermissionGroups
+        TabConfig.useWeightForStaff = Config.tabUseWeightForStaff
+        TabConfig.staffHeader = Config.tabStaffHeader
+        TabConfig.nationHeader = Config.tabNationHeader
+        TabConfig.townHeader = Config.tabTownHeader
+        TabConfig.worldHeader = Config.tabWorldHeader
+        TabConfig.sectionSeparator = Config.tabSectionSeparator
+        TabConfig.showPlayerCounts = Config.tabShowPlayerCounts
+        TabConfig.tabUpdatePeriod = Config.tabUpdatePeriod
+
+        // war
+
+        Config.allowAttackThroughWilderness = config.getBoolean("allowAttackThroughWilderness", Config.allowAttackThroughWilderness)
+
+        Config.warExhaustionEnabled = config.getBoolean("warExhaustionEnabled", Config.warExhaustionEnabled)
+        Config.warExhaustionDeathMultiplier = config.getInt("warExhaustionDeathMultiplier", Config.warExhaustionDeathMultiplier)
+        Config.warExhaustionWeaknessLevel = config.getInt("warExhaustionWeaknessLevel", Config.warExhaustionWeaknessLevel)
+        Config.warExhaustionWeaknessDuration = config.getInt("warExhaustionWeaknessDuration", Config.warExhaustionWeaknessDuration)
 
         // generic permissions
         Config.canInteractInEmpty = config.getBoolean("canInteractInEmpty", Config.canInteractInEmpty)
@@ -445,6 +517,26 @@ public object Config {
         val globalResourcesSection = config.getConfigurationSection("globalResources")
         if (globalResourcesSection !== null) {
             Config.globalResources = parseGlobalResources(globalResourcesSection)
+        }
+
+        val flagBlockStr = config.getString("war.flag_block_material", "CRYING_OBSIDIAN")
+        try {
+            if (flagBlockStr != null) {
+                flagBlockMaterial = Material.valueOf(flagBlockStr.uppercase())
+            }
+        } catch (e: IllegalArgumentException) {
+            logger?.warning("Invalid flag block material '$flagBlockStr', using default CRYING_OBSIDIAN")
+            flagBlockMaterial = Material.CRYING_OBSIDIAN
+        }
+
+        val flagTorchStr = config.getString("war.flag_torch_material", "TORCH")
+        try {
+            if (flagTorchStr != null) {
+                flagTorchMaterial = Material.valueOf(flagTorchStr.uppercase())
+            }
+        } catch (e: IllegalArgumentException) {
+            logger?.warning("Invalid flag torch material '$flagTorchStr', using default TORCH")
+            flagTorchMaterial = Material.TORCH
         }
 
         // town claims

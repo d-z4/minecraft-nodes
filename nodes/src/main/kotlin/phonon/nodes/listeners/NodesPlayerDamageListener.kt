@@ -8,6 +8,7 @@ import phonon.nodes.Config
 import phonon.nodes.Message
 import phonon.nodes.Nodes.getRelationshipOfPlayerToPlayer
 import phonon.nodes.constants.DiplomaticRelationship
+import phonon.nodes.war.WarExhaustion
 
 public class NodesPlayerDamageListener : Listener {
 
@@ -36,5 +37,13 @@ public class NodesPlayerDamageListener : Listener {
             event.setCancelled(true)
             Message.error(attacker, message)
         }
+    }
+
+    @EventHandler
+    public fun onPlayerDeath(event: org.bukkit.event.entity.PlayerDeathEvent) {
+        val player = event.entity
+
+        // Track death for war exhaustion system
+        WarExhaustion.onPlayerDeath(player.uniqueId)
     }
 }

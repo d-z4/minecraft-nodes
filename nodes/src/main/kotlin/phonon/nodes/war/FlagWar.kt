@@ -304,6 +304,7 @@ public object FlagWar {
         FlagWar.chunkToAttacker.clear()
         FlagWar.blockToAttacker.clear()
         FlagWar.occupiedChunks.clear()
+        WarExhaustion.reset()
     }
 
     /**
@@ -356,6 +357,8 @@ public object FlagWar {
         FlagWar.chunkToAttacker.clear()
         FlagWar.blockToAttacker.clear()
         FlagWar.occupiedChunks.clear()
+
+        WarExhaustion.reset()
 
         // save war.json (empty)
         WarSerializer.save(true)
@@ -533,8 +536,8 @@ public object FlagWar {
         }
 
         // initialize flag blocks
-        flagBlock.setType(Material.CRYING_OBSIDIAN)
-        flagTorch.setType(Material.TORCH)
+        flagBlock.setType(Config.flagBlockMaterial)
+        flagTorch.setType(Config.flagTorchMaterial)
 
         // create new attack instance
         val attack = Attack(
@@ -694,7 +697,7 @@ public object FlagWar {
      * conditions for attacking a chunk relative to a neighbor chunk
      */
     internal fun canAttackFromNeighborChunk(neighborChunk: TerritoryChunk?, attacker: Town): Boolean {
-        // no territory here
+        // FIX: If wilderness attacks enabled, allow attacking from wilderness
         if (neighborChunk === null) {
             return true
         }
@@ -706,7 +709,12 @@ public object FlagWar {
         val neighborTerritoryOccupier = neighborTerritory.occupier
         val neighborChunkOccupier = neighborChunk.occupier
 
-        // territory is unoccupied
+        // NEW: If wilderness attacks enabled and no town, treat as ally
+        if (Config.allowAttackThroughWilderness && neighborTown === null) {
+            return true
+        }
+
+        // territory is unoccupied (original check)
         if (neighborTown === null) {
             return true
         }
