@@ -14,6 +14,9 @@ import {
     RENDER_TOWN_NAMETAG_NONE, RENDER_TOWN_NAMETAG_TOWN, RENDER_TOWN_NAMETAG_NATION,
     TownSortKey,
 } from "constants.js";
+
+import { NODE_EDITOR_VERSION } from "editor.jsx";
+
 import * as UI from "ui/ui.jsx";
 import IconOptionIcons from "assets/icon/icon-option-icons.svg";
 import IconOptionId from "assets/icon/icon-option-id.svg";
@@ -464,6 +467,10 @@ At some point i want this option to show all the outposts on the map        */}
             <div>Controls</div>
             <div>- [Shift + Right Click] to select multiple nodes</div>
 
+        </div>
+
+        <div className="nodes-version-info">
+            <div>Dynmap Towny Viewer v{NODE_EDITOR_VERSION}</div>
         </div>
         
         </>

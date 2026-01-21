@@ -35,6 +35,8 @@ const PANEL_TOWNS = 4;
 const PANEL_OPTIONS = 5;
 const PANEL_PORT_OUPOST_EDITOR = 6;
 
+const NODE_EDITOR_VERSION = "1.1.0";
+
 const EditorTab = (props) => {
     let className = "nodes-editor-tab";
     if ( props.selected ) {
@@ -262,6 +264,7 @@ export const Editor = (props) => {
                         selectedTerritory={props.selectedTerritory}
                         showPorts={showPorts} 
                         setShowPorts={setShowPorts}
+                        NODE_EDITOR_VERSION={NODE_EDITOR_VERSION}
                     />
                 </EditorPane>
                 { props.editorEnabled ? 

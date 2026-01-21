@@ -1,8 +1,7 @@
 # TODO
 
 ## Super High
-- Custom Warning system for editor
-  - a build in warning system would be super useful to tell admins why their x is broken (x being world.json, town.json, town they created, nation ect).
+- Shift + Right clicking a selected node will unselect it.
 
 ## High Priority:
 - make an editor for ports on webmap (editor will be in global options pane).
@@ -12,9 +11,10 @@
 
 
 ## Medium:
-- Shift + Right clicking a selected node will unselect it.
 - make outposts show on the map with a toggle button like ports.
 - add more info to resource node tooltip | attack time, liberation time, etc.
+
+
 ## Low:
 - add a search bar to search towns by name | Not super needed at all.
 

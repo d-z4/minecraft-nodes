@@ -444,10 +444,6 @@ const NodesSvgRenderer = L.Layer.extend({
  */
 const Nodes = {
 
-    // versioning TODO
-    version: {major: 1, minor: 1, patch: 0,
-    },
-
     // ============================================
     // Notification system - use instead of console.warn/error
     // ============================================
@@ -573,16 +569,6 @@ const Nodes = {
         ore: {},
         crops: {},
         animals: {},
-        income_total_multiplier: 1.0,
-        crops_total_multiplier: 1.0,
-        ore_total_multiplier: 1.0,
-        attacker_time_multiplier: 1.0,
-        animals_total_multiplier: 1.0,
-        neighbor_attacker_time_multiplier: 1.0,
-        neighbor_income_total_multiplier: 1.0,
-        neighbor_crops_total_multiplier: 1.0,
-        neighbor_ore_total_multiplier: 1.0,
-        neighbor_animals_total_multiplier: 1.0,
     }),
         null,
         3,
@@ -626,7 +612,7 @@ const Nodes = {
     shiftKey: false, // detect shift key down
     ctrlKey: false,  // detect ctrl key down
     isPainting: false,
-    paintRadius: 2.0, // size of paint cursor
+    paintRadius: 4.0, // size of paint cursor
     isEditingTerritoryNodes: false, // allow assign/remove nodes with ctrl + click select 
     // paint settings
     minPaintRadius: 1.0,  // min brush radius
@@ -773,6 +759,13 @@ const Nodes = {
                 else if ( e.key === "a" && Nodes.enabledPainting ) {
                     Nodes._createTerritory();
                 }
+                else if ( e.key === "Delete" || e.key === "Backspace" ) {
+                    Nodes._deleteTerritory();
+                }
+                else if ( e.key === "e" ) {
+                    Nodes._mergeTerritories();
+                }
+                // add "give random resource" keybind (use the list in territy panel)
             });
         }
         else {

@@ -57,6 +57,13 @@
     user-select: none;
 }
 
+.nodes-version-info {
+    margin-top: 8px;
+    color: #888;
+    font-size: 12px;
+    user-select: none;
+}
+
 .nodes-info-help {
     margin-top: 8px;
     color: #888;
