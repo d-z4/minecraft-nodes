@@ -1,0 +1,136 @@
+/* === Purple Dark Cyber Theme Overrides for Leaflet === */
+
+/* Base map container - deep purple-black gradient */
+.leaflet-container {
+    background: linear-gradient(135deg, #0f001a 0%, #1a0033 100%) !important;
+    color: #d0c0ff !important;
+}
+
+/* Tiles background fallback (shows during load / pan) */
+.leaflet-tile-pane {
+    background: #0a0015 !important;
+}
+
+/* === Controls / Bars (zoom, layers, etc.) === */
+.leaflet-bar {
+    box-shadow: 0 2px 12px rgba(108, 77, 255, 0.45) !important;
+    border-radius: 8px !important;
+    background: rgba(30, 10, 60, 0.85) !important;
+    backdrop-filter: blur(6px) !important;
+}
+
+.leaflet-bar a,
+.leaflet-bar a:hover {
+    background-color: #2a004d !important;
+    border-bottom: 1px solid #6b4aff66 !important;
+    color: #c4aaff !important;
+    width: 32px !important;
+    height: 32px !important;
+    line-height: 32px !important;
+    border-radius: 6px !important;
+    margin: 3px !important;
+    transition: all 0.15s ease !important;
+}
+
+.leaflet-bar a:hover {
+    background-color: #3f0099 !important;
+    color: #e0d4ff !important;
+    box-shadow: 0 0 12px rgba(123, 97, 255, 0.6) !important;
+}
+
+.leaflet-bar a:first-child { border-top-left-radius: 8px !important; border-top-right-radius: 8px !important; }
+.leaflet-bar a:last-child  { border-bottom-left-radius: 8px !important; border-bottom-right-radius: 8px !important; }
+
+/* Zoom buttons symbols */
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+    font-size: 20px !important;
+    color: #b19cff !important;
+}
+
+/* Layers control */
+.leaflet-control-layers {
+    background: rgba(20, 5, 45, 0.9) !important;
+    box-shadow: 0 3px 18px rgba(108, 77, 255, 0.35) !important;
+    border-radius: 10px !important;
+    color: #d0c0ff !important;
+}
+
+.leaflet-control-layers-expanded {
+    background: #1a0033 !important;
+    color: #e0d4ff !important;
+}
+
+.leaflet-control-layers-separator {
+    border-top: 1px solid #6b4aff44 !important;
+}
+
+/* Attribution (usually bottom-right) */
+.leaflet-control-attribution {
+    background: rgba(15, 0, 35, 0.75) !important;
+    color: #a78dff !important;
+    padding: 3px 8px !important;
+    border-radius: 6px !important;
+}
+
+.leaflet-control-attribution a {
+    color: #b19cff !important;
+}
+
+/* === Popups === */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+    background: #1f0042 !important;
+    color: #e0d4ff !important;
+    box-shadow: 0 4px 20px rgba(108, 77, 255, 0.5) !important;
+    border: 1px solid #6b4aff66 !important;
+}
+
+.leaflet-popup-content {
+    color: #d0c0ff !important;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+    color: #b19cff !important;
+}
+
+.leaflet-container a.leaflet-popup-close-button:hover {
+    color: #e0d4ff !important;
+}
+
+/* === Tooltips === */
+.leaflet-tooltip {
+    background: rgba(30, 10, 60, 0.92) !important;
+    border: 1px solid #8a6aff !important;
+    color: #e0d4ff !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.6) !important;
+    padding: 7px 11px !important;
+    border-radius: 6px !important;
+}
+
+.leaflet-tooltip:before {
+    border-color: transparent !important;
+}
+
+.leaflet-tooltip-top:before    { border-top-color: #8a6aff !important; }
+.leaflet-tooltip-bottom:before  { border-bottom-color: #8a6aff !important; }
+.leaflet-tooltip-left:before    { border-left-color: #8a6aff !important; }
+.leaflet-tooltip-right:before   { border-right-color: #8a6aff !important; }
+
+/* === Optional: Purple-tinted tile "hack" for dark/purple vibe ===
+   (use if your basemap is light – adjust hue-rotate/saturate for more/less purple)
+   Warning: can be CPU heavy on low-end devices & may look weird on some tile providers */
+.leaflet-tile {
+    /* filter: brightness(0.85) invert(0.92) hue-rotate(210deg) saturate(1.4) contrast(0.95); */
+    /* Uncomment above line if you want a quick purple shift without changing tiles */
+}
+
+/* Make interactive elements pop a bit more */
+.leaflet-interactive {
+    outline: none !important;
+}
+
+.leaflet-marker-icon.leaflet-interactive,
+.leaflet-pane > svg path.leaflet-interactive {
+    filter: drop-shadow(0 0 6px rgba(123, 97, 255, 0.7)) !important;
+}

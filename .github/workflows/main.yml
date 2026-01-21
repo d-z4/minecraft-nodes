@@ -1,0 +1,82 @@
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: |
+          cd nodes
+          chmod +x gradlew
+          ./gradlew clean build
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: |
+         cd dynmap
+         npm install
+         rustup target add wasm32-unknown-unknown
+         cargo install -f --version 0.2.100 wasm-bindgen-cli
+         npm run wasm
+         npm run build
+         zip -r dynmap.zip build/*
+         
+      - if: github.event_name == 'push'
+        id: get_version
+        run: |
+          VERSION=""
+          if [ -f "nodes/build.gradle.kts" ]; then
+            VERSION=$(grep -E "version\s*=\s*['\"]" nodes/build.gradle.kts | sed -E "s/.*version\s*=\s*['\"]([^'\"]+)['\"].*/\1/" | head -n 1)
+          fi
+          if [ -z "$VERSION" ]; then
+            echo "Could not determine version"
+            exit 1
+          fi
+          echo "Detected version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - if: github.event_name == 'push'
+        id: check_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.get_version.outputs.version }}
+        run: |
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - if: github.event_name == 'push' && steps.check_release.outputs.exists == 'false'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.get_version.outputs.version }}
+        run: |
+          NODES_JAR=nodes/build/libs/nodes-$VERSION.jar
+          DYNMAP_ZIP=dynmap/dynmap.zip
+          ALL="$NODES_JAR $DYNMAP_ZIP"
+          if [ -z "$ALL" ]; then
+            echo "No build files found"
+            exit 1
+          fi
+          echo "Found build files: $ALL"
+          gh release create "v$VERSION" $ALL \
+            --title "Release v$VERSION" \
+            --notes "Automated release for version $VERSION."

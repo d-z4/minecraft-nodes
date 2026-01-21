@@ -1,0 +1,84 @@
+/* nodes-global.css - Purple cyber / dark aesthetic edition */
+
+html {
+    height: 100%;
+    width: 100%;
+    background: #0d001a; /* deep purple-black */
+}
+
+body {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #0f001f 0%, #1a0033 100%);
+    color: #e0d4ff;
+}
+
+#page-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    background: #0a0015;
+}
+
+#nodes-container {
+    height: 100%;
+    width: 480px;              /* wider sidebar */
+    min-width: 480px;
+    background: linear-gradient(to bottom, #1a0033, #2a004d);
+    border-right: 1px solid #6b4aff44;
+    box-shadow: 4px 0 25px rgba(108, 77, 255, 0.25);
+    backdrop-filter: blur(4px);
+    z-index: 10;
+    overflow-y: auto;
+}
+
+/* Optional: subtle glow on hover/focus for interactive elements inside nodes */
+#nodes-container:hover {
+    box-shadow: 6px 0 35px rgba(123, 97, 255, 0.4);
+    transition: box-shadow 0.4s ease;
+}
+
+#dynmap-container {
+    flex-grow: 1;
+    position: relative;
+    background: #0a0015;
+    border: none;
+}
+
+/* Make sure Leaflet panes play nice with the new z-order */
+.leaflet-nodes-pane {
+    z-index: 650 !important;   /* higher than most map layers */
+}
+
+#nodes-world {
+    z-index: 650 !important;
+}
+
+/* Make SVG paths in nodes layer more interactive & visible */
+.leaflet-nodes-pane > svg path {
+    pointer-events: all;
+    stroke: #b19cff;
+    stroke-width: 2.5;
+    fill: rgba(140, 100, 255, 0.18);
+    transition: all 0.2s ease;
+}
+
+.leaflet-nodes-pane > svg path:hover {
+    fill: rgba(160, 120, 255, 0.45);
+    stroke: #d5c0ff;
+    stroke-width: 3.2;
+}
+
+/* Optional: faint purple overlay on the whole map (subtle cyber feel) */
+#dynmap-container::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 70%, rgba(108, 77, 255, 0.08) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 1;
+}
