@@ -1466,23 +1466,14 @@ public class TownCommand :
             return
         }
 
-        // check player permissions
-        val hasPermissions = if (resident === town.leader || town.officers.contains(resident)) {
-            true
-        } else if (town.permissions[TownPermissions.INCOME].contains(PermissionsGroup.TOWN) && resident.town === town) {
-            true
-        } else if (town.permissions[TownPermissions.INCOME].contains(PermissionsGroup.TRUSTED) && resident.town === town && resident.trusted) {
-            true
-        } else {
-            false
+        // Check if player is leader or officer (ONLY these can access income)
+        if (resident !== town.leader && !town.officers.contains(resident)) {
+            Message.error(player, "Only town leaders and officers can access town income")
+            return
         }
 
-        // open town inventory
-        if (hasPermissions) {
-            player.openInventory(Nodes.getTownIncomeInventory(town))
-        } else {
-            Message.error(player, "You do not have permissions to view town income")
-        }
+        // Open town inventory
+        player.openInventory(Nodes.getTownIncomeInventory(town))
     }
 
     /**
