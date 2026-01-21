@@ -33,6 +33,7 @@ const PANEL_NODES = 2;
 const PANEL_GENERATION = 3;
 const PANEL_TOWNS = 4;
 const PANEL_OPTIONS = 5;
+const PANEL_PORT_OUPOST_EDITOR = 6;
 
 const EditorTab = (props) => {
     let className = "nodes-editor-tab";
@@ -90,8 +91,8 @@ export const Editor = (props) => {
     const [colorPickerColor, setColorPickerColor] = useState("#ff0000");
     const [colorPickerTop, setColorPickerTop] = useState(100);
     const [colorPickerLeft, setColorPickerLeft] = useState(100);
-    const [colorPickerOnChange, setColorPickerOnChange] = useState(() => (col) => console.log("Color picker onChange:", col));
-    const [colorPickerOnExit, setColorPickerOnExit] = useState(() => (col) => console.log("Color picker onExit:", col));
+    const [colorPickerOnChange, setColorPickerOnChange] = useState(() => (col) => Nodes.log("Color picker onChange:", col));
+    const [colorPickerOnExit, setColorPickerOnExit] = useState(() => (col) => Nodes.log("Color picker onExit:", col));
 
     const [showPorts, setShowPortsState] = useState(true);
     

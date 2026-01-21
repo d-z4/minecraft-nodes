@@ -473,10 +473,19 @@ const Nodes = {
     /**
      * Display an error notification.
      * @param {string} message - Message to display
-     * @param {number} duration - Auto-dismiss time in ms (default: 8000, 0 = no auto-dismiss)
+     * @param {number} duration - Auto-dismiss time in ms (default: 0, 0 = no auto-dismiss)
      */
-    error: (message, duration = 8000) => {
+    error: (message, duration = 0) => {
         return NotificationManager.error(message, duration);
+    },
+
+    /**
+     * Display a log notification.
+     * @param {string} message - Message to display
+     * @param {number} duration - Auto-dismiss time in ms (default: 4000, 0 = no auto-dismiss)
+     */
+    log: (message, duration = 4000) => {
+        return NotificationManager.log(message, duration);
     },
 
     /**
@@ -839,7 +848,7 @@ const Nodes = {
                 Nodes.renderEditor();
             }
         })
-        .catch(err => { console.error(err) });
+        .catch(err => { Nodes.error(err); });
         
         if ( callback !== undefined ) {
             callback();
@@ -911,7 +920,7 @@ const Nodes = {
                         Nodes.load(json, mergeFile, render);
                         resolve();
                     } catch ( err ) {
-                        console.error(err);
+                        Nodes.error(`Failed to load nodes file: '${path}': ${err}`);
                         reject();
                     }
                 }
@@ -1170,7 +1179,7 @@ const Nodes = {
             }
         }
         else {
-            console.error("Invalid load metadata")
+            Nodes.error("Invalid load metadata")
         }
     },
 
@@ -1235,10 +1244,10 @@ const Nodes = {
                 if ( town.territories.length > 0 ) {
                     const lowestTerritoryId = Math.min(...town.territories);
                     town.home = lowestTerritoryId;
-                    console.log(`Set home territory of town ${town.name} to territory ${lowestTerritoryId}`);
+                    Nodes.log(`Set home territory of town ${town.name} to territory ${lowestTerritoryId}`);
                 }
                 else {
-                    console.warn(`Town ${town.name} has no territories...`);
+                    Nodes.warn(`Town ${town.name} has no territories...`);
                 }
             }
             towns[name] = town.export();
@@ -1255,7 +1264,7 @@ const Nodes = {
 
                 if (townWithMostTerritories) {
                     nation.capital = townWithMostTerritories.name;
-                    console.log(`Set capital of nation ${nation.name} to town ${townWithMostTerritories.name}`);
+                    Nodes.log(`Set capital of nation ${nation.name} to town ${townWithMostTerritories.name}`);
                 }
             }
             nations[name] = nation.export();
@@ -1311,7 +1320,7 @@ const Nodes = {
             }
         }
         else {
-            console.error(`No "${setting}" property in Nodes`);
+            Nodes.warn(`No "${setting}" property in Nodes`);
         }
     },
 
@@ -1681,7 +1690,7 @@ const Nodes = {
         else {
             // new name was inputed, if it already exists, error and stop
             if ( Node.towns.has(newTownName) ) {
-                console.error(`Cannot create new town ${newTownName} because name already exists.`);
+                Nodes.warn(`Cannot create new town ${newTownName} because name already exists.`);
                 return;
             }
         }
@@ -1710,7 +1719,7 @@ const Nodes = {
         let town = Nodes.towns.get(name);
 
         if ( town === undefined ) {
-            console.log(`Town with name ${name} does not exist, cannot be deleted.`);
+            Nodes.info(`Town with name ${name} does not exist, cannot be deleted.`);
             return;
         }
         
@@ -1755,7 +1764,7 @@ const Nodes = {
      * Set a town's name.
      */
     setTownName: (town, newTownName) => {
-        console.log(`Setting town name ${town} ${town.name} to ${newTownName}`);
+        Nodes.info(`Setting town name ${town} ${town.name} to ${newTownName}`);
 
         if ( town === undefined || town === null ) {
             return;
@@ -1768,13 +1777,13 @@ const Nodes = {
 
         // if town with name already exists, print error and return
         if ( Nodes.towns.has(newTownName) ) {
-            console.error(`Cannot rename ${town.name} => ${newTownName} because name already exists.`);
+            Nodes.error(`Cannot rename ${town.name} => ${newTownName} because name already exists.`);
             return;
         }
 
         // remove old town in towns map
         if ( Nodes.towns.delete(town.name) !== true ) {
-            console.error (`Failed to delete old town named ${town.name} from towns map`);
+            Nodes.error (`Failed to delete old town named ${town.name} from towns map`);
             return;
         }
 
@@ -1808,7 +1817,7 @@ const Nodes = {
         
         // make sure new home is within town's territories
         if ( !town.territories.includes(newHomeIdInt) ) {
-            console.error(`Cannot set town ${town.name} home to ${newHomeIdInt} because it is not a territory in the town.`);
+            Nodes.error(`Cannot set town ${town.name} home to ${newHomeIdInt} because it is not a territory in the town.`);
             return;
         }
 
@@ -1833,11 +1842,11 @@ const Nodes = {
      */
     setSelectedTownHomeToSelectedTerritory: () => {
         if ( Nodes.selectedTown === undefined || Nodes.selectedTown === null ) {
-            console.error(`setSelectedTownHomeToSelectedTerritory: No selected town.`)
+            Nodes.error(`setSelectedTownHomeToSelectedTerritory: No selected town.`)
             return;
         }
         if ( Nodes.selectedTerritory === undefined || Nodes.selectedTerritory === null ) {
-            console.error(`setSelectedTownHomeToSelectedTerritory: No selected territory.`)
+            Nodes.error(`setSelectedTownHomeToSelectedTerritory: No selected territory.`)
             return;
         }
 
@@ -1859,7 +1868,7 @@ const Nodes = {
      */
     setTownNationFromName: (town, newNationName) => {
         if ( town === undefined || town === null ) {
-            console.error("setTownNationFromName: Town undefined, cannot set nation");
+            Nodes.error("setTownNationFromName: Town undefined, cannot set nation");
             return;
         }
 
@@ -1963,13 +1972,13 @@ const Nodes = {
     addTownResident: (town, playerName, rank = RESIDENT_RANK_NONE) => {
         // if town undefined early exit
         if ( town === undefined || town === null ) {
-            console.log("Town undefined, cannot add resident");
+            Nodes.info("Town undefined, cannot add resident");
             return;
         }
         
         // if player already in town, skip
         if ( town.residents.some(r => r.name === playerName) ) {
-            console.error(`Town ${town.name} already has resident ${playerName}, skipping`);
+            Nodes.log(`Town ${town.name} already has resident ${playerName}, skipping`);
             return;
         }
 
@@ -2007,14 +2016,14 @@ const Nodes = {
     removeTownResident: (town, playerName) => {
         // if town undefined early exit
         if ( town === undefined || town === null ) {
-            console.error("Town undefined, cannot add resident");
+            Nodes.error("Town undefined, cannot add resident");
             return;
         }
         
         // find player index in residents array
         const playerIndex = town.residents.findIndex(r => r.name === playerName);
         if ( playerIndex === -1 ) {
-            console.error(`Town ${town.name} does not have resident ${playerName}, skipping`);
+            Nodes.log(`Town ${town.name} does not have resident ${playerName}, skipping`);
             return;
         }
 
@@ -2050,12 +2059,12 @@ const Nodes = {
      */
     addTownTerritories: (town, territories) => {
         if ( town === undefined || town === null ) {
-            console.error("Town undefined, cannot add territories");
+            Nodes.warn("Town undefined, cannot add territories");
             return;
         }
 
         if ( territories === undefined || territories === null || territories.size === 0 ) {
-            console.error("No territories to add");
+            Nodes.warn("No territories to add");
             return;
         }
 
@@ -2094,12 +2103,12 @@ const Nodes = {
      */
     addTownCapturedTerritories: (town, territories) => {
         if ( town === undefined || town === null ) {
-            console.error("Town undefined, cannot add territories");
+            Nodes.warn("Town undefined, cannot add territories");
             return;
         }
 
         if ( territories === undefined || territories === null || territories.size === 0 ) {
-            console.error("No territories to add");
+            Nodes.warn("No territories to add");
             return;
         }
 
@@ -2131,12 +2140,12 @@ const Nodes = {
      */
     removeTownTerritories: (town, territories) => {
         if ( town === undefined || town === null ) {
-            console.error("Town undefined, cannot add territories");
+            Nodes.warn("Town undefined, cannot remove territories");
             return;
         }
 
         if ( territories === undefined || territories === null || territories.size === 0 ) {
-            console.error("No territories to remove");
+            Nodes.warn("No territories to remove");
             return;
         }
 
@@ -2223,7 +2232,7 @@ const Nodes = {
      */
     removeTerritoriesOwned: (territories) => {
         if ( territories === undefined || territories === null || territories.size === 0 ) {
-            console.error("No territories to remove");
+            Nodes.warn("No territories to remove");
             return;
         }
 
@@ -2282,7 +2291,7 @@ const Nodes = {
      */
     removeTerritoriesCaptured: (territories) => {
         if ( territories === undefined || territories === null || territories.size === 0 ) {
-            console.error("No territories to remove");
+            Nodes.warn("No territories to remove");
             return;
         }
 
@@ -2335,12 +2344,12 @@ const Nodes = {
      */
     setTownColor: (town, color) => {
         if ( town === undefined || town === null ) {
-            console.error("setTownColor: town is undefined");
+            Nodes.warn("setTownColor: town is undefined");
             return;
         }
 
         if ( color === undefined || color === null ) {
-            console.error("setTownColor: color is undefined");
+            Nodes.warn("setTownColor: color is undefined");
             return;
         }
 
@@ -2368,7 +2377,7 @@ const Nodes = {
      */
     setSelectedTownColor: (color) => {
         if ( Nodes.selectedTown === undefined || Nodes.selectedTown === null ) {
-            console.error("setSelectedTownColor: no town selected");
+            Nodes.warn("setSelectedTownColor: no town selected");
             return;
         }
 
@@ -2383,12 +2392,12 @@ const Nodes = {
      */
     setNationColor: (nation, color) => {
         if ( nation === undefined || nation === null ) {
-            console.error("setNationColor: nation is undefined");
+            Nodes.warn("setNationColor: nation is undefined");
             return;
         }
 
         if ( color === undefined || color === null ) {
-            console.error("setNationColor: color is undefined");
+            Nodes.warn("setNationColor: color is undefined");
             return;
         }
 
@@ -2421,13 +2430,13 @@ const Nodes = {
      */
     setSelectedTownNationColor: (color) => {
         if ( Nodes.selectedTown === undefined ) {
-            console.error("setSelectedTownColor: no town selected");
+            Nodes.warn("setSelectedTownColor: no town selected");
             return;
         }
 
         const nation = Nodes.nations.get(Nodes.selectedTown.nation);
         if ( nation === undefined ) {
-            console.error("setSelectedTownColor: town has no nation");
+            Nodes.warn("setSelectedTownColor: town has no nation");
             return;
         }
 
@@ -2846,7 +2855,7 @@ const Nodes = {
 
         for ( const id of ids ) {
             if ( !Nodes.territories.has(id) ) {
-                console.error("Cannot merge:", id, "does not exist");
+                Nodes.error("Cannot merge:", id, "does not exist");
                 return;
             }
         }
@@ -2885,13 +2894,13 @@ const Nodes = {
      * Wrapper for merging selected territory ids
      */
     mergeSelectedTerritories: () => {
-        console.log("Merging selected territories...");
+        Nodes.log("Merging selected territories...");
         let newId = Nodes._mergeTerritories(Nodes.selectedTerritoryIds());
         if ( newId !== undefined ) {
-            console.log(`Merged into id=${newId}`);
+            Nodes.log(`Merged into id=${newId}`);
         }
         else {
-            console.log("No merge");
+            Nodes.log("No merge");
         }
     },
 
@@ -2912,7 +2921,7 @@ const Nodes = {
     ) => {
 
         if ( !Nodes.territories.has(id) ) {
-            console.error(`Invalid territory ${id}`);
+            Nodes.error(`Invalid territory ${id}`);
             return;
         }
 
@@ -3175,7 +3184,7 @@ const Nodes = {
                 prTotal += resources[r];
             }
             else {
-                console.error(`No resource ${r}, skipping`);
+                Nodes.warn(`No resource ${r}, skipping`);
             }
         }
 
@@ -3377,7 +3386,7 @@ const Nodes = {
         if ( index < territoryElements.length ) {
             let terrElement = territoryElements[index];
             if ( terrElement !== undefined && id !== terrElement.props.territory.id ) {
-                console.error("UPDATE TERRITORY ELEMENT ID DOES NOT MATCH", id, terr);
+                Nodes.error("UPDATE TERRITORY ELEMENT ID DOES NOT MATCH", id, terr);
                 return;
             }
 
@@ -3393,7 +3402,7 @@ const Nodes = {
             Nodes.territoryElements = territoryElements;
         }
         else {
-            console.error("new territory index out of bounds?");
+            Nodes.error("new territory index out of bounds?");
             return;
         }
     },
@@ -3414,7 +3423,7 @@ const Nodes = {
             if ( index < territoryElements.length ) {
                 let terrElement = territoryElements[index];
                 if ( terrElement !== undefined && id !== terrElement.props.territory.id ) {
-                    console.error("UPDATE TERRITORY ELEMENT ID DOES NOT MATCH", id, terr);
+                    Nodes.error("UPDATE TERRITORY ELEMENT ID DOES NOT MATCH", id, terr);
                     return;
                 }
 
@@ -3427,7 +3436,7 @@ const Nodes = {
                 territoryElements[index] = Nodes._createTerritoryJsx(terr);
             }
             else {
-                console.error("new territory index out of bounds?");
+                Nodes.error("new territory index out of bounds?");
                 return;
             }
         });
@@ -3555,7 +3564,7 @@ const Nodes = {
                 tagName = town.name;
             }
         } else {
-            console.error(`Invalid town name render mode: ${Nodes.renderTownNames}`);
+            Nodes.error(`Invalid town name render mode: ${Nodes.renderTownNames}`);
             return null;
         }
 
@@ -3736,14 +3745,14 @@ const Nodes = {
     _color: () => {
     
         // calculate neighbors
-        console.log("calculating neighbors");
+        Nodes.log("calculating neighbors");
         Nodes.wasmWorld.calculateNeighbors();
 
         // generate colors
-        console.log("generating colors")
+        Nodes.log("generating colors")
         Nodes.wasmWorld.generateColors();
 
-        console.log("verifying color solution");
+        Nodes.log("verifying color solution");
         
         let passed = true;
 
@@ -3753,7 +3762,7 @@ const Nodes = {
             terr.color = Nodes.wasmWorld.getTerritoryColor(terr.id);
 
             if ( terr.color == undefined || terr.color == null ) {
-                console.error(`terr ${terr.id}: has no color`);
+                Nodes.error(`terr ${terr.id}: has no color`);
                 passed = false;
             }
         });
@@ -3763,14 +3772,14 @@ const Nodes = {
             terr.neighbors.forEach(neighborId => {
                 const neighbor = Nodes.territories.get(neighborId);
                 if ( terr.color == neighbor.color ) {
-                    console.error(`terr ${terr.id} - ${neighbor.id}: same color ${terr.color}`);
+                    Nodes.error(`terr ${terr.id} - ${neighbor.id}: same color ${terr.color}`);
                     passed = false;
                 }
             });
         });
 
         if ( passed ) {
-            console.log("PASSED COLOR CHECK");
+            Nodes.log("PASSED COLOR CHECK");
         }
 
         // render colors
@@ -3783,7 +3792,7 @@ const Nodes = {
     // and set territories isEdge property
     _calculateTerritoriesAtEdge: () => {
         // calculate neighbors
-        console.log("calculating neighbors");
+        Nodes.log("calculating neighbors");
         Nodes.wasmWorld.calculateNeighbors();
 
         // set isEdge
@@ -3803,7 +3812,7 @@ const Nodes = {
 
     _getTerritoriesInAABB: (xmin, zmin, xmax, zmax, select = true) => {
         // calculate neighbors
-        console.log(`Getting territories from (${xmin},${zmin}) to (${xmax},${zmax})`);
+        Nodes.log(`Getting territories from (${xmin},${zmin}) to (${xmax},${zmax})`);
         const terrIds = Nodes.wasmWorld.getTerritoriesInAABB(xmin, zmin, xmax, zmax);
         
         if ( select ) {

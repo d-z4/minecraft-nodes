@@ -55,8 +55,8 @@ const ColorSelector = ({
             color,
             0,
             0,
-            (col) => console.log("ColorPicker.onChange", col),
-            (col) => console.log("ColorPicker.onExit", col),
+            (col) => Nodes.log("ColorPicker.onChange", col),
+            (col) => Nodes.log("ColorPicker.onExit", col),
         );
     };
 

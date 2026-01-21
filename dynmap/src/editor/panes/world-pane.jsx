@@ -323,8 +323,6 @@ export const WorldPane = (props) => {
         selectedTerritoryNodes: selectedTerritoryNodes,
         setResourceTooltip: setResourceTooltip,
     }), [selectedTerritory, selectedTerritoryNodesCount]);
-    console.log("Nodes object:", Nodes);
-    console.log("Ports Toggle:", props.showPorts);
     return (
         <>
         <div id="nodes-editor-options-header">Map Options:</div>

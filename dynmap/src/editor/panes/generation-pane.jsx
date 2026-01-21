@@ -30,12 +30,12 @@ import "editor/css/panes/generation-pane.css";
 
 const handleBtnSubdivide = () => {
     if ( Nodes.selectedTerritory === undefined ) {
-        console.log("No selected territory to subdivide");
+        Nodes.warn("No selected territory to subdivide");
         return;
     }
     const id = Nodes.selectedTerritory.id;
 
-    console.log(`[terr=${id}] Subdividing into territories...`);
+    Nodes.log(`[terr=${id}] Subdividing into territories...`);
 
     Nodes._subdivideIntoRandomTerritories(
         id,

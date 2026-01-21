@@ -216,7 +216,7 @@ export const OptionsPane = (props) => {
 const runSetCost = (setTerritoryCost, constant, scale) => {
     // check if number valid
     if ( isNaN(constant) || isNaN(scale) ) {
-        console.error("Invalid number: NaN")
+        Nodes.error("Invalid number: NaN")
         return
     }
 

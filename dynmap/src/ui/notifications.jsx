@@ -11,10 +11,14 @@ import "./css/notifications.css";
 // Notification types
 export const NotificationType = {
     INFO: "info",
+    INFO: "log",
     WARN: "warn",
     ERROR: "error",
 };
-
+// Nodes.warn("This is a warning message");
+// Nodes.error("This is an error message");
+// Nodes.info("This is an info message");
+// Nodes.log("This is a log message"); same as info
 // Single notification component
 const Notification = ({ id, type, message, onDismiss, duration }) => {
     useEffect(() => {
@@ -35,6 +39,7 @@ const Notification = ({ id, type, message, onDismiss, duration }) => {
                     {type === NotificationType.ERROR && "✕"}
                     {type === NotificationType.WARN && "⚠"}
                     {type === NotificationType.INFO && "ℹ"}
+                    {type === NotificationType.LOG && "🧾"}
                 </span>
                 <span className="nodes-notification-message">{message}</span>
             </div>
