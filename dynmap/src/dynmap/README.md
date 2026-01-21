@@ -1,1 +1,0 @@
-Modified dynmap HTML/JS, copy into `plugins/dynmap/web`

@@ -73,6 +73,38 @@ townSpawnTime: 10
 outpostTeleportCost:
   diamond: 1
 
+  # Add these new options to your config.yml file in the war section:
+
+ # ===================================
+ # War Configuration
+ # ===================================
+
+  # Allow attacking enemy territories through wilderness
+  # When enabled, wilderness acts like an ally - you can place flags
+  # in enemy territory if it borders wilderness
+allowAttackThroughWilderness: false
+
+  # War Exhaustion System
+  # Tracks kills and applies debuffs when a town/nation loses too many players
+warExhaustionEnabled: false
+
+  # Deaths must be this multiple of online count to trigger exhaustion
+  # Example: If 3, and 25 players online, exhaustion triggers at 75 deaths
+warExhaustionDeathMultiplier: 3
+
+  # Weakness effect level (0 = Weakness I, 1 = Weakness II, etc)
+warExhaustionWeaknessLevel: 1
+
+  # Duration of weakness effect in ticks (20 ticks = 1 second)
+  # 600 ticks = 30 seconds
+warExhaustionWeaknessDuration: 600
+
+    # Material for the main flag block (placed above the base)
+flag_block_material: "CRYING_OBSIDIAN"
+
+    # Material for the flag torch/light source (placed on top)
+flag_torch_material: "TORCH"
+
 # ===========================================
 # nation settings
 # ===========================================
@@ -96,6 +128,8 @@ rallyCapApplyToNations: true  # If true, applies to nations; if false, applies t
 # ===================================
 # allow allied nations to attack eachother
 allowAllyFriendlyFire: true
+
+
 
 # ===========================================
 # Town Claim Settings
@@ -145,6 +179,53 @@ overClaimsMaxPenalty: 0.5
 
 # allow claiming territories even if town already over max claims
 overClaimsAllowClaim: false
+
+# ===================================
+# Tab List Configuration
+# ===================================
+tab:
+  # Enable custom tab list
+  enabled: true
+
+  # Update period in ticks (20 ticks = 1 second)
+  # 100 ticks = 5 seconds
+  updatePeriod: 100
+
+  # Staff detection settings
+  staff:
+    # Method 1: Use LuckPerms weight (recommended)
+    # If true, uses weight threshold. If false, uses permission groups.
+    useWeight: true
+
+    # Minimum LuckPerms weight to be considered staff
+    # Only used if useWeight is true
+    minWeight: 50
+
+    # Permission groups that count as staff
+    # Only used if useWeight is false
+    permissionGroups:
+      - admin
+      - moderator
+      - helper
+      - mod
+
+  # Section headers (supports Minecraft color codes with §)
+  headers:
+    staff: "§c§l━━━━ §6STAFF §c§l━━━━"
+    nation: "§a§l━━━━ §2NATION §a§l━━━━"
+    town: "§b§l━━━━ §3TOWN §b§l━━━━"
+    world: "§f§l━━━━ §7WORLD §f§l━━━━"
+  sectionSeparator: "§8━━━━━━━━━━━━━━━━━━━━"
+
+  # Show player counts in section headers
+  # Example: "⚔ STAFF TEAM ⚔ (3)"
+  showPlayerCounts: true
+
+# Example configurations:
+
+# Configuration 1: Use weight-based staff detection (default)
+# This makes anyone with LuckPerms weight >= 50 appear in staff section
+
 
 # ===========================================
 # Resource Settings
