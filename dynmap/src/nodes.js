@@ -447,47 +447,18 @@ const Nodes = {
     // ============================================
     // Notification system - use instead of console.warn/error
     // ============================================
-    
-    /**
-     * Display an info notification.
-     * @param {string} message - Message to display
-     * @param {number} duration - Auto-dismiss time in ms (default: 4000, 0 = no auto-dismiss)
-     */
     info: (message, duration = 4000) => {
         return NotificationManager.info(message, duration);
     },
 
-    /**
-     * Display a warning notification.
-     * @param {string} message - Message to display  
-     * @param {number} duration - Auto-dismiss time in ms (default: 6000, 0 = no auto-dismiss)
-     */
     warn: (message, duration = 6000) => {
         return NotificationManager.warn(message, duration);
     },
 
-    /**
-     * Display an error notification.
-     * @param {string} message - Message to display
-     * @param {number} duration - Auto-dismiss time in ms (default: 0, 0 = no auto-dismiss)
-     */
     error: (message, duration = 0) => {
         return NotificationManager.error(message, duration);
     },
 
-    /**
-     * Display a log notification.
-     * @param {string} message - Message to display
-     * @param {number} duration - Auto-dismiss time in ms (default: 4000, 0 = no auto-dismiss)
-     */
-    log: (message, duration = 4000) => {
-        return NotificationManager.log(message, duration);
-    },
-
-    /**
-     * Dismiss a notification by its ID.
-     * @param {number} id - Notification ID returned by info/warn/error
-     */
     dismissNotification: (id) => {
         NotificationManager.dismiss(id);
     },
@@ -763,9 +734,22 @@ const Nodes = {
                     Nodes._deleteTerritory();
                 }
                 else if ( e.key === "e" ) {
-                    Nodes._mergeTerritories();
+                    Nodes.mergeSelectedTerritories();
                 }
-                // add "give random resource" keybind (use the list in territy panel)
+                else if ( e.key === "r" ) {
+                    Nodes.distributeResourcesInSelectedTerritories();
+                }
+                /*else if ( e.key === "Escape" ) {
+                    Nodes.selectedNodeName = undefined;
+                    Nodes.selectedNodeIndex = undefined;
+                    Nodes.selectedTerritory = undefined;
+                    Nodes.selectedTown = undefined;
+                    Nodes.selectedTownIndex = undefined;
+                }*/
+                else if ( e.key === "x" ) {
+                    Nodes._subdivideIntoRandomTerritories();
+                }
+                
             });
         }
         else {
@@ -1237,7 +1221,7 @@ const Nodes = {
                 if ( town.territories.length > 0 ) {
                     const lowestTerritoryId = Math.min(...town.territories);
                     town.home = lowestTerritoryId;
-                    Nodes.log(`Set home territory of town ${town.name} to territory ${lowestTerritoryId}`);
+                    Nodes.info(`Set home territory of town ${town.name} to territory ${lowestTerritoryId}`);
                 }
                 else {
                     Nodes.warn(`Town ${town.name} has no territories...`);
@@ -1257,7 +1241,7 @@ const Nodes = {
 
                 if (townWithMostTerritories) {
                     nation.capital = townWithMostTerritories.name;
-                    Nodes.log(`Set capital of nation ${nation.name} to town ${townWithMostTerritories.name}`);
+                    Nodes.info(`Set capital of nation ${nation.name} to town ${townWithMostTerritories.name}`);
                 }
             }
             nations[name] = nation.export();
@@ -1971,7 +1955,7 @@ const Nodes = {
         
         // if player already in town, skip
         if ( town.residents.some(r => r.name === playerName) ) {
-            Nodes.log(`Town ${town.name} already has resident ${playerName}, skipping`);
+            Nodes.info(`Town ${town.name} already has resident ${playerName}, skipping`);
             return;
         }
 
@@ -2016,7 +2000,7 @@ const Nodes = {
         // find player index in residents array
         const playerIndex = town.residents.findIndex(r => r.name === playerName);
         if ( playerIndex === -1 ) {
-            Nodes.log(`Town ${town.name} does not have resident ${playerName}, skipping`);
+            Nodes.info(`Town ${town.name} does not have resident ${playerName}, skipping`);
             return;
         }
 
@@ -2887,13 +2871,13 @@ const Nodes = {
      * Wrapper for merging selected territory ids
      */
     mergeSelectedTerritories: () => {
-        Nodes.log("Merging selected territories...");
+        Nodes.info("Merging selected territories...");
         let newId = Nodes._mergeTerritories(Nodes.selectedTerritoryIds());
         if ( newId !== undefined ) {
-            Nodes.log(`Merged into id=${newId}`);
+            Nodes.info(`Merged into id=${newId}`);
         }
         else {
-            Nodes.log("No merge");
+            Nodes.info("No merge");
         }
     },
 
@@ -3738,14 +3722,14 @@ const Nodes = {
     _color: () => {
     
         // calculate neighbors
-        Nodes.log("calculating neighbors");
+        Nodes.info("calculating neighbors");
         Nodes.wasmWorld.calculateNeighbors();
 
         // generate colors
-        Nodes.log("generating colors")
+        Nodes.info("generating colors")
         Nodes.wasmWorld.generateColors();
 
-        Nodes.log("verifying color solution");
+        Nodes.info("verifying color solution");
         
         let passed = true;
 
@@ -3772,7 +3756,7 @@ const Nodes = {
         });
 
         if ( passed ) {
-            Nodes.log("PASSED COLOR CHECK");
+            Nodes.info("PASSED COLOR CHECK");
         }
 
         // render colors
@@ -3785,7 +3769,7 @@ const Nodes = {
     // and set territories isEdge property
     _calculateTerritoriesAtEdge: () => {
         // calculate neighbors
-        Nodes.log("calculating neighbors");
+        Nodes.info("calculating neighbors");
         Nodes.wasmWorld.calculateNeighbors();
 
         // set isEdge
@@ -3805,7 +3789,7 @@ const Nodes = {
 
     _getTerritoriesInAABB: (xmin, zmin, xmax, zmax, select = true) => {
         // calculate neighbors
-        Nodes.log(`Getting territories from (${xmin},${zmin}) to (${xmax},${zmax})`);
+        Nodes.info(`Getting territories from (${xmin},${zmin}) to (${xmax},${zmax})`);
         const terrIds = Nodes.wasmWorld.getTerritoriesInAABB(xmin, zmin, xmax, zmax);
         
         if ( select ) {

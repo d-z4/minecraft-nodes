@@ -53,7 +53,7 @@ export const WorldRenderer = (props) => {
         }
         catch (e) {
             // ignore?
-            Nodes.log("FAILED", e);
+            Nodes.info("FAILED", e);
         }
         
     }

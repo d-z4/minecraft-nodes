@@ -264,6 +264,10 @@ export const TerritoryPane = (props) => {
             <div>- [Ctrl + right mouse drag]: Erase chunks</div>
             <div>- [Shift + mouse drag]: Change brush size</div>
             <div>- [A]: While painting will create a new territory</div>
+            <div>- [E]: Merge selected territories (buggy with resource nodes)</div>
+            <div>- [R]: Distribute resources in selected territories</div>
+            <div>- [X]: Subdivide selected territories into smaller ones</div>
+            <div>- [Delete]: Delete selected territories</div>
         </div>
         </>
     );

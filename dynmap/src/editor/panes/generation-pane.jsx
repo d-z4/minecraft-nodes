@@ -35,7 +35,7 @@ const handleBtnSubdivide = () => {
     }
     const id = Nodes.selectedTerritory.id;
 
-    Nodes.log(`[terr=${id}] Subdividing into territories...`);
+    Nodes.info(`[terr=${id}] Subdividing into territories...`);
 
     Nodes._subdivideIntoRandomTerritories(
         id,
