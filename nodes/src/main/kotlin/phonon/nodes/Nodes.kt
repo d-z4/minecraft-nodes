@@ -72,6 +72,8 @@ import phonon.nodes.objects.Town
 import phonon.nodes.objects.TownOutpost
 import phonon.nodes.objects.TownPair
 import phonon.nodes.serdes.Deserializer
+import phonon.nodes.tasks.BoostBossBarUpdateManager
+import phonon.nodes.tasks.BoostSaveManager
 import phonon.nodes.tasks.OverMaxClaimsReminder
 import phonon.nodes.tasks.SaveManager
 import phonon.nodes.tasks.TaskCopyToDynmap
@@ -202,6 +204,8 @@ public object Nodes {
      */
     internal fun reloadManagers() {
         SaveManager.stop()
+        BoostSaveManager.stop()
+        BoostBossBarUpdateManager.stop()
         PeriodicTickManager.stop()
         OverMaxClaimsReminder.stop()
         Nametag.stop()
@@ -212,6 +216,8 @@ public object Nodes {
         }
 
         SaveManager.start(plugin, Config.savePeriod)
+        BoostSaveManager.start(plugin, Config.boostSavePeriod)
+        BoostBossBarUpdateManager.start(plugin, 20L) // Update every second (20 ticks)
         PeriodicTickManager.start(plugin, Config.mainPeriodicTick)
         OverMaxClaimsReminder.start(plugin, Config.overMaxClaimsReminderPeriod)
         Nametag.start(plugin, Config.nametagUpdatePeriod)
@@ -3192,6 +3198,30 @@ public object Nodes {
             Bukkit.getScheduler().runTaskAsynchronously(Nodes.plugin!!, Truce.saveTask())
         } else {
             Truce.saveTask().run()
+        }
+    }
+
+    /**
+     * Save active boosts to file
+     */
+    public fun saveBoosts() {
+        if (Config.boostEnabled) {
+            val boostSaveStates = BoostManager.getSaveState()
+            phonon.nodes.serdes.BoostSerdes.saveBoostsToFile(boostSaveStates, Config.pathBoosts)
+            BoostManager.dirty = false
+        }
+    }
+
+    /**
+     * Load boosts from file
+     */
+    public fun loadBoosts() {
+        if (Config.boostEnabled) {
+            val path = Config.pathBoosts
+            if (java.nio.file.Files.exists(path)) {
+                val boosts = phonon.nodes.serdes.BoostSerdes.loadBoostsFromFile(path)
+                BoostManager.loadBoosts(boosts)
+            }
         }
     }
 

@@ -12,6 +12,7 @@ import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import phonon.nodes.BoostBossBarManager
 import phonon.nodes.Nodes
 import phonon.nodes.chat.Chat
 import phonon.nodes.objects.Resident
@@ -32,6 +33,9 @@ public class NodesPlayerJoinQuitListener : Listener {
         if (Nodes.war.enabled == true) {
             Nodes.war.sendWarProgressBarToPlayer(player)
         }
+
+        // update boost boss bars for player
+        BoostBossBarManager.updatePlayerBossBars(player)
     }
 
     @EventHandler
@@ -42,6 +46,9 @@ public class NodesPlayerJoinQuitListener : Listener {
             resident.destroyMinimap()
             Nodes.setResidentOffline(resident, player)
         }
+
+        // remove boost boss bars for player
+        BoostBossBarManager.removePlayerBossBars(player)
 
         // remove player from muting global chat
         Chat.enableGlobalChat(player)

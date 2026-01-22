@@ -10,6 +10,7 @@
 
 package phonon.nodes.tasks
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import org.bukkit.Bukkit
 import org.bukkit.plugin.Plugin
 import org.bukkit.scheduler.BukkitTask
@@ -161,6 +162,82 @@ public object SaveManager {
         }
 
         this.task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, task, period, period)
+    }
+
+    public fun stop() {
+        val task = this.task
+        if (task === null) {
+            return
+        }
+
+        task.cancel()
+        this.task = null
+    }
+}
+
+/**
+ * Async periodic tick scheduler to save boost state
+ */
+public object BoostSaveManager {
+
+    private var task: ScheduledTask? = null
+
+    public fun start(plugin: Plugin, period: Long) {
+        if (this.task !== null) {
+            return
+        }
+
+        // scheduler for saving boosts
+        val task = object : Runnable {
+            public override fun run() {
+                if (Config.boostEnabled) {
+                    // Clean up expired boosts
+                    phonon.nodes.BoostManager.cleanupExpiredBoosts()
+
+                    // Save if dirty
+                    if (phonon.nodes.BoostManager.dirty) {
+                        Nodes.saveBoosts()
+                    }
+                }
+            }
+        }
+
+        this.task = Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, { _ -> task.run() }, period, period)
+    }
+
+    public fun stop() {
+        val task = this.task
+        if (task === null) {
+            return
+        }
+
+        task.cancel()
+        this.task = null
+    }
+}
+
+/**
+ * Async periodic tick scheduler to update boss bars
+ */
+public object BoostBossBarUpdateManager {
+
+    private var task: ScheduledTask? = null
+
+    public fun start(plugin: Plugin, period: Long) {
+        if (this.task !== null) {
+            return
+        }
+
+        // scheduler for updating boss bars
+        val task = object : Runnable {
+            public override fun run() {
+                if (Config.boostEnabled) {
+                    phonon.nodes.BoostBossBarManager.updateAllPlayerBossBars()
+                }
+            }
+        }
+
+        this.task = Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, { _ -> task.run() }, period, period)
     }
 
     public fun stop() {

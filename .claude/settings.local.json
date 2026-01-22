@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew publish:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

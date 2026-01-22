@@ -76,6 +76,9 @@ townCooldownUpdateTick: 2400
 townSpawnTime: 10
 
 # outpost configs
+# enable/disable outpost system
+outpostsEnabled: false
+
 # item cost for outpost teleport
 outpostTeleportCost:
   diamond: 1
@@ -201,6 +204,30 @@ cropsMinYHeight: 16
 cropsMaxYHeight: 255
 breedingMinYHeight: 16
 breedingMaxYHeight: 255
+
+# ===========================================
+# Mining Boosts (Micropayments)
+# ===========================================
+# enable boost system
+boostEnabled: true
+
+# boost save period in ticks (1200 = 1 minute)
+boostSavePeriod: 1200
+
+# server-wide boost configuration
+boostServerMultiplier: 5.0    # multiplier for drop rates (5.0 = 5x)
+boostServerDuration: 600      # duration in seconds (600 = 10 minutes)
+boostServerPrice: 5.0         # price in currency (5.0 = 5€)
+
+# town-wide boost configuration
+boostTownMultiplier: 3.0      # multiplier for drop rates (3.0 = 3x)
+boostTownDuration: 600        # duration in seconds (600 = 10 minutes)
+boostTownPrice: 5.0           # price in currency (5.0 = 5€)
+
+# nation-wide boost configuration
+boostNationMultiplier: 2.0    # multiplier for drop rates (2.0 = 2x)
+boostNationDuration: 600      # duration in seconds (600 = 10 minutes)
+boostNationPrice: 5.0         # price in currency (5.0 = 5€)
 
 # ===========================================
 # Tax Settings

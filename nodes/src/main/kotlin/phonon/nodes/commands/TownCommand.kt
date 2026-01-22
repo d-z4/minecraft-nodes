@@ -208,7 +208,7 @@ public class TownCommand :
             "untrust" -> trustPlayer(player, args, false)
             "capital" -> setCapital(player, args)
             "annex" -> annexTerritory(player, args)
-            "outpost" -> manageOutpost(sender, args)
+            "outpost" -> if (Config.outpostsEnabled) manageOutpost(sender, args) else Message.error(sender, "Invalid command, use /town help")
             "fly" -> toggleFlight(player)
             else -> {
                 Message.error(sender, "Invalid command, use /town help")
@@ -227,7 +227,12 @@ public class TownCommand :
 
         // match subcommand
         if (args.size == 1) {
-            return filterByStart(SUBCOMMANDS, args[0])
+            val commands = if (Config.outpostsEnabled) {
+                SUBCOMMANDS
+            } else {
+                SUBCOMMANDS.filter { it != "outpost" }
+            }
+            return filterByStart(commands, args[0])
         }
         // match each subcommand format
         else if (args.size > 1) {
@@ -325,7 +330,7 @@ public class TownCommand :
 
                 // outpost subcommand
                 "outpost" -> {
-                    if (args.size == 2) {
+                    if (Config.outpostsEnabled && args.size == 2) {
                         return filterByStart(OUTPOST_SUBCOMMANDS, args[1])
                     }
                 }
@@ -364,7 +369,9 @@ public class TownCommand :
         Message.print(sender, "/town untrust${ChatColor.WHITE}: Remove player from trusted")
         Message.print(sender, "/town capital${ChatColor.WHITE}: Set your town's home territory")
         Message.print(sender, "/town annex${ChatColor.WHITE}: Annex an occupied territory")
-        Message.print(sender, "/town outpost${ChatColor.WHITE}: Town outpost commands")
+        if (Config.outpostsEnabled) {
+            Message.print(sender, "/town outpost${ChatColor.WHITE}: Town outpost commands")
+        }
         Message.print(sender, "/town fly${ChatColor.WHITE}: Fly inside your town")
         return
     }
@@ -1055,7 +1062,7 @@ public class TownCommand :
         }
 
         // parse spawn destination
-        val destination = if (args.size > 1) {
+        val destination = if (args.size > 1 && Config.outpostsEnabled) {
             val outpostName = args[1]
             val outpost = town.outposts.get(outpostName)
             if (outpost !== null) {

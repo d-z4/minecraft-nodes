@@ -35,6 +35,7 @@ public object Config {
     public var pathWar = Paths.get(pathPlugin, "war.json").normalize()
     public var pathTruce = Paths.get(pathPlugin, "truce.json").normalize()
     public var pathPorts = Paths.get(pathPlugin, "ports.json").normalize()
+    public var pathBoosts = Paths.get(pathPlugin, "boosts.json").normalize()
     public var pathLastBackupTime = Paths.get(pathPlugin, "lastBackupTime.txt").normalize()
     public var pathLastIncomeTime = Paths.get(pathPlugin, "lastIncomeTime.txt").normalize()
 
@@ -160,6 +161,28 @@ public object Config {
     public var breedingMaxYHeight: Int = 255
 
     // ===================================
+    // mining boosts (micropayments)
+    // ===================================
+    // enable boost system
+    public var boostEnabled: Boolean = true
+
+    // boost save period (in ticks, 1200 = 1 minute)
+    public var boostSavePeriod: Long = 1200L
+
+    // boost configurations for each type
+    public var boostServerMultiplier: Double = 5.0
+    public var boostServerDuration: Int = 600 // seconds (10 minutes)
+    public var boostServerPrice: Double = 5.0 // euros or currency
+
+    public var boostTownMultiplier: Double = 3.0
+    public var boostTownDuration: Int = 600 // seconds (10 minutes)
+    public var boostTownPrice: Double = 5.0 // euros or currency
+
+    public var boostNationMultiplier: Double = 2.0
+    public var boostNationDuration: Int = 600 // seconds (10 minutes)
+    public var boostNationPrice: Double = 5.0 // euros or currency
+
+    // ===================================
     // afk kick time
     // ===================================
     // time in milliseconds for afk time before player kicked
@@ -247,6 +270,8 @@ public object Config {
     public var townSpawnTime: Int = 10
 
     // outpost configs
+    public var outpostsEnabled: Boolean = false
+
     public val outpostTeleportCost: EnumMap<Material, Int> = EnumMap<Material, Int>(Material::class.java)
 
     // inline string list of outpost teleport cost
@@ -452,6 +477,19 @@ public object Config {
             Config.globalResources = parseGlobalResources(globalResourcesSection)
         }
 
+        // boost configs
+        Config.boostEnabled = config.getBoolean("boostEnabled", Config.boostEnabled)
+        Config.boostSavePeriod = config.getLong("boostSavePeriod", Config.boostSavePeriod)
+        Config.boostServerMultiplier = config.getDouble("boostServerMultiplier", Config.boostServerMultiplier)
+        Config.boostServerDuration = config.getInt("boostServerDuration", Config.boostServerDuration)
+        Config.boostServerPrice = config.getDouble("boostServerPrice", Config.boostServerPrice)
+        Config.boostTownMultiplier = config.getDouble("boostTownMultiplier", Config.boostTownMultiplier)
+        Config.boostTownDuration = config.getInt("boostTownDuration", Config.boostTownDuration)
+        Config.boostTownPrice = config.getDouble("boostTownPrice", Config.boostTownPrice)
+        Config.boostNationMultiplier = config.getDouble("boostNationMultiplier", Config.boostNationMultiplier)
+        Config.boostNationDuration = config.getInt("boostNationDuration", Config.boostNationDuration)
+        Config.boostNationPrice = config.getDouble("boostNationPrice", Config.boostNationPrice)
+
         // town claims
         Config.territoryCostBase = config.getInt("territoryCostBase", Config.territoryCostBase)
         Config.territoryCostScale = config.getDouble("territoryCostScale", Config.territoryCostScale)
@@ -475,6 +513,7 @@ public object Config {
 
         // town settings
         Config.townSpawnTime = config.getInt("townSpawnTime", Config.townSpawnTime)
+        Config.outpostsEnabled = config.getBoolean("outpostsEnabled", Config.outpostsEnabled)
         val outpostTeleportCostSection = config.getConfigurationSection("outpostTeleportCost")
         if (outpostTeleportCostSection !== null) {
             Config.outpostTeleportCost.putAll(parseTeleportCost(outpostTeleportCostSection))

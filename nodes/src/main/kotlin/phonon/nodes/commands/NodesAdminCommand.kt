@@ -52,6 +52,7 @@ private val SUBCOMMANDS: List<String> = listOf(
     "help",
     "reload",
     "war",
+    "boost",
     "port",
     "portgroup",
     "resident",
@@ -85,6 +86,16 @@ private val WAR_SUBCOMMANDS: List<String> = listOf(
     "disable",
     "whitelist",
     "blacklist",
+)
+
+// boost subcommands
+private val BOOST_SUBCOMMANDS: List<String> = listOf(
+    "server",
+    "town",
+    "nation",
+    "list",
+    "remove",
+    "clear",
 )
 
 // port subcommands
@@ -172,6 +183,7 @@ public class NodesAdminCommand :
             "help" -> printHelp(sender)
             "reload" -> reload(sender, args)
             "war" -> war(sender, args)
+            "boost" -> manageBoost(sender, args)
             "resident" -> manageResident(sender, args)
             "town" -> manageTown(sender, args)
             "port" -> managePort(sender, args)
@@ -216,6 +228,24 @@ public class NodesAdminCommand :
                 "war" -> {
                     if (args.size == 2) {
                         return filterByStart(WAR_SUBCOMMANDS, args[1])
+                    }
+                }
+
+                // /nodesadmin boost [subcommand]
+                "boost" -> {
+                    if (args.size == 2) {
+                        return filterByStart(BOOST_SUBCOMMANDS, args[1])
+                    }
+                    // handle subcommands
+                    else if (args.size == 3) {
+                        when (args[1].lowercase()) {
+                            "town" -> {
+                                return filterTown(args[2])
+                            }
+                            "nation" -> {
+                                return filterNation(args[2])
+                            }
+                        }
                     }
                 }
 
@@ -291,7 +321,12 @@ public class NodesAdminCommand :
                 // /nodesadmin town [subcommand]
                 "town" -> {
                     if (args.size == 2) {
-                        return filterByStart(TOWN_SUBCOMMANDS, args[1])
+                        val commands = if (Config.outpostsEnabled) {
+                            TOWN_SUBCOMMANDS
+                        } else {
+                            TOWN_SUBCOMMANDS.filter { it != "addoutpost" && it != "removeoutpost" }
+                        }
+                        return filterByStart(commands, args[1])
                     }
                     // handle subcommand
                     else if (args.size > 2) {
@@ -357,16 +392,16 @@ public class NodesAdminCommand :
 
                             // outpost
                             "addoutpost" -> {
-                                if (args.size == 3) {
+                                if (Config.outpostsEnabled && args.size == 3) {
                                     return filterTown(args[2])
                                 }
                             }
 
                             // /nodesadmin town subcommand [town] [outpost] ...
                             "removeoutpost" -> {
-                                if (args.size == 3) {
+                                if (Config.outpostsEnabled && args.size == 3) {
                                     return filterTown(args[2])
-                                } else if (args.size >= 4) {
+                                } else if (Config.outpostsEnabled && args.size >= 4) {
                                     val town = Nodes.getTownFromName(args[2])
                                     if (town !== null) {
                                         return filterByStart(town.outposts.keys.toList(), args[3])
@@ -653,6 +688,140 @@ public class NodesAdminCommand :
                 }
             }
         }
+    }
+
+    // =============================================================
+    // boost management commands
+    // - grant mining boosts (server/town/nation)
+    // =============================================================
+
+    private fun manageBoost(sender: CommandSender, args: Array<String>) {
+        if (args.size < 2) {
+            printBoostHelp(sender)
+            return
+        }
+
+        when (args[1].lowercase()) {
+            "server" -> grantServerBoost(sender, args)
+            "town" -> grantTownBoost(sender, args)
+            "nation" -> grantNationBoost(sender, args)
+            "list" -> listBoosts(sender)
+            "remove" -> removeBoost(sender, args)
+            "clear" -> clearBoosts(sender)
+            else -> printBoostHelp(sender)
+        }
+    }
+
+    private fun printBoostHelp(sender: CommandSender) {
+        Message.print(sender, "${ChatColor.BOLD}Boost Commands:")
+        Message.print(sender, "/nodesadmin boost server [duration] [multiplier] - Grant server-wide boost")
+        Message.print(sender, "/nodesadmin boost town [town] [duration] [multiplier] - Grant town boost")
+        Message.print(sender, "/nodesadmin boost nation [nation] [duration] [multiplier] - Grant nation boost")
+        Message.print(sender, "/nodesadmin boost list - List all active boosts")
+        Message.print(sender, "/nodesadmin boost remove [id] - Remove a boost by ID")
+        Message.print(sender, "/nodesadmin boost clear - Clear all boosts")
+    }
+
+    private fun grantServerBoost(sender: CommandSender, args: Array<String>) {
+        val duration = if (args.size >= 3) args[2].toIntOrNull() ?: Config.boostServerDuration else Config.boostServerDuration
+        val multiplier = if (args.size >= 4) args[3].toDoubleOrNull() ?: Config.boostServerMultiplier else Config.boostServerMultiplier
+
+        val boost = phonon.nodes.BoostManager.createServerBoost(multiplier, duration, null)
+        Message.broadcast("${ChatColor.GOLD}[Boost] Server-wide ${multiplier}x mining boost activated for $duration seconds!")
+        Message.print(sender, "Server boost activated: ID=${boost.id}, ${multiplier}x for ${duration}s")
+    }
+
+    private fun grantTownBoost(sender: CommandSender, args: Array<String>) {
+        if (args.size < 3) {
+            Message.error(sender, "Usage: /nodesadmin boost town [town] [duration] [multiplier]")
+            return
+        }
+
+        val townName = args[2]
+        val town = Nodes.getTownFromName(townName)
+        if (town === null) {
+            Message.error(sender, "Town \"${townName}\" does not exist")
+            return
+        }
+
+        val duration = if (args.size >= 4) args[3].toIntOrNull() ?: Config.boostTownDuration else Config.boostTownDuration
+        val multiplier = if (args.size >= 5) args[4].toDoubleOrNull() ?: Config.boostTownMultiplier else Config.boostTownMultiplier
+
+        val boost = phonon.nodes.BoostManager.createTownBoost(town.uuid, multiplier, duration, null)
+        Message.broadcast("${ChatColor.GOLD}[Boost] ${town.name} received a ${multiplier}x mining boost for $duration seconds!")
+        Message.print(sender, "Town boost activated for ${town.name}: ID=${boost.id}, ${multiplier}x for ${duration}s")
+    }
+
+    private fun grantNationBoost(sender: CommandSender, args: Array<String>) {
+        if (args.size < 3) {
+            Message.error(sender, "Usage: /nodesadmin boost nation [nation] [duration] [multiplier]")
+            return
+        }
+
+        val nationName = args[2]
+        val nation = Nodes.getNationFromName(nationName)
+        if (nation === null) {
+            Message.error(sender, "Nation \"${nationName}\" does not exist")
+            return
+        }
+
+        val duration = if (args.size >= 4) args[3].toIntOrNull() ?: Config.boostNationDuration else Config.boostNationDuration
+        val multiplier = if (args.size >= 5) args[4].toDoubleOrNull() ?: Config.boostNationMultiplier else Config.boostNationMultiplier
+
+        val boost = phonon.nodes.BoostManager.createNationBoost(nation.uuid, multiplier, duration, null)
+        Message.broadcast("${ChatColor.GOLD}[Boost] ${nation.name} received a ${multiplier}x mining boost for $duration seconds!")
+        Message.print(sender, "Nation boost activated for ${nation.name}: ID=${boost.id}, ${multiplier}x for ${duration}s")
+    }
+
+    private fun listBoosts(sender: CommandSender) {
+        val boosts = phonon.nodes.BoostManager.getActiveBoosts()
+        if (boosts.isEmpty()) {
+            Message.print(sender, "${ChatColor.GRAY}No active boosts")
+            return
+        }
+
+        Message.print(sender, "${ChatColor.BOLD}Active Boosts:")
+        for (boost in boosts) {
+            val targetName = when (boost.type) {
+                phonon.nodes.objects.BoostType.SERVER -> "SERVER"
+                phonon.nodes.objects.BoostType.TOWN -> {
+                    val town = Nodes.towns.values.find { it.uuid == boost.targetId }
+                    town?.name ?: "Unknown Town"
+                }
+                phonon.nodes.objects.BoostType.NATION -> {
+                    val nation = Nodes.nations.values.find { it.uuid == boost.targetId }
+                    nation?.name ?: "Unknown Nation"
+                }
+            }
+            val remainingMinutes = (boost.getRemainingSeconds() / 60).toInt()
+            val remainingSeconds = (boost.getRemainingSeconds() % 60).toInt()
+            Message.print(sender, "${ChatColor.GRAY}- ID: ${boost.id} | ${boost.type} ($targetName) | ${boost.multiplier}x | ${remainingMinutes}m ${remainingSeconds}s remaining")
+        }
+    }
+
+    private fun removeBoost(sender: CommandSender, args: Array<String>) {
+        if (args.size < 3) {
+            Message.error(sender, "Usage: /nodesadmin boost remove [id]")
+            return
+        }
+
+        val boostId = try {
+            java.util.UUID.fromString(args[2])
+        } catch (e: Exception) {
+            Message.error(sender, "Invalid boost ID")
+            return
+        }
+
+        if (phonon.nodes.BoostManager.removeBoost(boostId)) {
+            Message.print(sender, "Boost removed: $boostId")
+        } else {
+            Message.error(sender, "Boost not found: $boostId")
+        }
+    }
+
+    private fun clearBoosts(sender: CommandSender) {
+        phonon.nodes.BoostManager.clearAllBoosts()
+        Message.print(sender, "All boosts cleared")
     }
 
     // =============================================================
@@ -978,8 +1147,8 @@ public class NodesAdminCommand :
                 "incomeremove" -> townIncomeRemove(sender, args)
                 "sethome" -> setTownHome(sender, args)
                 "sethomecooldown" -> setTownMoveHomeCooldown(sender, args)
-                "addoutpost" -> addOutpostToTown(sender, args)
-                "removeoutpost" -> removeOutpostFromTown(sender, args)
+                "addoutpost" -> if (Config.outpostsEnabled) addOutpostToTown(sender, args) else printTownHelp(sender)
+                "removeoutpost" -> if (Config.outpostsEnabled) removeOutpostFromTown(sender, args) else printTownHelp(sender)
                 "defaulttownspawns" -> defaultTownSpawns(sender, args)
                 else -> {
                     printTownHelp(sender)
@@ -1007,8 +1176,10 @@ public class NodesAdminCommand :
         Message.print(sender, "/nodesadmin town leader${ChatColor.WHITE}: Set town leader to player")
         Message.print(sender, "/nodesadmin town open${ChatColor.WHITE}: Toggle town is open to join")
         Message.print(sender, "/nodesadmin town income${ChatColor.WHITE}: View a town's income inventory")
-        Message.print(sender, "/nodesadmin town addoutpost${ChatColor.WHITE}: Add an outpost to a town")
-        Message.print(sender, "/nodesadmin town removeoutpost${ChatColor.WHITE}: Remove an outpost from a town")
+        if (Config.outpostsEnabled) {
+            Message.print(sender, "/nodesadmin town addoutpost${ChatColor.WHITE}: Add an outpost to a town")
+            Message.print(sender, "/nodesadmin town removeoutpost${ChatColor.WHITE}: Remove an outpost from a town")
+        }
         Message.print(sender, "Run a command with no args to see usage.")
     }
 

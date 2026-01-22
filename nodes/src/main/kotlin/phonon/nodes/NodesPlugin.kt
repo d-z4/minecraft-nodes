@@ -82,6 +82,10 @@ public class NodesPlugin : JavaPlugin() {
                 logger.info("- Residents: ${Nodes.getResidentCount()}")
                 logger.info("- Towns: ${Nodes.getTownCount()}")
                 logger.info("- Nations: ${Nodes.getNationCount()}")
+
+                // load boosts
+                Nodes.loadBoosts()
+                logger.info("- Boosts: ${BoostManager.getActiveBoosts().size}")
             } else {
                 logger.severe("Error loading world: Invalid world file at $pluginPath/${Config.pathWorld}")
                 if (Config.disableWorldWhenLoadFails) {
@@ -175,6 +179,9 @@ public class NodesPlugin : JavaPlugin() {
 
         Nodes.enabled = false
 
+        // cleanup boost boss bars
+        BoostBossBarManager.cleanup()
+
         // world cleanup
         Nodes.cleanup()
 
@@ -184,6 +191,7 @@ public class NodesPlugin : JavaPlugin() {
         if (Nodes.initialized) {
             Nodes.saveWorld(checkIfNeedsSave = false, async = false)
             Nodes.saveTruce(async = false)
+            Nodes.saveBoosts()
         }
     }
 }

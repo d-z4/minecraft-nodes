@@ -6,6 +6,7 @@ plugins {
     id("org.jetbrains.kotlin.jvm") version "2.3.20-Beta1"
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.17"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
+    `maven-publish`
 }
 
 repositories {
@@ -33,5 +34,23 @@ tasks {
 
     jar {
         archiveBaseName.set(outputJarName)
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "phonon"
+            artifactId = "nodes"
+            version = project.version.toString()
+
+            artifact(tasks.named("reobfJar"))
+        }
+    }
+
+    repositories {
+        maven {
+            url = uri("${rootDir.path}/../../avarion/local-maven")
+        }
     }
 }

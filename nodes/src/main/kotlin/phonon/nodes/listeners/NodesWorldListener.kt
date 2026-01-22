@@ -28,6 +28,7 @@ import org.bukkit.event.entity.EntityInteractEvent
 import org.bukkit.event.player.PlayerBucketEmptyEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
+import phonon.nodes.BoostManager
 import phonon.nodes.Config
 import phonon.nodes.Message
 import phonon.nodes.Nodes
@@ -866,7 +867,22 @@ private fun handleHiddenOre(player: Player, block: Block) {
             (Config.allowOreInNationTowns && territoryNation !== null && territoryNation === playerNation) ||
             (Config.allowOreInCaptured && territory.occupier === playerTown)
         ) {
-            val itemDrops = territory.ores.sample(blockY)
+            // Get boost multiplier for player
+            val boostMultiplier = if (Config.boostEnabled) {
+                BoostManager.getDropRateMultiplier(player)
+            } else {
+                1.0
+            }
+
+            // Sample ore drops with boost multiplier
+            val itemDrops = mutableListOf<ItemStack>()
+
+            // Apply boost by sampling multiple times
+            // For example, 10x boost = sample 10 times
+            val sampleCount = boostMultiplier.toInt()
+            for (i in 0 until sampleCount) {
+                itemDrops.addAll(territory.ores.sample(blockY))
+            }
 
             // do tax event check
             val territoryOccupier = territory.occupier
