@@ -4,6 +4,7 @@
 - Shift + Right clicking a selected node will unselect it.
 
 ## High Priority:
+- block all keybind inputs if the user is typing in the editor pane or whatnot so they dont accidentally break something
 - make an editor for ports on webmap (editor will be in global options pane).
 - make outposts show on the map with a toggle button like ports. | might not be posible depending on how logic for outposts is stored
 - make an editor for outposts on webmap (editor will be in global options pane). | might not be posible depending on how logic for outposts is stored

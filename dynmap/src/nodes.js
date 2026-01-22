@@ -439,6 +439,29 @@ const NodesSvgRenderer = L.Layer.extend({
     },
 });
 
+// Key handler to detect if user is typing in an editable element
+// aka input, textarea, contenteditable div, etc.
+// to prevent interfering with editor keybinds. and breaking the users work
+//
+function isTypingInEditableElement(e) {
+    const el = e.target;
+
+    if (
+        el instanceof HTMLInputElement ||
+        el instanceof HTMLTextAreaElement ||
+        el instanceof HTMLSelectElement
+    ) {
+        return true;
+    }
+
+    if (el.isContentEditable) {
+        return true;
+    }
+
+    return false;
+}
+
+
 /**
  * Global container for nodes functions
  */
@@ -710,6 +733,7 @@ const Nodes = {
         // NOTE: does not work for iframe region
         if ( editorEnabled === true ) {
             window.addEventListener("keydown", e => {
+                if (isTypingInEditableElement(e)) return;
                 if ( e.key === "Shift" ) {
                     if ( Nodes.shiftKey === false ) {
                         Nodes.shiftKey = true;
@@ -765,6 +789,7 @@ const Nodes = {
         }
         else {
             window.addEventListener("keydown", e => {
+                if (isTypingInEditableElement(e)) return;
                 if ( e.key === "Shift" ) {
                     if ( Nodes.shiftKey === false ) {
                         Nodes.shiftKey = true;
