@@ -24,7 +24,7 @@
     "amethyst": "images/nodes/resources_custom/amethyst.png",
     "bamboo_raft": "images/nodes/resources_custom/Bamboo_Raft.png",
     "black_bundle": "images/nodes/resources_custom/Black_Bundle.png",
-    "black_opened_bundle": "images/nodes/resources_custom/Black_Bundle_Bpen.png",
+    "black_opened_bundle": "images/nodes/resources_custom/Black_Bundle_Open.png",
     "bolt_Armor_Trim": "images/nodes/resources_custom/Bolt_Armor_Trim_Smithing_Template.png",
     "breeze_rod": "images/nodes/resources_custom/Breeze_Rod.png",
     "brush": "images/nodes/resources_custom/Brush.png",
@@ -65,11 +65,11 @@
     "resin_clump": "images/nodes/resources_custom/Resin_Clump.png",
     "rib_Armor_Trim": "images/nodes/resources_custom/Rib_Armor_Trim_Smithing_Template.png",
     "ruby": "images/nodes/resources_custom/Ruby.png",
-    "shape_Armor_Trim": "images/nodes/resources_custom/Shape_Armor_Trim_Smithing_Template.png",
+    "shape_Armor_Trim": "images/nodes/resources_custom/Shaper_Armor_Trim_Smithing_Template.png",
     "sniffer_egg": "images/nodes/resources_custom/Sniffer_Egg.png",
     "silance_Trim": "images/nodes/resources_custom/Silance_Trim.png",
     "spire_Armor_Trim": "images/nodes/resources_custom/Spire_Armor_Trim_Smithing_Template.png",
-    "spectral_arrow": "images/nodes/resources_custom/Sectral_Arrow.png",
+    "spectral_arrow": "images/nodes/resources_custom/Spectral_Arrow.png",
     "structure_void": "images/nodes/resources_custom/Structure_Void.png",
     "sweet_berries": "images/nodes/resources_custom/Sweet_Berries.png",
     "tide_Armor_Trim": "images/nodes/resources_custom/tide_Armor_Trim_Smithing_Template.png",
@@ -86,5 +86,5 @@
     "7": "images/nodes/resources_custom/icons8-7-100.png",
     "8": "images/nodes/resources_custom/icons8-8-100.png",
     "9": "images/nodes/resources_custom/icons8-9-100.png",
-    "10": "images/nodes/resources_custom/icons8-logic-data-type-100.png"
+    "10": "images/nodes/resources_custom/icons8-logic-data-types-100.png"
 }

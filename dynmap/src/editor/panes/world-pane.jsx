@@ -15,7 +15,7 @@ import {
     TownSortKey,
 } from "constants.js";
 
-import { NODE_EDITOR_VERSION } from "editor.jsx";
+import { NODE_EDITOR_VERSION } from "editor/editor.jsx";
 
 import * as UI from "ui/ui.jsx";
 import IconOptionIcons from "assets/icon/icon-option-icons.svg";

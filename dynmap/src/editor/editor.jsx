@@ -35,7 +35,7 @@ const PANEL_TOWNS = 4;
 const PANEL_OPTIONS = 5;
 const PANEL_PORT_OUPOST_EDITOR = 6;
 
-const NODE_EDITOR_VERSION = "1.1.0";
+export const NODE_EDITOR_VERSION = "1.1.0";
 
 const EditorTab = (props) => {
     let className = "nodes-editor-tab";
