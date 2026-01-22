@@ -747,7 +747,18 @@ const Nodes = {
                     Nodes.selectedTownIndex = undefined;
                 }*/
                 else if ( e.key === "x" ) {
-                    Nodes._subdivideIntoRandomTerritories();
+                    Nodes._subdivideIntoRandomTerritories(
+                        Nodes.selectedTerritory.id,
+                        Nodes.generatorAverageRadius,
+                        Nodes.generatorScaleX,
+                        Nodes.generatorScaleY,
+                        Nodes.generatorRandomSeed,
+                        Nodes.generatorIterationsSmoothCenters,
+                        Nodes.generatorIterationsSmoothCorners,
+                        Nodes.generatorDeleteSmallerThan,
+                        Nodes.generatorMergeSmallerThan,
+                        Nodes.generatorCopyName
+                    );
                 }
                 
             });

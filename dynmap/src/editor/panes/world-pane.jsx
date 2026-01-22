@@ -187,6 +187,8 @@ const TerritoryNodesList = (props) => {
 
 // render resource node info tooltip
 // appears fixed-position on right side of nodes list
+//tdl
+// make the propertys show there multiplyed versions if they exist
 const ResourceTooltip = (props) => {
     const node = props.node;
     if (!node) return null;
@@ -201,7 +203,7 @@ const ResourceTooltip = (props) => {
         { label: "Crops Total", value: node.crops_total_multiplier },
         { label: "Ore Total", value: node.ore_total_multiplier },
         { label: "Attack Time", value: node.attacker_time_multiplier }
-    ].filter(m => m.value !== undefined); // Only show if the value exists
+    ].filter(m => m.value !== undefined && m.value > 1); // Only show if the value exists
 
     const icon = props.resourceIcons.get(node.icon);
 
