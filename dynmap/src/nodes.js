@@ -28,273 +28,13 @@ import { Territory } from "world/territory.jsx";
 import { Port, PortTooltip } from "world/port.jsx";
 
 import { World, IndexSampler } from "wasm_main";
-
-/**
- * Required format properties for nodes resources.
- * Note: resources are fully configurable objects (so in future other
- * libraries can extend definitions in resources). So, the format
- * is left unfrozen here.
- */
-class NodesResource {
-    static defaultProps = Object.freeze({
-        name: undefined,
-        icon: null,
-        cost: {
-            scale: 1.0,
-            constant: 0,
-        },
-        priority: 0,
-    });
-    
-    constructor(options = {}) {
-        Object.assign(this, NodesResource.defaultProps, options);
-    }
-
-    /**
-     * Return game compatible object for json serialization.
-     * For resources, return everything (allow full customization in 
-     * editor).
-     */
-    export() {
-        return this;
-    }
-}
-
-/**
- * Data format for nodes territories.
- * NOTE: this is a frontend wrapper for drawing, actual chunks data is
- * stored in territory object handled in wasm.
- */
-class NodesTerritory {
-    static defaultProps = Object.freeze({
-        id: undefined,
-        name: "",                // territory readable name identifier
-        core: undefined,         // {x: x, y: y}
-        coreChunk: undefined,    // {x: x, y: y}
-        borders: undefined,      // borders for rendering
-        size: 0,                 // chunks.length
-        neighbors: [],           // neighboring ids
-        isEdge: false,           // territory borders wilderness
-        nodes: [],               // array of node type names
-        terrElement: undefined,  // react jsx element to render
-        town: undefined,         // link to town object
-        occupier: undefined,     // link to occupying town object
-        color: undefined,        // integer id to a color index, used by client
-        cost: 0,                 // territory power cost
-
-        // editor internal variables
-        selected: false,
-    });
-
-    constructor(id) {
-        Object.assign(this, NodesTerritory.defaultProps, {
-            id: id,
-        });
-        Object.seal(this);
-    }
-
-    /**
-     * TODO
-     */
-    export() {
-        return this;
-    }
-}
-
-/**
- * Nodes resident object data format, holds resident uuid and rank.
- * For rank format just use pre-defined magic number ints,
- * defined in `Nodes` object.
- * 
- * Leave this unsealed so that ingame specific properties are retained
- * and exported.
- */
-class NodesResident {
-    // required properties
-    static defaultProps = Object.freeze({
-        uuid: undefined,
-        name: "Anonymous",
-        prefix: "",
-        suffix: "",
-        town: undefined,
-        nation: undefined,
-        rank: RESIDENT_RANK_NONE,
-    });
-
-    constructor(options = {}) {
-        Object.assign(this, NodesResident.defaultProps, options);
-
-        // if uuid is undefined, generate new random uuid
-        this.uuid = this.uuid ?? uuidv4();
-    }
-
-    /**
-     * Return everything for export. This may contain in-game specific
-     * properties appended to editor required properties.
-     */
-    export() {
-        return this;
-    }
-}
-
-/**
- * Format for a nodes Town object.
- */
-class NodesTown {
-    static defaultProps = Object.freeze({
-        uuid: undefined,
-        name: undefined,
-        color: [255, 255, 255],
-        colorTown: [255, 255, 255],
-        colorNation: [255, 255, 255],
-
-        // flag that anyone can join
-        open: false,
-
-        // residents
-        leader: undefined,
-        playerNames: [],
-        residents: [],
-        residentUuids: [],
-
-        // territories
-        territories: [],
-        annexed: [],
-        captured: [],
-        home: -1,
-        spawn: [0.0, 0.0, 0.0],
-        
-        // relations with other towns
-        allies: [],
-        enemies: [],
-        truce: [],
-
-        // nation
-        nation: undefined,
-    });
-
-    constructor(options = {}) {
-        Object.assign(this, NodesTown.defaultProps, options);
-        this.original = options; // store copy of original, for export
-        Object.seal(this);
-
-        // if uuid is undefined, generate new random uuid
-        this.uuid = this.uuid ?? uuidv4();
-    }
-
-    /**
-     * Return in-game plugin compatible town data object.
-     * Returns original object which may contain in-game specific 
-     * properties not used in the editor. Then overwrite original
-     * with exporter editable properties.
-     */
-    export() {
-        return Object.assign({}, this.original, {
-            uuid: this.uuid,
-            color: this.colorTown,
-            open: this.open,
-            leader: this.leader,
-            residents: this.residentUuids,
-            territories: this.territories,
-            annexed: this.annexed,
-            captured: this.captured,
-            home: this.home,
-            spawn: this.spawn,
-            allies: this.allies,
-            enemies: this.enemies,
-            truce: this.truce,
-            income: this.income,
-            incomeEgg: this.incomeEgg,
-            claimsBonus: this.claimsBonus,
-            claimsPenalty: this.claimsPenalty,
-        });
-    }
-}
-
-/**
- * Data format for nodes nation objects.
- */
-class NodesNation {
-    static defaultProps = Object.freeze({
-        uuid: undefined,
-        capital: undefined,
-        color: [255, 255, 255],
-        towns: [],
-        allies: [],
-        enemies: [],
-
-        // editor state
-        numPlayers: 0,
-        numTerritories: 0,
-    });
-
-    constructor(options = {}) {
-        Object.assign(this, NodesNation.defaultProps, options);
-        this.original = options;
-        Object.seal(this);
-
-        // if uuid is undefined, generate new random uuid
-        this.uuid = this.uuid ?? uuidv4();
-    }
-
-    /**
-     * Return in-game plugin compatible nation data object.
-     * Return original object overwritten with editor editable
-     * properties.
-     */
-    export() {
-        return Object.assign({}, this.original, {
-            uuid: this.uuid,
-            capital: this.capital,
-            color: this.color,
-            towns: this.towns,
-            allies: this.allies,
-            enemies: this.enemies,   
-        });
-    }
-}
-
-/**
- * Data format for nodes port objects.
- */
-class NodesPort {
-    constructor(name, group, x, z) {
-        this.name = name;
-        this.group = group;
-        this.groupsString = group.join(", ");
-        this.x = x;
-        this.z = z;
-        this.owner = undefined;
-        
-        // Define these here so they aren't "new" properties later cause react is confused
-        this.showPorts = true; 
-        this.portVisible = true;
-    }
-}
-
-
-// painting event handlers
-const handleWindowMouseUp = (e) => {
-    Nodes._stopPaint();
-    window.removeEventListener("mouseup", handleWindowMouseUp);
-};
-
-const handleMouseDown = (e) => {
-    e.preventDefault();
-    // e.stopPropagation(); // problem: nodes pane is overlaid on top, prevents dragging map
-    
-    if ( e.button === 2 ) { // right click only
-        Nodes._startPaint();
-    
-        // add window event for mouse up
-        window.addEventListener("mouseup", handleWindowMouseUp);
-    }
-};
-
-const handleMouseUp = (e) => {
-    Nodes._stopPaint();
-    window.removeEventListener("mouseup", handleWindowMouseUp);
-}
+import { NodesResident } from "./NodesResident.js";
+import { NodesTown } from "./NodesTown.js";
+import { NodesResource } from "./NodesResource.js";
+import { NodesTerritory } from "./NodesTerritory.js";
+import { NodesNation } from "./NodesNation.js";
+import { NodesPort } from "./NodesPort.js";
+import { handleMouseDown, handleMouseUp, handleWindowMouseUp } from "./NodesHandlers.js";
 
 // private settings
 let editorEnabled = true; // constant for enabling editor panels and territory painting
@@ -465,7 +205,7 @@ function isTypingInEditableElement(e) {
 /**
  * Global container for nodes functions
  */
-const Nodes = {
+export const Nodes = {
 
     // ============================================
     // Notification system - use instead of console.warn/error
@@ -2832,31 +2572,34 @@ const Nodes = {
      * Delete list of territories
      */
     _deleteTerritory: (ids) => {
-        for ( const id of ids ) {
-            if ( Nodes.territories.has(id) ) {
-                Nodes.wasmWorld.deleteTerritory(id);
-                Nodes.territories.delete(id);
-                Nodes.selectedTerritories.delete(id);
-    
-                // update id to index
-                let i = 0;
-                Nodes.territoryIdToIndex.clear();
-                Nodes.territories.forEach( (terr, id) => {
-                    Nodes.territoryIdToIndex.set(id, i);
-                    i += 1;
-                });
-    
-                if ( Nodes.selectedTerritory !== undefined && Nodes.selectedTerritory.id === id ) {
-                    Nodes.selectedTerritory = undefined;
-                }
+            if (!ids) return;
+            const targets = (typeof ids[Symbol.iterator] === 'function') ? ids : [ids];
 
-                // update world render
-                Nodes._updateAllTerritoryElements();
-                Nodes.renderEditor();
-                Nodes.renderWorld();
+            for ( const id of targets ) {
+                if ( Nodes.territories.has(id) ) {
+                    Nodes.wasmWorld.deleteTerritory(id);
+                    Nodes.territories.delete(id);
+                    Nodes.selectedTerritories.delete(id);
+        
+                    // update id to index
+                    let i = 0;
+                    Nodes.territoryIdToIndex.clear();
+                    Nodes.territories.forEach( (terr, id) => {
+                        Nodes.territoryIdToIndex.set(id, i);
+                        i += 1;
+                    });
+        
+                    if ( Nodes.selectedTerritory !== undefined && Nodes.selectedTerritory.id === id ) {
+                        Nodes.selectedTerritory = undefined;
+                    }
+
+                    // update world render
+                    Nodes._updateAllTerritoryElements();
+                    Nodes.renderEditor();
+                    Nodes.renderWorld();
+                }
             }
-        }
-    },
+        },
 
     /**
      * Merges territories in `ids` array into the first index territory (ids[0]).

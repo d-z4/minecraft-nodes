@@ -151,9 +151,10 @@ export const TerritoryPane = (props) => {
                 />
                 <UI.Button
                     className="nodes-editor-terr-tool-btn"
-                    onClick={() => props.deleteTerritory(Nodes.selectedTerritories.keys())}
+                    onClick={() => props.deleteTerritory(props.selectedTerritory?.id)} 
                     icon={IconDelete}
-                    tooltip={"Delete territory"}
+                    tooltip={"Delete selected territory"}
+                    disabled={!props.selectedTerritory}
                 />
             </div>
             <div id="nodes-editor-terr-toolbar-g2">

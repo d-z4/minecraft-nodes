@@ -6,7 +6,7 @@
  * -> Must calculate width/height separately and set for the editor
  * */
 import { useMemo, useCallback } from "react";
-import Nodes from "../nodes";
+import Nodes from "../nodes.js";
 import {Territory} from "world/territory.jsx";
 import "world/css/nodes.css";
 
