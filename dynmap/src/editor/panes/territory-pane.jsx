@@ -102,7 +102,7 @@ export const TerritoryPane = (props) => {
 
     const handleCopy = () => {
         navigator.clipboard.writeText(selectedTerritoryListString);
-        // Optional: You could trigger a small "Copied!" toast here
+        Nodes.info("Copied territory IDs to clipboard.");
     };
 
     const handleAddNodeToTerritory = () => {
