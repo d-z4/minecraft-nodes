@@ -1,0 +1,271 @@
+/**
+ * Instance for attacking a chunk
+ * - holds state data of attack
+ * - functions as runnable thread for attack tick
+ */
+
+package phonon.nodes.war
+
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask
+import org.bukkit.Bukkit
+import org.bukkit.Location
+import org.bukkit.NamespacedKey
+import org.bukkit.World
+import org.bukkit.block.Block
+import org.bukkit.boss.BossBar
+import org.bukkit.entity.ArmorStand
+import org.bukkit.persistence.PersistentDataType
+import phonon.nodes.Config
+import phonon.nodes.Nodes
+import phonon.nodes.nms.createArmorStandNamePacket
+import phonon.nodes.nms.sendPacket
+import phonon.nodes.objects.Coord
+import phonon.nodes.objects.Town
+import phonon.nodes.objects.townNametagViewedByPlayer // in nametag
+import java.util.UUID
+
+public class Attack(
+    val attacker: UUID,
+    val town: Town,
+    val coord: Coord,
+    val flagBase: Block,
+    val flagBlock: Block,
+    val flagTorch: Block,
+    val skyBeaconColorBlocks: List<Block>,
+    val skyBeaconWireframeBlocks: List<Block>,
+    val progressBar: BossBar,
+    val attackTime: Long,
+    var progress: Long,
+
+    // NEW: store the beam entity IDs per player
+    val beamIdsByPlayer: MutableMap<UUID, List<Int>> = mutableMapOf(),
+) : Runnable {
+    // no build region
+    val noBuildXMin: Int
+    val noBuildXMax: Int
+    val noBuildZMin: Int
+    val noBuildZMax: Int
+    val noBuildYMin: Int
+    val noBuildYMax: Int = 255 // temporarily set to height
+
+    var thread: ScheduledTask
+
+    // armor stands used to show town name and progress on flag
+    val armorstand = AttackArmorStand(this, flagBase.world, flagBase.location.clone().add(0.5, 1.75, 0.5))
+
+    // re-used json serialization StringBuilders
+    val jsonStringBase: StringBuilder
+    val jsonString: StringBuilder
+
+    init {
+        val flagX = flagBase.x
+        val flagY = flagBase.y
+        val flagZ = flagBase.z
+
+        // set no build ranges
+        this.noBuildXMin = flagX - Config.flagNoBuildDistance
+        this.noBuildXMax = flagX + Config.flagNoBuildDistance
+        this.noBuildZMin = flagZ - Config.flagNoBuildDistance
+        this.noBuildZMax = flagZ + Config.flagNoBuildDistance
+        this.noBuildYMin = flagY + Config.flagNoBuildYOffset
+
+        // set boss bar progress
+        val progressNormalized: Double = this.progress.toDouble() / this.attackTime.toDouble()
+        this.progressBar.setProgress(progressNormalized)
+
+        // pre-generate main part of the JSON serialization string
+        this.jsonStringBase = generateFixedJsonBase(
+            this.attacker,
+            this.coord,
+            this.flagBase,
+        )
+
+        // send armor stand packets to players in range
+        try {
+            this.armorstand.sendPackets()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // full json StringBuilder, initialize capacity to be
+        // base capacity + room for progress ticks length
+        val jsonStringBufferSize = this.jsonStringBase.capacity() + 20
+        this.jsonString = StringBuilder(jsonStringBufferSize)
+
+        // start the attack tick timer, runs on region that the flag is located
+        this.thread = Bukkit.getRegionScheduler().runAtFixedRate(
+            Nodes.plugin!!,
+            this.flagBase.world,
+            this.flagBase.x shr 4,
+            this.flagBase.z shr 4,
+            { _ -> this.run() },
+            FlagWar.ATTACK_TICK,
+            FlagWar.ATTACK_TICK,
+        )
+    }
+
+    public override fun run() {
+        FlagWar.attackTick(this)
+    }
+
+    public fun cancel() {
+        this.thread.cancel()
+        FlagWar.cancelAttack(this)
+    }
+
+    // returns json format string as a StringBuilder
+    // only used with WarSerializer objects
+    public fun toJson(): StringBuilder {
+        // reset json StringBuilder
+        this.jsonString.setLength(0)
+
+        // add base
+        this.jsonString.append(this.jsonStringBase)
+
+        // add progress in ticks
+        this.jsonString.append("\"p\":${this.progress}")
+        this.jsonString.append("}")
+
+        return this.jsonString
+    }
+}
+
+// pre-generate main part of the JSON serialization string
+// for the attack which does not change
+// (only part that changes is progress)
+// parts required for serialization:
+// - attacker: player uuid
+// - coord: chunk coord
+// - block: flag base block (fence)
+// - skyBeaconColorBlocks: track blocks in sky beacon
+// - skyBeaconWireframeBlocks: track blocks in sky beacon
+private fun generateFixedJsonBase(
+    attacker: UUID,
+    coord: Coord,
+    block: Block,
+): StringBuilder {
+    val s = StringBuilder()
+
+    s.append("{")
+
+    // attacker uuid
+    s.append("\"id\":\"$attacker\",")
+
+    // chunk coord [c.x, c.z]
+    s.append("\"c\":[${coord.x},${coord.z}],")
+
+    // flag base block [b.x, b.y, b.z]
+    s.append("\"b\":[${block.x},${block.y},${block.z}],")
+
+    return s
+}
+
+public class AttackArmorStand(
+    val attack: Attack,
+    val world: World,
+    val loc: Location,
+    val maxViewDistance: Int = 3,
+) {
+    var townNameArmorstand = createArmorStand(world, loc)
+    var progressArmorstand = createArmorStand(world, loc.add(0.0, -0.25, 0.0))
+
+    // min/max x/z chunk view distance from this armor stand
+    val minViewChunkX: Int
+    val maxViewChunkX: Int
+    val minViewChunkZ: Int
+    val maxViewChunkZ: Int
+
+    init {
+        // calculate max chunk view distance from this armor stand
+        val chunk = this.loc.chunk
+        val chunkX = chunk.x
+        val chunkZ = chunk.z
+
+        minViewChunkX = chunkX - this.maxViewDistance
+        maxViewChunkX = chunkX + this.maxViewDistance
+        minViewChunkZ = chunkZ - this.maxViewDistance
+        maxViewChunkZ = chunkZ + this.maxViewDistance
+    }
+
+    /**
+     * Remove armorstand, for cleanup.
+     */
+    public fun remove() {
+        this.townNameArmorstand.remove()
+        this.progressArmorstand.remove()
+    }
+
+    /**
+     * Check if armorstand is still valid.
+     */
+    public fun isValid(): Boolean = this.townNameArmorstand.isValid && this.progressArmorstand.isValid
+
+    /**
+     * Re-create new armorstand.
+     */
+    public fun respawn() {
+        this.townNameArmorstand.remove()
+        this.townNameArmorstand = createArmorStand(this.world, this.loc)
+        this.progressArmorstand.remove()
+        this.progressArmorstand = createArmorStand(this.world, this.loc.add(0.0, -0.25, 0.0))
+    }
+
+    /**
+     * Send player-specific armor stand packets for players
+     * within maxViewDistance chunks of this armorstand.
+     */
+    public fun sendPackets() {
+        // if this chunk not loaded, skip
+        if (!this.world.isChunkLoaded(this.loc.chunk)) {
+            return
+        }
+
+        for (player in world.players) {
+            val playerChunk = player.location.chunk
+            val playerChunkX = playerChunk.x
+            val playerChunkZ = playerChunk.z
+
+            if (playerChunkX < minViewChunkX ||
+                playerChunkX > maxViewChunkX ||
+                playerChunkZ < minViewChunkZ ||
+                playerChunkZ > maxViewChunkZ
+            ) {
+                continue
+            }
+
+            // send armor stand packets
+            // town
+            val label = townNametagViewedByPlayer(attack.town, player).dropLast(1)
+            val townNamePacket = this.townNameArmorstand.createArmorStandNamePacket(label)
+            player.sendPacket(townNamePacket)
+
+            // progress
+            val remainingSeconds = (attack.attackTime - attack.progress) / 20
+            val minutes = remainingSeconds / 60
+            val seconds = remainingSeconds % 60
+            val colorCode = townNametagViewedByPlayer(attack.town, player).take(2)
+            val formattedProgress = "$colorCode[$minutes:${seconds.toString().padStart(2, '0')}]"
+            val progressPacket = this.progressArmorstand.createArmorStandNamePacket(formattedProgress)
+            player.sendPacket(progressPacket)
+        }
+    }
+}
+
+/**
+ * Namespaced key for marking armorstands as nodes plugin armorstands.
+ */
+internal val NODES_ARMORSTAND_KEY = NamespacedKey("nodes", "armorstand")
+
+/**
+ * Helper function to create a new armorstand with associated metadata.
+ */
+private fun createArmorStand(
+    world: World,
+    loc: Location,
+): ArmorStand {
+    val armorstand = world.spawn(loc, ArmorStand::class.java)
+    armorstand.setSmall(true)
+    armorstand.setGravity(false)
+    armorstand.persistentDataContainer.set(NODES_ARMORSTAND_KEY, PersistentDataType.INTEGER, 0)
+    return armorstand
+}

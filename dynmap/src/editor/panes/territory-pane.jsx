@@ -259,7 +259,7 @@ export const TerritoryPane = (props) => {
         {/* --- HELP SECTION --- */}
         <div className="nodes-editor-help" style={{marginTop: "20px"}}>
             <div>Help/Controls:</div>
-            <div>- [Right click]: Select multiple territories</div>
+            <div>- [Shift + Right click]: Select multiple territories</div>
             <div>- [Space bar]: Turn on/off paint mode</div>
             <div>- [Right mouse drag]: Paint chunks</div>
             <div>- [Ctrl + right mouse drag]: Erase chunks</div>
@@ -268,6 +268,7 @@ export const TerritoryPane = (props) => {
             <div>- [E]: Merge selected territories (buggy with resource nodes)</div>
             <div>- [R]: Distribute resources in selected territories</div>
             <div>- [X]: Subdivide selected territories into smaller ones</div>
+            <div>- [F]: Remove all resource nodes from selected territories (icons updating is buggy, the resources ARE removed after but the icon doesnt update till a node is selected)</div>
             <div>- [Delete]: Delete selected territories</div>
         </div>
         </>

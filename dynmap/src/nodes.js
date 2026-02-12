@@ -210,15 +210,15 @@ export const Nodes = {
     // ============================================
     // Notification system - use instead of console.warn/error
     // ============================================
-    info: (message, duration = 4000) => {
+    info: (message, duration = 2000) => {
         return NotificationManager.info(message, duration);
     },
 
-    warn: (message, duration = 6000) => {
+    warn: (message, duration = 4000) => {
         return NotificationManager.warn(message, duration);
     },
 
-    error: (message, duration = 0) => {
+    error: (message, duration = 4000) => {
         return NotificationManager.error(message, duration);
     },
 
@@ -503,6 +503,11 @@ export const Nodes = {
                 else if ( e.key === "r" ) {
                     Nodes.distributeResourcesInSelectedTerritories();
                 }
+                // remove resource nodes in territory
+                else if ( e.key === "f" ) {
+                    const selectedIds = Nodes.selectedTerritories.keys();
+                    Nodes._removeAllNodesFromTerritories(selectedIds);
+                }
                 /*else if ( e.key === "Escape" ) {
                     Nodes.selectedNodeName = undefined;
                     Nodes.selectedNodeIndex = undefined;
@@ -634,7 +639,7 @@ export const Nodes = {
                     resolve(response.json());
                 }
                 else {
-                    reject(`Failed to load resource icon file: '${path}'`);
+                    Nodes.warn(`Failed to load resource icon file: '${path}'`);
                 }
             })
             .catch(err => reject(err));
@@ -2900,18 +2905,21 @@ export const Nodes = {
      * Remove all nodes from array of territory ids
      */
     _removeAllNodesFromTerritories: (ids) => {
+        if (!ids) return;
+
         for ( const id of ids ) {
             if ( Nodes.territories.has(id) ) {
                 let territory = Nodes.territories.get(id);
                 territory.nodes = [];
+                if (Nodes.setTerritory) {
+                    Nodes.setTerritory(id, territory);
+                }
             }
         }
-
         Nodes._updateTerritoryElementIds(ids);
         Nodes.renderEditor();
         Nodes.renderWorld();
     },
-
     /**
      * Randomly distribute set of nodes in a group of territories.
      * This function will only append additional node into territories.
