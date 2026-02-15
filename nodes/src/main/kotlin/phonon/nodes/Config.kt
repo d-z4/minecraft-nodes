@@ -432,7 +432,6 @@ public object Config {
         Config.requireSheepNodeToShear = config.getBoolean("requireSheepNodeToShear", Config.requireSheepNodeToShear)
 
         // webhooks
-        Config.discordWebhooks.clear() // MAY CAUSE ISSUES
         val webhooksSection = config.getConfigurationSection("discordWebhooks")
         if (webhooksSection != null) {
             for (key in webhooksSection.getKeys(false)) {
@@ -497,6 +496,7 @@ public object Config {
 
         // town settings
         Config.townSpawnTime = config.getInt("townSpawnTime", Config.townSpawnTime)
+        
         val outpostTeleportCostSection = config.getConfigurationSection("outpostTeleportCost")
         if (outpostTeleportCostSection !== null) {
             Config.outpostTeleportCost.putAll(parseTeleportCost(outpostTeleportCostSection))
@@ -505,6 +505,7 @@ public object Config {
 
         // nation settings
         Config.allowNationTownSpawn = config.getBoolean("allowNationTownSpawn", Config.allowNationTownSpawn)
+        
         val nationTeleportCostSection = config.getConfigurationSection("nationTownTeleportCost")
         if (nationTeleportCostSection !== null) {
             Config.nationTownTeleportCost.putAll(parseTeleportCost(nationTeleportCostSection))
