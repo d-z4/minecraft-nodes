@@ -88,6 +88,11 @@ commands:
     aliases: []
     permission: nodes.command.port
     usage: /port help
+  report:
+    description: Report an issue to staff
+    aliases: []
+    permission: nodes.command.report
+    usage: /report <message>
 permissions:
   nodes.command.town.fly:
     default: op

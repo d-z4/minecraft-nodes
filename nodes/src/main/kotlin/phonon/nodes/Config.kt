@@ -66,6 +66,9 @@ public object Config {
     // force copy to dynmap folder
     public var dynmapCopyTowns: Boolean = false
 
+    // map nation name -> webhook url
+    public var discordWebhooks: HashMap<String, String> = hashMapOf()
+
     // ===================================
     // resource configs
     // ===================================
@@ -427,6 +430,17 @@ public object Config {
         Config.canInteractInEmpty = config.getBoolean("canInteractInEmpty", Config.canInteractInEmpty)
         Config.canInteractInUnclaimed = config.getBoolean("canInteractInUnclaimed", Config.canInteractInUnclaimed)
         Config.requireSheepNodeToShear = config.getBoolean("requireSheepNodeToShear", Config.requireSheepNodeToShear)
+
+        // webhooks
+        val webhooksSection = config.getConfigurationSection("discordWebhooks")
+        if (webhooksSection != null) {
+            for (key in webhooksSection.getKeys(false)) {
+                val url = webhooksSection.getString(key)
+                if (url != null) {
+                    Config.discordWebhooks[key] = url
+                }
+            }
+        }
 
         // town cooldown configs
         Config.townCreateCooldown = config.getLong("townCreateCooldown", Config.townCreateCooldown)

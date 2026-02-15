@@ -24,6 +24,7 @@ import phonon.nodes.commands.TownCommand
 import phonon.nodes.commands.TruceCommand
 import phonon.nodes.commands.UnallyCommand
 import phonon.nodes.commands.WarCommand
+import phonon.nodes.commands.ReportCommand
 import phonon.nodes.listeners.DisabledWorldListener
 import phonon.nodes.listeners.NodesBlockGrowListener
 import phonon.nodes.listeners.NodesChatListener
@@ -147,6 +148,7 @@ public class NodesPlugin : JavaPlugin() {
         this.getCommand("player")?.setExecutor(PlayerCommand())
         this.getCommand("territory")?.setExecutor(TerritoryCommand())
         this.getCommand("port")?.setExecutor(PortCommand())
+        this.getCommand("report")?.setExecutor(ReportCommand())
 
         // override command aliases tab complete if they exist
         this.getCommand("t")?.setTabCompleter(this.getCommand("town")?.getExecutor() as TabCompleter)
