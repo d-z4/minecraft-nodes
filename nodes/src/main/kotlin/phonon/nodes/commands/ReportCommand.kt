@@ -23,13 +23,13 @@ class ReportCommand : CommandExecutor {
 
         val message = args.joinToString(" ")
         val resident = Nodes.getResident(sender)
-        
+
         // Gathers info
         val locationStr = "${sender.world.name}, ${sender.location.blockX}, ${sender.location.blockY}, ${sender.location.blockZ}"
-        
+
         var townNationStr = "None"
         var webhookUrl = Config.discordWebhooks["default"]
-        
+
         if (resident != null) {
             val town = resident.town
             if (town != null) {
@@ -37,7 +37,7 @@ class ReportCommand : CommandExecutor {
                 val nation = town.nation
                 if (nation != null) {
                     townNationStr += " / ${nation.name}"
-                    
+
                     // Check if there is a specific webhook for this nation
                     val nationWebhook = Config.discordWebhooks[nation.name]
                     if (nationWebhook != null) {
@@ -59,7 +59,7 @@ class ReportCommand : CommandExecutor {
             reporter = sender.name,
             content = message,
             location = locationStr,
-            townNation = townNationStr
+            townNation = townNationStr,
         )
 
         sender.sendMessage("${ChatColor.GREEN}Report sent to your regions staff. Thank you!")

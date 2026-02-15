@@ -18,13 +18,13 @@ import phonon.nodes.commands.NodesSweepCommand
 import phonon.nodes.commands.PeaceCommand
 import phonon.nodes.commands.PlayerCommand
 import phonon.nodes.commands.PortCommand
+import phonon.nodes.commands.ReportCommand
 import phonon.nodes.commands.TerritoryCommand
 import phonon.nodes.commands.TownChatCommand
 import phonon.nodes.commands.TownCommand
 import phonon.nodes.commands.TruceCommand
 import phonon.nodes.commands.UnallyCommand
 import phonon.nodes.commands.WarCommand
-import phonon.nodes.commands.ReportCommand
 import phonon.nodes.listeners.DisabledWorldListener
 import phonon.nodes.listeners.NodesBlockGrowListener
 import phonon.nodes.listeners.NodesChatListener

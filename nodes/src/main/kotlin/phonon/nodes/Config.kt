@@ -431,7 +431,7 @@ public object Config {
         Config.canInteractInUnclaimed = config.getBoolean("canInteractInUnclaimed", Config.canInteractInUnclaimed)
         Config.requireSheepNodeToShear = config.getBoolean("requireSheepNodeToShear", Config.requireSheepNodeToShear)
 
-        // webhooks
+        // webhooks (blame turgangs)
         val webhooksSection = config.getConfigurationSection("discordWebhooks")
         if (webhooksSection != null) {
             for (key in webhooksSection.getKeys(false)) {
