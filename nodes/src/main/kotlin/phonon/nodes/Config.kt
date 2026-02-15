@@ -432,7 +432,7 @@ public object Config {
         Config.requireSheepNodeToShear = config.getBoolean("requireSheepNodeToShear", Config.requireSheepNodeToShear)
 
         // webhooks
-        Config.discordWebhooks.clear() //not needed
+        Config.discordWebhooks.clear() // MAY CAUSE ISSUES
         val webhooksSection = config.getConfigurationSection("discordWebhooks")
         if (webhooksSection != null) {
             for (key in webhooksSection.getKeys(false)) {
